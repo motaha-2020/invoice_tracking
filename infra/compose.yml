@@ -1,0 +1,31 @@
+# منظومة تتبع المستخلصات — على سيرفر Hetzner جنب ProjectFlow و n8n
+# كل حاجة معزولة: شبكة خاصة، بورتات على 127.0.0.1 بس، وحدود ذاكرة.
+# التشغيل:  docker compose -p invoices --env-file /srv/invoices/.env -f infra/compose.yml up -d
+name: invoices
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-invoices}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in /srv/invoices/.env}
+      POSTGRES_DB: ${POSTGRES_DB:-invoices}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5545:5432"   # للـ backup والصيانة من السيرفر بس
+    networks: [invoices]
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-invoices} -d ${POSTGRES_DB:-invoices}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+
+networks:
+  invoices:
+    name: invoices_net
