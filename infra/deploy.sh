@@ -39,8 +39,19 @@ export WEB_IMAGE="$REGISTRY/invoice_tracking-web:$TAG"
 export MIGRATE_IMAGE="$REGISTRY/invoice_tracking-migrate:$TAG"
 dc() { docker compose -p invoices --env-file "$ENV_FILE" -f infra/compose.yml "$@"; }
 
+# الصور private على GHCR: الـ CI بيبعت GITHUB_TOKEN (صلاحية packages:read، بينتهي مع الـ job) على stdin.
+# بنسجّل دخول في DOCKER_CONFIG مؤقت ونمسحه بعد الـ pull — مفيش credentials بتفضل على السيرفر.
+GHCR_TOKEN=""
+if [[ ! -t 0 ]]; then read -r -t 5 GHCR_TOKEN || true; fi
+if [[ -n "$GHCR_TOKEN" ]]; then
+  DOCKER_CONFIG="$(mktemp -d)"; export DOCKER_CONFIG
+  trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+  printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u motaha-2020 --password-stdin >/dev/null
+fi
+
 echo "deploy: $WEB_IMAGE"
 dc --profile deploy pull -q migrate web
+if [[ -n "$GHCR_TOKEN" ]]; then docker logout ghcr.io >/dev/null 2>&1 || true; fi
 dc --profile deploy run --rm migrate
 dc up -d --no-deps web
 

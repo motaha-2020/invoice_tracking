@@ -92,6 +92,7 @@ jobs:
     environment: production
     permissions:
       contents: read
+      packages: read   # GITHUB_TOKEN بيتبعت للسيرفر عشان يعمل pull للصور الـ private
     steps:
       # الـ secrets مايتقروش في if مباشرة، فبنحوّلهم لـ output
       - id: cfg
@@ -116,13 +117,15 @@ jobs:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           TAG: ${{ needs.build.outputs.tag }}
+          GHCR_TOKEN: ${{ github.token }}
         run: |
           install -m 700 -d ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           # على السيرفر الـ key ده عليه forced command = infra/deploy.sh، فالأمر هنا هو الـ tag بس
-          ssh -i ~/.ssh/deploy_key \
+          # التوكن على stdin (مش في الأمر) — deploy.sh بيقراه ويسجّل دخول مؤقت لـ GHCR
+          printf '%s\n' "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key \
               -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes \
               -o ConnectTimeout=20 -o ServerAliveInterval=15 \
               "$DEPLOY_USER@$DEPLOY_HOST" "deploy $TAG"
