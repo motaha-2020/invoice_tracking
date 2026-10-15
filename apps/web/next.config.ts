@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
   experimental: {
     // forbidden() + app/forbidden.tsx لصفحات الصلاحيات
     authInterrupts: true,
+    // رفع قوالب Excel والمرفقات بيعدّي على Server Actions (الافتراضي 1MB)
+    serverActions: { bodySizeLimit: "10mb" },
   },
   turbopack: {
     root: repoRoot,
