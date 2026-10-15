@@ -1,8 +1,85 @@
 import type { Metadata } from "next";
-import { UnderConstruction } from "@/features/shell/components/under-construction";
+import { Suspense } from "react";
+import { PageHeader, PageSkeleton } from "@/components/ui";
+import type { SessionUser } from "@/features/auth/auth.types";
+import { ImportPanel } from "@/features/imports/components/import-panel";
+import { requireNavAccess } from "@/features/shell/nav.service";
+import { TabLinks } from "@/features/users/components/tab-links";
+import { HolidaysPanel } from "@/features/workflow/components/holidays-panel";
+import { RequiredDocs } from "@/features/workflow/components/required-docs";
+import { ReturnReasons } from "@/features/workflow/components/return-reasons";
+import { SettingsForm } from "@/features/workflow/components/settings-form";
+import { SlaMatrixEditor } from "@/features/workflow/components/sla-matrix";
+import * as wf from "@/features/workflow/workflow.service";
 
 export const metadata: Metadata = { title: "المسار والـ SLA" };
 
-export default function Page() {
-  return <UnderConstruction navKey="workflow" sub="المحطات وفئات التجاوز والـ SLA" />;
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+const TABS = [
+  { key: "path", label: "المسار والـ SLA" },
+  { key: "reasons", label: "أسباب الإرجاع" },
+  { key: "docs", label: "المستندات الإلزامية" },
+  { key: "holidays", label: "الأجازات" },
+  { key: "settings", label: "الإعدادات" },
+];
+
+export default function WorkflowPage({ searchParams }: { searchParams: SearchParams }) {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <WorkflowContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function WorkflowContent({ searchParams }: { searchParams: SearchParams }) {
+  const actor = await requireNavAccess("workflow");
+  const raw = (await searchParams).tab;
+  const t = Array.isArray(raw) ? raw[0] : raw;
+  const tab = TABS.some((x) => x.key === t) ? t! : "path";
+
+  return (
+    <>
+      <PageHeader
+        title="المسار والـ SLA"
+        sub="مسار كل فئة تجاوز ومدة كل محطة بأيام العمل، وأسباب الإرجاع والمستندات والأجازات"
+        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "المسار والـ SLA" }]}
+      />
+      <TabLinks base="/workflow" tabs={TABS} current={tab} />
+      <TabBody tab={tab} actor={actor} />
+    </>
+  );
+}
+
+async function TabBody({ tab, actor }: { tab: string; actor: SessionUser }) {
+  switch (tab) {
+    case "reasons":
+      return <ReturnReasons reasons={await wf.getReturnReasons(actor)} />;
+    case "docs": {
+      const m = await wf.getDocsMatrix(actor);
+      return <RequiredDocs docTypes={m.docTypes} projectTypes={m.projectTypes} required={m.required} />;
+    }
+    case "holidays": {
+      const holidays = await wf.getHolidays(actor);
+      return (
+        <div className="space-y-4">
+          <HolidaysPanel holidays={holidays} today={wf.todayCairo()} />
+          <ImportPanel
+            templateId="12_الأجازات_الرسمية"
+            title="رفع الأجازات من Excel"
+            templateFile="12_الأجازات_الرسمية.xlsx"
+            hint="كل يوم في صف — اليوم الموجود اسمه بيتحدث"
+          />
+        </div>
+      );
+    }
+    case "settings": {
+      const { smtp, ...values } = await wf.getSettingsView(actor);
+      return <SettingsForm values={values} smtp={smtp} />;
+    }
+    default: {
+      const cfg = await wf.getPathConfig(actor);
+      return <SlaMatrixEditor steps={cfg.steps} categories={cfg.categories} />;
+    }
+  }
 }
