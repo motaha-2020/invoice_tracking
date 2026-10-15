@@ -7,7 +7,7 @@ import { SESSION_COOKIE, sessionCookieOptions } from "@/features/auth/session-co
  * - فيه كوكي ← بنجدد عمره (sliding 12 ساعة) مع كل تنقل GET.
  * التحقق الحقيقي (الجلسة في DB، الدور، النطاق) بيحصل في getCurrentUser وفي كل Server Action.
  */
-const PUBLIC_PREFIXES = ["/login", "/invite/"];
+const PUBLIC_PREFIXES = ["/login", "/invite/", "/api/health"];
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
