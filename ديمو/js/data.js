@@ -69,12 +69,12 @@ const DB = {
     { id: 'co3', name: 'المعادي', fullName: 'شركة المعادي للهندسة', email: 'acc@maadi-eng.com', phone: '01000000003' },
   ],
   contracts: [
-    { id: 'k1', no: '77/2025/1/5', companyId: 'co1', title: 'تنفيذ شبكات FTTH بالدقهلية', currency: 'EGP', vatPct: 14, retentionPct: 5, taxPct: 1, stampPct: 0.5, advancePct: 10, priceFactor: 1.00, start: '2025-03-01' },
-    { id: 'k2', no: '301/2024/3/9', companyId: 'co1', title: 'أعمال مدنية وصيانة الشرقية', currency: 'EGP', vatPct: 14, retentionPct: 5, taxPct: 1, stampPct: 0.5, advancePct: 0, priceFactor: 0.95, start: '2024-09-15' },
-    { id: 'k3', no: '232/2025/1/36', companyId: 'co2', title: 'تنفيذ FTTH وكابينات الدلتا', currency: 'EGP', vatPct: 14, retentionPct: 5, taxPct: 1, stampPct: 0.5, advancePct: 10, priceFactor: 1.05, start: '2025-05-10' },
-    { id: 'k4', no: '118/2024/2/12', companyId: 'co2', title: 'حلقات ألياف رئيسية دمياط', currency: 'EGP', vatPct: 14, retentionPct: 5, taxPct: 1, stampPct: 0.5, advancePct: 0, priceFactor: 1.10, start: '2024-06-01' },
-    { id: 'k5', no: '45/2025/1/2', companyId: 'co3', title: 'تنفيذ FTTH جنوب القاهرة', currency: 'EGP', vatPct: 14, retentionPct: 5, taxPct: 1, stampPct: 0.5, advancePct: 10, priceFactor: 1.08, start: '2025-02-01' },
-    { id: 'k6', no: '190/2024/1/14', companyId: 'co3', title: 'كابينات MSAN المعادي', currency: 'EGP', vatPct: 14, retentionPct: 5, taxPct: 1, stampPct: 0.5, advancePct: 0, priceFactor: 1.00, start: '2024-11-20' },
+    { id: 'k1', no: '77/2025/1/5', companyId: 'co1', title: 'تنفيذ شبكات FTTH بالدقهلية', currency: 'EGP', vatPct: 14, taxPct: 1, payMonthlyPct: 70, asbuiltPct: 20, handoverPct: 10, finalGuaranteePct: 5, delayFinePctWeek: 0, delayFineCapPct: 0, warrantyMonths: 12, priceFactor: 1.00, start: '2025-03-01' },
+    { id: 'k2', no: '301/2024/3/9', companyId: 'co1', title: 'أعمال مدنية وصيانة الشرقية', currency: 'EGP', vatPct: 14, taxPct: 1, payMonthlyPct: 90, asbuiltPct: 0, handoverPct: 10, finalGuaranteePct: 5, delayFinePctWeek: 2, delayFineCapPct: 10, warrantyMonths: 12, priceFactor: 0.95, start: '2024-09-15' },
+    { id: 'k3', no: '232/2025/1/36', companyId: 'co2', title: 'تنفيذ FTTH وكابينات الدلتا', currency: 'EGP', vatPct: 14, taxPct: 1, payMonthlyPct: 70, asbuiltPct: 20, handoverPct: 10, finalGuaranteePct: 5, delayFinePctWeek: 0, delayFineCapPct: 0, warrantyMonths: 12, priceFactor: 1.05, start: '2025-05-10' },
+    { id: 'k4', no: '118/2024/2/12', companyId: 'co2', title: 'حلقات ألياف رئيسية دمياط', currency: 'EGP', vatPct: 14, taxPct: 1, payMonthlyPct: 70, asbuiltPct: 20, handoverPct: 10, finalGuaranteePct: 5, delayFinePctWeek: 0, delayFineCapPct: 0, warrantyMonths: 12, priceFactor: 1.10, start: '2024-06-01' },
+    { id: 'k5', no: '45/2025/1/2', companyId: 'co3', title: 'تنفيذ FTTH جنوب القاهرة', currency: 'EGP', vatPct: 14, taxPct: 1, payMonthlyPct: 90, asbuiltPct: 0, handoverPct: 10, finalGuaranteePct: 5, delayFinePctWeek: 2, delayFineCapPct: 10, warrantyMonths: 12, priceFactor: 1.08, start: '2025-02-01' },
+    { id: 'k6', no: '190/2024/1/14', companyId: 'co3', title: 'كابينات MSAN المعادي', currency: 'EGP', vatPct: 14, taxPct: 1, payMonthlyPct: 70, asbuiltPct: 20, handoverPct: 10, finalGuaranteePct: 5, delayFinePctWeek: 0, delayFineCapPct: 0, warrantyMonths: 12, priceFactor: 1.00, start: '2024-11-20' },
   ],
 
   /* مقايسة موحدة متدرجة (نفس شكل مقايسة FTTx الحقيقية: 1 ← 1-1 ← 1-1-1-1)
@@ -192,12 +192,13 @@ const DB = {
   slaWarnAt: 1, // يتلوّن أصفر لما يفضل يوم واحد أو أقل
 
   /* ── الاستقطاعات (قيم افتراضية — المالية بتعدّلها) ── */
+  /* ── جدول الدفع والاستقطاعات (زي العقود الحقيقية: 70% شهري / 20% بعد As-Built / 10% بعد التسليم الابتدائي — أو 90/10) ──
+     المحجوز (releasable) بيتصرف لما المرحلة تتحقق. الدمغات بتتدفع مرة واحدة على أمر التكليف مش على المستخلص. */
   deductionTypes: [
-    { id: 'retention', name: 'تأمين ضمان أعمال', basis: 'retentionPct', releasable: true },
-    { id: 'tax',       name: 'خصم ضريبي من المنبع', basis: 'taxPct' },
-    { id: 'stamp',     name: 'دمغة', basis: 'stampPct' },
-    { id: 'advance',   name: 'استرداد الدفعة المقدمة', basis: 'advancePct' },
-    { id: 'penalty',   name: 'غرامة تأخير', basis: null },
+    { id: 'asbuilt',  name: 'محجوز لحد تسليم خرائط As-Built', basis: 'asbuiltPct', releasable: true },
+    { id: 'handover', name: 'محجوز لحد التسليم الابتدائي', basis: 'handoverPct', releasable: true },
+    { id: 'tax',      name: 'خصم ضريبي من المنبع', basis: 'taxPct' },
+    { id: 'penalty',  name: 'غرامة تأخير', basis: null },
   ],
 
   /* ── الأدوار ونطاقها ── */

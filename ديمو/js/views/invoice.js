@@ -295,6 +295,7 @@ function inv_callouts(inv) {
       ${e && e.note ? `<div class="sm" style="white-space:pre-line;margin-top:6px">${esc(e.note)}</div>` : ''}
       <div class="sm" style="margin-top:4px">لما يتصلّح هيرجع على ${esc(stepShort(inv.returnedFrom))} مباشرة مش من الأول.</div></div></div>`;
   }
+  if (inv.status !== 'paid' && inv.status !== 'draft') invAlerts(inv).forEach(a => { h += `<div class="alert ${a.cls === 'r' ? 'r' : ''} mt">${icon(a.cls === 'r' ? 'alert-octagon' : 'alert-triangle')}<div>${esc(a.t)}</div></div>`; });
   if (inv.status === 'on_hold') h += `<div class="alert mt">${icon('pause-circle')}<div><b>المستخلص معلّق</b> — ${esc(inv.holdReason || 'بانتظار أمر التكليف')}<div class="sm">عداد الـ SLA واقف لحد ما التعليق يترفع.</div></div></div>`;
   if (inv.status === 'paid' && inv.payment) h += `<div class="alert g mt">${icon('banknote')}<div><b>تم الصرف</b> — ${esc(inv.payment.method)} رقم ${N(esc(inv.payment.ref))} يوم ${N(fmtD(inv.payment.date))} · صافي <span class="money">${money(inv.payment.amount)}</span> جنيه</div></div>`;
   return h;

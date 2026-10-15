@@ -464,7 +464,10 @@ adm_uploader({
 });
 
 /* 05 العقد والمقايسة */
-const ADM_K_FIELDS = [['contract_no', 'رقم العقد / الإحالة'], ['company_code', 'كود الشركة'], ['title', 'موضوع العقد'], ['award_date', 'تاريخ برقية القبول', 'd'], ['start_date', 'تاريخ البدء', 'd'], ['end_date', 'تاريخ الانتهاء', 'd'], ['currency', 'العملة'], ['vat_pct', 'ضريبة القيمة المضافة %'], ['retention_pct', 'تأمين ضمان الأعمال %'], ['tax_pct', 'خصم ضريبي %'], ['stamp_pct', 'دمغة %'], ['advance_pct', 'الدفعة المقدمة %'], ['contract_value', 'قيمة العقد']];
+const ADM_K_FIELDS = [['contract_no', 'رقم العقد / الإحالة'], ['company_code', 'كود الشركة'], ['title', 'موضوع العقد'], ['award_date', 'تاريخ برقية القبول', 'd'], ['start_date', 'تاريخ البدء', 'd'], ['end_date', 'تاريخ الانتهاء', 'd'], ['currency', 'العملة'], ['vat_pct', 'ضريبة القيمة المضافة %'], ...[['pay_monthly_pct', 'نسبة الصرف مع المستخلص الشهري %'], ['pay_asbuilt_pct', 'محجوز لحد As-Built %'], ['pay_handover_pct', 'محجوز لحد التسليم الابتدائي %'], ['final_guarantee_pct', 'خطاب الضمان النهائي %'], ['delay_fine_pct_week', 'غرامة التأخير % أسبوعياً'], ['delay_fine_cap_pct', 'الحد الأقصى للغرامة %'], ['warranty_months', 'مدة الضمان (شهور)'], ['tax_pct', 'خصم ضريبي %']], ['contract_value', 'قيمة العقد']];
+/* شروط العقد (من برقية القبول) — مفتاح القالب ← الحقل في DB */
+const ADM_K_TERMS = [['pay_monthly_pct', 'payMonthlyPct'], ['pay_asbuilt_pct', 'asbuiltPct'], ['pay_handover_pct', 'handoverPct'], ['final_guarantee_pct', 'finalGuaranteePct'], ['delay_fine_pct_week', 'delayFinePctWeek'], ['delay_fine_cap_pct', 'delayFineCapPct'], ['tax_pct', 'taxPct']];
+const adm_termsOf = k => Object.fromEntries([...ADM_K_TERMS, ['warranty_months', 'warrantyMonths']].map(([key, f]) => [key, k[f] ?? '']));
 const ADM_WORK_TYPES = ['أعمال مدنية', 'تركيبات', 'كهربية', 'توريد', 'توريد وتركيب', 'تخطيط ورسومات', 'خدمات', 'صيانة', 'صواعد داخل المباني', 'رفع كفاءة'];
 const adm_contractByNo = v => { v = adm_code(v); return DB.contracts.find(k => k.no === v || k.id === v); };
 adm_uploader({
@@ -478,7 +481,9 @@ adm_uploader({
       if (!adm_code(o.title)) R.err('موضوع العقد إلزامي');
       if (!['EGP', 'USD', 'EUR'].includes(cur)) R.err('العملة لازم EGP أو USD أو EUR');
       const h = { no, companyId: co && co.id, title: adm_code(o.title), currency: cur };
-      [['vat_pct', 'vatPct', 1], ['retention_pct', 'retentionPct'], ['tax_pct', 'taxPct'], ['stamp_pct', 'stampPct'], ['advance_pct', 'advancePct']].forEach(([k, f, req]) => { const n = adm_num(o[k]); if (n == null) { if (req) R.err('ضريبة القيمة المضافة إلزامية'); h[f] = 0; } else if (isNaN(n) || n < 0 || n > 100) R.err(`${k} لازم نسبة من 0 لـ 100`); else h[f] = n; });
+      const wm = adm_num(o.warranty_months); h.warrantyMonths = wm == null || isNaN(wm) ? 12 : wm;
+      [['vat_pct', 'vatPct', 1], ...ADM_K_TERMS].forEach(([k, f, req]) => { const n = adm_num(o[k]); if (n == null) { if (req) R.err('ضريبة القيمة المضافة إلزامية'); h[f] = 0; } else if (isNaN(n) || n < 0 || n > 100) R.err(`${k} لازم نسبة من 0 لـ 100`); else h[f] = n; });
+      if ((h.payMonthlyPct || 0) + (h.asbuiltPct || 0) + (h.handoverPct || 0) !== 100 && h.payMonthlyPct) R.err('نسب الصرف (الشهري + As-Built + التسليم) لازم مجموعها 100%');
       [['award_date', 'awardDate'], ['start_date', 'start'], ['end_date', 'end']].forEach(([k, f]) => { const d = adm_date(o[k]); if (d === false) R.err(`التاريخ ${k} مش مفهوم`); else h[f] = d || ''; });
       const val = adm_num(o.contract_value); if (val != null && (isNaN(val) || val < 0)) R.err('قيمة العقد لازم رقم'); h.value = val;
       const ex = no ? DB.contracts.find(k => k.no === no) : null;
@@ -512,7 +517,7 @@ adm_uploader({
   onCommit(v, env) {
     const h = env.h; let k = DB.contracts.find(x => x.no === h.no);
     if (!k) { k = { id: env.cid, no: h.no, priceFactor: 1 }; DB.contracts.push(k); }
-    Object.assign(k, { companyId: h.companyId, title: h.title, currency: h.currency, vatPct: h.vatPct, retentionPct: h.retentionPct, taxPct: h.taxPct, stampPct: h.stampPct, advancePct: h.advancePct, start: h.start || k.start || '', end: h.end || k.end || '', awardDate: h.awardDate || k.awardDate || '' });
+    Object.assign(k, { companyId: h.companyId, title: h.title, currency: h.currency, vatPct: h.vatPct, ...Object.fromEntries([...ADM_K_TERMS.map(t => t[1]), 'warrantyMonths'].map(f => [f, h[f]])), start: h.start || k.start || '', end: h.end || k.end || '', awardDate: h.awardDate || k.awardDate || '' });
     if (h.value != null) k.value = h.value;
     let n = 0;
     v['المقايسة'].forEach(({ row: r, res }) => {
@@ -530,12 +535,12 @@ adm_uploader({
     if (k) { // تحديث مقايسة عقد موجود: تعديل سعر + بند جديد
       const it = DB.contractItems.find(i => i.contractId === k.id && !i.isGroup && i.unitPrice != null);
       return {
-        'بيانات العقد': [{ __row: 2, contract_no: k.no, company_code: k.companyId, title: k.title, currency: k.currency, vat_pct: k.vatPct, retention_pct: k.retentionPct, tax_pct: k.taxPct, stamp_pct: k.stampPct, advance_pct: k.advancePct }],
+        'بيانات العقد': [{ __row: 2, contract_no: k.no, company_code: k.companyId, title: k.title, currency: k.currency, vat_pct: k.vatPct, ...adm_termsOf(k) }],
         'المقايسة': adm_rows([{ item_code: it.itemNo, description: it.description, unit: it.unit, contract_qty: 200, unit_price: Math.round(it.unitPrice * 1.05), work_type: it.workType }, { item_code: '2.9.1', description: 'تركيب مانع تسرب للمواسير (بند إضافي)', unit: 'عدد', contract_qty: 500, unit_price: 85, work_type: 'تركيبات' }, { item_code: '2-9-2', description: 'بند من غير سعر لسه', unit: 'م.ط', contract_qty: '', unit_price: '', work_type: 'تركيبات' }]),
       };
     }
     return {
-      'بيانات العقد': [{ __row: 2, contract_no: '88/2026/1/7', company_code: 'co3', title: 'تنفيذ شبكات FTTH المعادي الجديدة', award_date: '15/09/2026', start_date: '01/10/2026', end_date: '30/09/2027', currency: 'EGP', vat_pct: 14, retention_pct: 5, tax_pct: 1, stamp_pct: 0.5, advance_pct: 10, contract_value: '' }],
+      'بيانات العقد': [{ __row: 2, contract_no: '88/2026/1/7', company_code: 'co3', title: 'تنفيذ شبكات FTTH المعادي الجديدة', award_date: '15/09/2026', start_date: '01/10/2026', end_date: '30/09/2027', currency: 'EGP', vat_pct: 14, pay_monthly_pct: 90, pay_asbuilt_pct: 0, pay_handover_pct: 10, final_guarantee_pct: 5, delay_fine_pct_week: 2, delay_fine_cap_pct: 10, warranty_months: 12, tax_pct: 1, contract_value: '' }],
       'المقايسة': adm_rows([
         { item_code: '1', description: 'الأعمال المدنية', unit: '', contract_qty: '', unit_price: '', work_type: '' },
         { item_code: '1.1', description: 'غرف التفتيش', unit: '', contract_qty: '', unit_price: '', work_type: '' },
@@ -863,7 +868,7 @@ function adm_contractDetail(k) {
   const val = sum(aos, a => aoValue(a.id)), b = sum(aos, a => (billed[a.id] || {}).gross);
   const crumbs = `<div class="crumbs"><a onclick="adm_openContract(null)">العقود وأوامر التكليف</a>${icon('chevron-left')}<span>${esc(k.no)}</span></div>`;
   const head = crumbs + pageHeader({ title: `عقد <span class="num">${esc(k.no)}</span>`, sub: `${esc(co.fullName || co.name || '—')} — ${esc(k.title || '')}`, actions: `<button class="btn" onclick="adm_openContract(null)">${icon('arrow-right')} رجوع</button>` + (imp ? adm_upBtn('contract05', 'تحديث المقايسة', { contractId: k.id }) + adm_upBtn('ao06', 'رفع أمر تكليف', { contractId: k.id }, 'pr') : '') });
-  const kv = `<div class="card mb"><div class="cb"><div class="kv">${[['الشركة', esc(co.name || '—')], ['العملة', esc(k.currency || '—')], ['ضريبة القيمة المضافة', N(qty(k.vatPct) + '%')], ['تأمين ضمان الأعمال', N(qty(k.retentionPct || 0) + '%')], ['خصم ضريبي', N(qty(k.taxPct || 0) + '%')], ['دمغة', N(qty(k.stampPct || 0) + '%')], ['الدفعة المقدمة', N(qty(k.advancePct || 0) + '%')], ['تاريخ البدء', N(fmtD(k.start))], ['قيمة أوامر التكليف', `<span class="money">${money(val)}</span>`], ['المفوتر', `<span class="money">${money(b)}</span> <span class="sm mut num">(${pct(b, val).toFixed(0)}%)</span>`]].map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div></div></div>`;
+  const kv = `<div class="card mb"><div class="cb"><div class="kv">${[['الشركة', esc(co.name || '—')], ['العملة', esc(k.currency || '—')], ['ضريبة القيمة المضافة', N(qty(k.vatPct) + '%')], ['جدول الصرف', N(`${qty(k.payMonthlyPct || 100)}% شهري` + (k.asbuiltPct ? ` / ${qty(k.asbuiltPct)}% As-Built` : '') + (k.handoverPct ? ` / ${qty(k.handoverPct)}% تسليم` : ''))], ['خطاب الضمان النهائي', N(qty(k.finalGuaranteePct || 0) + '%')], ['غرامة التأخير', k.delayFinePctWeek ? N(`${qty(k.delayFinePctWeek)}% أسبوعياً (حد ${qty(k.delayFineCapPct)}%)`) : 'مش محددة'], ['الضمان الفني', N((k.warrantyMonths || 0) + ' شهر')], ['تاريخ البدء', N(fmtD(k.start))], ['قيمة أوامر التكليف', `<span class="money">${money(val)}</span>`], ['المفوتر', `<span class="money">${money(b)}</span> <span class="sm mut num">(${pct(b, val).toFixed(0)}%)</span>`]].map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div></div></div>`;
   const tabs = adm_tabs(st.ctab, [['boq', 'المقايسة', leaf.length, 'list-tree'], ['aos', 'أوامر التكليف', aos.length, 'clipboard-list']], "adm_set.bind(null,'ctab')");
   let body;
   if (st.ctab === 'aos') {

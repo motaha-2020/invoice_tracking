@@ -125,6 +125,19 @@ for it in items:
 desc_of = {(it["contract_no"], it["item_code"]): it["description"] for it in items}
 
 MISSING = "ناقص: "
+
+# شروط العقود — اتقرت من برقيات القبول وملاحقها وأوامر التكليف الممسوحة (data-import/contract_terms.csv)
+CONTRACT_TERMS = {
+    "232/2025/1/36": dict(award_date="2025-05-22", pay_monthly_pct=70, pay_asbuilt_pct=20, pay_handover_pct=10, planning_pay_pct=100,
+                          final_guarantee_pct=5, warranty_months=12, out_of_scope_uplift="5% / 10% / 15% سيناء — حتى 100% بعد ملحق البرقية 2025-07-28",
+                          stamp_engineering_pct=0.3, stamp_applied_arts_pct=0.3, stamp_construction_pct=0.05, retention_pct=0, advance_pct=0,
+                          contract_value=422587120),
+    "231/2026/1/12": dict(pay_monthly_pct=90, pay_asbuilt_pct=0, pay_handover_pct=10, planning_pay_pct=100,
+                          final_guarantee_pct=5, delay_fine_pct_week=2, delay_fine_cap_pct=10, warranty_months=12,
+                          out_of_scope_uplift="5% / 10% / 15% سيناء — حتى 25% من قيمة العقد",
+                          stamp_engineering_pct=0.3, stamp_applied_arts_pct=0.3, stamp_construction_pct=0.05, retention_pct=0, advance_pct=0,
+                          contract_value=599228333.33),
+}
 print("ملء القوالب في", OUT)
 
 # ═════════════ 03 الشركات ═════════════
@@ -140,13 +153,10 @@ for k in contracts:
     wb = open_template("05_العقد_والمقايسة")
     fill_kv(wb["بيانات العقد"],
             dict(contract_no=no, company_code=COMPANY_CODE.get(k["company_id"], k["company_id"]), title=k["title"],
-                 currency=k["currency"], vat_pct=num(k["vat_pct"])),
-            notes={"award_date": MISSING + "تاريخ برقية القبول مش موجود في ملفات الإكسل (موجود في PDF البرقية)",
-                   "start_date": MISSING + "من برقية القبول / محضر التسليم",
-                   "retention_pct": MISSING + "نسبة تأمين ضمان الأعمال — من شروط العقد",
+                 currency=k["currency"], vat_pct=num(k["vat_pct"]), **CONTRACT_TERMS.get(no, {})),
+            notes={"start_date": MISSING + "من محضر التسليم",
                    "tax_pct": MISSING + "نسبة الخصم من المنبع — من المالية",
-                   "stamp_pct": MISSING + "نسبة الدمغة — من المالية",
-                   "advance_pct": MISSING + "الدفعة المقدمة (لو فيه) — من شروط العقد"})
+                   "pay_monthly_pct": "من برقية القبول / أوامر التكليف (اتقرت من الـ PDF الممسوح)"})
     ws = wb["المقايسة"]
     clear_examples(ws)
     # نضيف قيم نوع العمل الناقصة في قائمة الاختيار (النسخة المملوءة بس)
@@ -166,29 +176,50 @@ for k in contracts:
     save(wb, f"05_العقد_والمقايسة__{no.replace('/', '-')}.xlsx")
     print(f"     {n} صف ({sum(flags)} عنوان، {n - sum(flags)} بند)")
 
-# ═════════════ 06 أوامر التكليف (ملف لكل أمر تكليف بكميات) ═════════════
-ao_meta = {(a["contract_no"], a["ao_no"]): a for a in aos}
+# ═════════════ 06 أوامر التكليف (ملف لكل أمر تكليف من الخطابات الممسوحة + كميات قوائم الأعمال) ═════════════
+ao_master = read_csv("ao_master.csv") if os.path.exists(os.path.join(SRC, "ao_master.csv")) else []
+final_lines = defaultdict(list)
+if os.path.exists(os.path.join(SRC, "ao_items_final.csv")):
+    for l in read_csv("ao_items_final.csv"):
+        if "سابقة" not in l["version"]:
+            final_lines[(l["contract_no"], l["ao_no"])].append(l)
 lines_by_ao = defaultdict(list)
-for a in ao_items:
-    lines_by_ao[(a["contract_no"], a["ao_no"])].append(a)
-for (contract_no, ao_key), lines in lines_by_ao.items():
-    meta = ao_meta.get((contract_no, ao_key), {})
-    base_no, _, rev = ao_key.partition("-R")
+for x in ao_items:
+    lines_by_ao[(x["contract_no"], x["ao_no"])].append(x)
+for a in lines_by_ao:  # أوامر التكليف اللي كمياتها من ملفات الإكسل (PO25/PO26/PO25-R1)
+    base_no = a[1].partition("-R")[0]
+    if not final_lines.get((a[0], base_no)):
+        final_lines[(a[0], base_no)] = [dict(item_code=l["item_code"], site_code=l["site_code"], planned_qty=l["planned_qty"], version="excel", source_file="xlsx") for l in lines_by_ao[a]]
+count_q = 0
+for m in ao_master:
+    contract_no, ao_no = m["contract_no"], m["ao_no"]
+    lines = final_lines.get((contract_no, ao_no), [])
     wb = open_template("06_أمر_التكليف")
+    notes = {"project_code": "لازم الأدمن يربطه بكود المشروع من قالب 02"}
+    if not m["ao_date"] or len(m["ao_date"]) < 10:
+        notes["ao_date"] = "التاريخ في الخطاب ناقص اليوم — راجع"
+    if m["confidence"] != "high":
+        notes["ao_value"] = "اتقرت من صورة ممسوحة بثقة " + m["confidence"] + " — راجع"
+    if lines and lines[0]["version"] == "folder":
+        notes["name"] = "الكميات مربوطة من اسم الفولدر وإجماليها مختلف عن القيمة — راجع (" + lines[0]["source_file"] + ")"
+    if not lines:
+        notes["name"] = "مفيش ملف كميات رقمي لأمر التكليف ده — الكميات ناقصة"
     fill_kv(wb["بيانات أمر التكليف"],
-            dict(contract_no=contract_no, ao_no=base_no, revision=int(rev) if rev else 0,
-                 project_code="PJ-?", name=meta.get("name", "")),
-            notes={"project_code": "لازم الأدمن يربطه: PJ-? مكان مؤقت — اختار كود المشروع من قالب 02 المشروعات "
-                                   "(ملفات الإكسل مفيهاش ربط أمر التكليف بالمشروع/السنترال)",
-                   "ao_date": MISSING + "تاريخ أمر التكليف موجود في PDF أمر التكليف بس",
-                   "ao_value": "فاضي = السيستم يحسبها من الكميات × أسعار العقد"})
+            dict(contract_no=contract_no, ao_no=ao_no, revision=1 if m["increases"] else 0, ao_date=m["ao_date"],
+                 project_code="PJ-?", name=(m["project_name"] or m["subject"])[:120], ao_value=num(m["current_value"]),
+                 increase_value=num(m["increases"]), financial_commitment=num(m["financial_commitment"]),
+                 planning_annex_value=num(m["planning_annex_value"]), area=m["area"], central=m["central"],
+                 out_of_scope="نعم" if "خارج نطاق" in (m["subject"] + m["project_name"]) else "",
+                 duration=m["duration"], final_guarantee_pct=num(m["final_guarantee_pct"]) or 5, stamps_total=num(m["stamps_total"])),
+            notes=notes)
     ws = wb["بنود أمر التكليف"]
     clear_examples(ws)
-    n = write_rows(ws, [dict(item_code=l["item_code"], description=desc_of.get((contract_no, l["item_code"]), "(مش موجود في المقايسة)"),
-                             site_code=l["site_code"], planned_qty=num(l["planned_qty"])) for l in lines])
-    clear_examples(wb["مهمات أمر التكليف"])  # مفيش مهمات مخططة في الملفات الحالية
-    save(wb, f"06_أمر_التكليف__{ao_key}.xlsx")
-    print(f"     {n} سطر كمية، {len({l['site_code'] for l in lines if l['site_code']})} موقع")
+    write_rows(ws, [dict(item_code=l["item_code"], description=desc_of.get((contract_no, l["item_code"]), "(مش موجود في المقايسة)"),
+                         site_code=l.get("site_code", ""), planned_qty=num(l["planned_qty"])) for l in lines])
+    clear_examples(wb["مهمات أمر التكليف"])
+    save(wb, f"06_أمر_التكليف__{contract_no[:3]}-{ao_no}.xlsx")
+    count_q += bool(lines)
+print(f"     {len(ao_master)} أمر تكليف، منهم {count_q} بكميات")
 
 # ═════════════ 07 كتالوج المهمات (الأصناف بس) ═════════════
 wb = open_template("07_كتالوج_المهمات")

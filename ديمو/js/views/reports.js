@@ -523,17 +523,17 @@ function rep_export() {
    ============================================================ */
 const REP_DED_ROLES = ['company', 'finance', 'pmo', 'admin', 'stores'];
 const rep_addMonths = (d, n) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setMonth(x.getMonth() + n); return x; };
-/** مواعيد الإفراج عن تأمين ضمان الأعمال لكل أمر تكليف
-   افتراض الديمو: الإفراج بعد 12 شهر من صرف آخر مستخلص على أمر التكليف */
+/** مواعيد صرف المحجوز (20% As-Built + 10% التسليم الابتدائي حسب العقد) لكل أمر تكليف
+   افتراض الديمو: الميعاد المتوقع = 3 شهور بعد صرف آخر مستخلص (لحد ما الشركة تسلّم As-Built ومحضر التسليم) */
 function rep_retention(rows) {
   const u = rep_ui();
   return Object.values(groupBy(rows, r => r.c.ao.id)).map(rs => {
     const pd = rs.filter(r => r.inv.status === 'paid' && r.inv.payment);
-    const ret = r => (r.t.deductions.find(d => d.typeId === 'retention') || {}).amount || 0;
+    const ret = r => sum(r.t.deductions.filter(d => d.releasable), d => d.amount || 0);
     const held = sum(pd, ret);
     if (!pd.length || !held) return null;
     const last = new Date(Math.max(...pd.map(r => new Date(r.inv.payment.date).getTime())));
-    const rel = rep_addMonths(last, 12), days = rep_dayDiff(TODAY, rel), c = rs[0].c;
+    const rel = rep_addMonths(last, 3), days = rep_dayDiff(TODAY, rel), c = rs[0].c;
     const released = u.released[c.ao.id] || null;
     const st = released ? { k: 'done', l: 'تم الإفراج', cls: 'g' } : days <= 30 ? { k: 'req', l: 'مطلوب الإفراج', cls: 'a' } : { k: 'held', l: 'محجوز', cls: 'n' };
     return { c, held, pending: sum(rs.filter(r => r.inflight), ret), live: rs.filter(r => r.inflight).length, paidN: pd.length, last, rel, days, released, st };
@@ -560,15 +560,15 @@ function rep_dedAgg(rows) {
 function rep_release(aoId) {
   if (!can('deductions.edit')) { toast('تسجيل الإفراج للمالية بس', 'err'); return; }
   const ao = byId('aos', aoId);
-  confirmBox('تسجيل الإفراج عن الضمان', `هيتسجّل إن تأمين ضمان أعمال أمر التكليف <b class="num">${esc(ao.no)}</b> اتفرج عنه النهارده. متأكد؟`, 'تم الإفراج', () => { rep_ui().released[aoId] = iso(TODAY); render(); toast('اتسجّل الإفراج عن ضمان ' + ao.no, 'ok'); }, 'ok');
+  confirmBox('تسجيل صرف المحجوز', `هيتسجّل إن المحجوز (As-Built / التسليم الابتدائي) لأمر التكليف <b class="num">${esc(ao.no)}</b> اتفرج عنه النهارده. متأكد؟`, 'تم الإفراج', () => { rep_ui().released[aoId] = iso(TODAY); render(); toast('اتسجّل صرف المحجوز لأمر التكليف ' + ao.no, 'ok'); }, 'ok');
 }
 function rep_unrelease(aoId) { delete rep_ui().released[aoId]; render(); }
 function rep_dedExport() {
   const rows = rep_dedRows(), D = rep_dedAgg(rows), R = rep_retention(rows);
   Excel.download(`الاستقطاعات_والضمانات_${iso(TODAY)}.xlsx`, {
     'الاستقطاعات': [['العقد', 'الشركة', 'نوع الاستقطاع', 'قابل للإفراج', 'من المصروف', 'متوقع من الجاري', 'الإجمالي', 'عدد المستخلصات'], ...D.map(x => [x.contract.no, x.company.name, x.name, x.releasable ? 'نعم' : 'لا', rep_r2(x.paid), rep_r2(x.live), rep_r2(x.paid + x.live), x.n])],
-    'مواعيد الإفراج': [['العقد', 'الشركة', 'أمر التكليف', 'المشروع', 'الضمان المحجوز', 'متوقع من الجاري', 'آخر صرف', 'ميعاد الإفراج', 'أيام متبقية', 'الحالة', 'تاريخ الإفراج'], ...R.map(x => [x.c.contract.no, x.c.company.name, x.c.ao.no, x.c.project.name, rep_r2(x.held), rep_r2(x.pending), iso(x.last), iso(x.rel), x.days, x.st.l, x.released || ''])],
-    'ملاحظة': [['الافتراض'], ['ميعاد الإفراج عن تأمين ضمان الأعمال = 12 شهر بعد صرف آخر مستخلص على أمر التكليف (افتراض الديمو — بيتعدّل حسب شروط العقد)']],
+    'مواعيد الإفراج': [['العقد', 'الشركة', 'أمر التكليف', 'المشروع', 'المحجوز', 'متوقع من الجاري', 'آخر صرف', 'ميعاد الإفراج', 'أيام متبقية', 'الحالة', 'تاريخ الإفراج'], ...R.map(x => [x.c.contract.no, x.c.company.name, x.c.ao.no, x.c.project.name, rep_r2(x.held), rep_r2(x.pending), iso(x.last), iso(x.rel), x.days, x.st.l, x.released || ''])],
+    'ملاحظة': [['الافتراض'], ['المحجوز = 20% لحد تسليم As-Built + 10% لحد التسليم الابتدائي (عقد 232) أو 10% لحد التسليم (عقد 231). الميعاد المتوقع في الديمو = 3 شهور بعد آخر صرف — في المنظومة الحقيقية بيتصرف لما المستند يترفع']],
   });
 }
 
@@ -607,8 +607,8 @@ View.register('deductions', {
       ${D.map((x, i) => `<tr>${i === 0 || D[i - 1].contract.id !== x.contract.id ? `<td rowspan="${D.filter(y => y.contract.id === x.contract.id).length}" style="vertical-align:top"><b class="num">${esc(x.contract.no)}</b><div class="sm mut">${esc(x.company.name)} · ${esc(x.contract.title)}</div></td>` : ''}<td>${esc(x.name)} ${x.releasable ? '<span class="bd b">بيتفرج عنه</span>' : ''}</td><td class="n"><span class="money">${money(x.paid)}</span></td><td class="n"><span class="money">${money(x.live)}</span></td><td class="n"><span class="money">${money(x.paid + x.live)}</span></td><td class="n">${N(x.n)}</td></tr>`).join('')}
       </tbody><tfoot><tr><td colspan="2">الإجمالي</td><td class="n"><span class="money">${money(sum(D, x => x.paid))}</span></td><td class="n"><span class="money">${money(sum(D, x => x.live))}</span></td><td class="n"><span class="money">${money(sum(D, x => x.paid + x.live))}</span></td><td></td></tr></tfoot></table></div></div>`;
 
-    const relCard = `<div class="card"><div class="ch"><h3>تأمين ضمان الأعمال — ميعاد الإفراج</h3><span class="sub">${R.length} أمر تكليف عليه ضمان محجوز</span></div>
-      <div class="cb" style="padding-bottom:0"><div class="alert i">${icon('info')}<div><b>افتراض الديمو:</b> الإفراج بعد 12 شهر من صرف آخر مستخلص على أمر التكليف. لو لسه فيه مستخلصات شغالة على نفس الأمر، الميعاد هيتأجل مع صرفها. "مطلوب الإفراج" = الميعاد جاي خلال 30 يوم أو فات.</div></div></div>
+    const relCard = `<div class="card"><div class="ch"><h3>المحجوز من المستخلصات — As-Built والتسليم الابتدائي</h3><span class="sub">${R.length} أمر تكليف عليه مبالغ محجوزة</span></div>
+      <div class="cb" style="padding-bottom:0"><div class="alert i">${icon('info')}<div><b>حسب العقد:</b> بيتحجز 20% لحد تسليم خرائط As-Built و10% لحد التسليم الابتدائي (أو 10% بس في عقود 90/10)، والدمغات بتتدفع مرة واحدة مع أمر التكليف. <b>افتراض الديمو:</b> الميعاد المتوقع 3 شهور بعد آخر صرف. لو لسه فيه مستخلصات شغالة على نفس الأمر، الميعاد هيتأجل مع صرفها. "مطلوب الإفراج" = الميعاد جاي خلال 30 يوم أو فات.</div></div></div>
       ${R.length ? `<div class="tw"><table><thead><tr><th>أمر التكليف</th><th>العقد</th><th class="n">الضمان المحجوز</th><th class="n">آخر صرف</th><th class="n">ميعاد الإفراج</th><th>الحالة</th>${canEd ? '<th></th>' : ''}</tr></thead><tbody>
       ${R.map(x => `<tr class="${x.st.k === 'req' ? 'warn' : ''}"><td><b class="num">${esc(x.c.ao.no)}</b><div class="sm mut">${esc(x.c.project.name)}</div></td><td><span class="num">${esc(x.c.contract.no)}</span><div class="sm mut">${esc(x.c.company.name)}</div></td>
         <td class="n"><span class="money">${money(x.held)}</span><div class="sm mut">${x.paidN} مستخلص مصروف${x.live ? ` · ${x.live} شغال` : ''}</div></td><td class="n"><span class="num">${fmtD(x.last)}</span></td>

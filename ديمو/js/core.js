@@ -131,11 +131,29 @@ function invTotals(inv) {
   const dedTotal = sum(deductions, d => d.amount);
   const net = gross + vat - dedTotal;
   const cumGross = sum(aoInvoices(inv.aoId).filter(x => x.seq < inv.seq && x.status !== 'draft'), p => sum(invLines(p), l => l.total || 0)) + gross;
-  return { gross, submitted, byWorkType, vatPct: contract.vatPct, vat, deductions, dedTotal, net, cumGross, aoValue: aoValue(inv.aoId), currency: contract.currency, words: numberToArabicWords(Math.round(net)) + ' جنيهاً مصرياً لا غير' };
+  const withheld = sum(deductions.filter(d => d.releasable), d => d.amount);
+  return { gross, submitted, byWorkType, vatPct: contract.vatPct, vat, deductions, dedTotal, withheld, payNowPct: inv.kind === 'تخطيط' ? 100 : (contract.payMonthlyPct || 100), net, cumGross, aoValue: aoValue(inv.aoId), currency: contract.currency, words: numberToArabicWords(Math.round(net)) + ' جنيهاً مصرياً لا غير' };
 }
 function defaultDeductions(inv) {
   const k = ctx(inv).contract;
-  return DB.deductionTypes.filter(t => t.basis && k[t.basis] > 0).map(t => ({ typeId: t.id, name: t.name, pct: k[t.basis], releasable: !!t.releasable }));
+  // مستخلص التخطيط بيتصرف 100% بعد الانتهاء — مفيش حجز As-Built/تسليم
+  const planning = inv.kind === 'تخطيط';
+  return DB.deductionTypes.filter(t => t.basis && k[t.basis] > 0 && !(planning && t.releasable)).map(t => ({ typeId: t.id, name: t.name, pct: k[t.basis], releasable: !!t.releasable }));
+}
+/** الالتزام المالي لأمر التكليف: المفوتر التراكمي مقابل الالتزام المعتمد (ممكن يبقى أقل من قيمة أمر التكليف) */
+function aoCommitment(aoId) {
+  const ao = byId('aos', aoId), value = aoValue(aoId);
+  const limit = ao.financialCommitment || value;
+  const billed = sum(DB.invoices.filter(i => i.aoId === aoId && i.status !== 'draft'), i => sum(invLines(i), l => l.total || 0));
+  return { value, limit, billed, pct: pct(billed, limit), exceeded: billed > limit, partial: !!ao.financialCommitment && ao.financialCommitment < value };
+}
+/** تنبيهات المستخلص اللي لازم تظهر للمراجعين */
+function invAlerts(inv) {
+  const out = [], c = aoCommitment(inv.aoId);
+  if (c.exceeded) out.push({ cls: 'r', t: `المفوتر على أمر التكليف (${money(c.billed)}) عدّى الالتزام المالي المعتمد (${money(c.limit)}) — محتاج تجديد التزام مالي قبل الصرف` });
+  else if (c.pct >= 90) out.push({ cls: 'a', t: `المفوتر وصل ${c.pct.toFixed(0)}% من الالتزام المالي لأمر التكليف` });
+  const miss = missingDocs(inv); if (miss.length) out.push({ cls: 'a', t: 'مستندات إلزامية ناقصة: ' + miss.map(d => d.name).join('، ') });
+  return out;
 }
 const missingDocs = inv => {
   const req = DB.requiredDocs[ctx(inv).type.id] || [];
