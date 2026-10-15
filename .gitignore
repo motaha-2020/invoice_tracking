@@ -1,0 +1,25 @@
+# ── بيانات حقيقية — ممنوع ترفع على GitHub (الـ repo عام) ──
+Example Data/
+data-import/
+# (بيشمل data-import/filled-templates/ و validation_report.md و _report.txt)
+
+# ── Python ──
+__pycache__/
+*.pyc
+
+# ── Node ──
+node_modules/
+
+# ── أسرار ──
+.env*
+
+# ── ملفات مؤقتة من Excel / النظام ──
+~$*
+.DS_Store
+Thumbs.db
+
+# ── عرض داخلي فيه أرقام عقود حقيقية ──
+*.pdf
+
+# ── إعدادات محلية ──
+.claude/
