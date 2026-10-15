@@ -1,0 +1,35 @@
+# منظومة تتبع المستخلصات — site block لـ Caddy اللي على الـ host
+# بيتعمله import من /etc/caddy/Caddyfile (شوف infra/caddy/README.md). ده snippet بس، مش Caddyfile كامل.
+invoices.projectflow.site {
+	encode zstd gzip
+
+	# المرفقات (PDF / صور / Excel) — نفس الحد اللي في التطبيق
+	request_body {
+		max_size 30MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		-Server
+		-X-Powered-By
+	}
+
+	reverse_proxy 127.0.0.1:3100 {
+		header_up X-Real-IP {remote_host}
+		# لو الـ container واقع، Caddy يرجّع 502 بسرعة بدل ما يعلّق
+		lb_try_duration 5s
+	}
+
+	log {
+		output file /var/log/caddy/invoices.access.log {
+			roll_size 20MiB
+			roll_keep 10
+			roll_keep_for 720h
+		}
+		format json
+	}
+}

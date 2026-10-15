@@ -1,0 +1,36 @@
+# ── بيانات حقيقية — ممنوع تدخل أي صورة ──
+Example Data
+data-import
+**/*.pdf
+
+# ── الديمو والقوالب والسكريبتات (مش جزء من التطبيق) ──
+ديمو
+templates
+scripts
+erd_*.html
+
+# ── Node / build ──
+**/node_modules
+**/.next
+**/out
+**/*.tsbuildinfo
+**/next-env.d.ts
+packages/db/src/generated
+packages/db/.pgdata
+
+# ── أسرار وإعدادات محلية ──
+**/.env
+**/.env.*
+.npmrc
+**/.npmrc
+.claude
+
+# ── git / CI / infra ──
+.git
+.github
+infra
+docs
+**/*.md
+**/~$*
+**/.DS_Store
+**/Thumbs.db

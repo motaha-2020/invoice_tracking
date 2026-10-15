@@ -1,7 +1,14 @@
 # منظومة تتبع المستخلصات — على سيرفر Hetzner جنب ProjectFlow و n8n
 # كل حاجة معزولة: شبكة خاصة، بورتات على 127.0.0.1 بس، وحدود ذاكرة.
 # التشغيل:  docker compose -p invoices --env-file /srv/invoices/.env -f infra/compose.yml up -d
+# الـ deploy (بيعمله deploy.yml — شوف infra/README.md):
+#   ... --profile deploy run --rm migrate   ← migrate deploy + البيانات المرجعية
+#   ... up -d web
 name: invoices
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
 
 services:
   postgres:
@@ -23,8 +30,55 @@ services:
       timeout: 5s
       retries: 10
 
+  # one-shot: بيشتغل بس بـ --profile deploy (مش مع up -d العادي)
+  migrate:
+    image: ${MIGRATE_IMAGE:-ghcr.io/motaha-2020/invoice_tracking-migrate:latest}
+    profiles: [deploy]
+    restart: "no"
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      # الباسورد لازم يبقى URL-safe (hex مثلاً) لأنه جوه الـ URL
+      DATABASE_URL: postgresql://${POSTGRES_USER:-invoices}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-invoices}
+    networks: [invoices]
+    mem_limit: 512m
+    logging: *logging
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/motaha-2020/invoice_tracking-web:latest}
+    restart: unless-stopped
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-invoices}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-invoices}
+      APP_URL: ${APP_URL:-https://invoices.projectflow.site}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      UPLOAD_DIR: /data/uploads
+      NODE_OPTIONS: --max-old-space-size=512
+    volumes:
+      - uploads:/data/uploads
+    ports:
+      - "127.0.0.1:3100:3000"   # Caddy على الـ host بس هو اللي بيوصله
+    networks: [invoices]
+    mem_limit: 768m
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
 volumes:
   pgdata:
+  uploads:
 
 networks:
   invoices:

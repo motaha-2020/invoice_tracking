@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: invoices
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: invoices
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U invoices -d invoices"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql://invoices:ci@localhost:5432/invoices
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Prisma generate
+        run: npx -w @it/db prisma generate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (domain)
+        run: npm test
+
+      - name: Lint (web)
+        run: npm run lint -w @it/web
+
+      - name: Migrations apply on a clean Postgres 16
+        run: npx -w @it/db prisma migrate deploy
+
+      - name: Migrations match schema (no drift)
+        run: >-
+          npx -w @it/db prisma migrate diff
+          --from-config-datasource
+          --to-schema prisma/schema.prisma
+          --exit-code
+
+      - name: Seed reference (twice — must be idempotent)
+        run: |
+          npm exec -w @it/db -- tsx prisma/seed.ts --reference
+          npm exec -w @it/db -- tsx prisma/seed.ts --reference
+
+      - name: Seed admin + demo dataset (exercise the optional paths)
+        env:
+          ADMIN_EMAIL: ci-admin@example.test
+          ADMIN_NAME: CI Admin
+          SEED_DEMO: "1"
+          SEED_DEMO_PASSWORD: ci-only-demo-password
+        run: |
+          npm exec -w @it/db -- tsx prisma/seed.ts > /dev/null
+          npm exec -w @it/db -- tsx prisma/seed.ts > /dev/null
