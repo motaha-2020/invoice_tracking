@@ -1,26 +1,169 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================================
+   منظومة تتبع المستخلصات — design system (WE brand tokens)
+   منقول من ديمو/css/app.css. ممنوع ألوان hex جوه الصفحات والمكونات:
+   استخدم الـ utilities اللي جاية من الـ tokens دي (bg-card، text-tx2، border-bd1 ...).
+   ============================================================ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* المتغيرات الخام — بتتبدل في الوضع الداكن */
+:root {
+  --p950: #1e0b32; --p900: #2e1148; --p800: #3d1a63; --p700: #4a2278; --p600: #5c2d91;
+  --p500: #7343a8; --p400: #9670c1; --p300: #bfa3da; --p200: #dccceb; --p100: #ede5f4; --p50: #f6f2fa;
+  --ok7: #0e5c37; --ok6: #147d4b; --ok3: #7fc69f; --ok1: #e4f3ea;
+  --wa7: #8a4f08; --wa6: #b4690e; --wa3: #efc077; --wa1: #fdf2e1;
+  --cr7: #8f1b2a; --cr6: #c0263a; --cr3: #e7959f; --cr1: #fbe9eb;
+  --in7: #144f7c; --in6: #1b6aa5; --in3: #8fbedc; --in1: #e7f1f8;
+  --id6: #71717f; --id1: #f0f0f3;
+
+  --bg: #f5f5f7; --card: #ffffff; --sunken: #ececf0; --hover: #fafafb; --sel: var(--p50);
+  --tx: #22222a; --tx2: #55555f; --tx3: #71717f; --tx4: #9a9aa6;
+  --bd1: #ececf0; --bd2: #dedee4; --bd3: #c5c5ce;
+  --brand: var(--p600); --brand-h: var(--p700); --brand-tx: var(--p600);
+  --brand-soft: var(--p50); --brand-soft2: var(--p100);
+  --side: #ffffff; --hdr: var(--p600); --hdr2: var(--p900);
+
+  --sh-card: 0 1px 2px rgba(34, 34, 42, 0.05), 0 1px 3px rgba(34, 34, 42, 0.04);
+  --sh-raised: 0 2px 4px rgba(34, 34, 42, 0.06), 0 6px 14px rgba(34, 34, 42, 0.06);
+  --sh-overlay: 0 8px 16px rgba(34, 34, 42, 0.08), 0 20px 40px rgba(30, 11, 50, 0.18);
+  --sh-focus: 0 0 0 3px rgba(115, 67, 168, 0.32);
+  --scrim: rgba(30, 11, 50, 0.44);
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --bg: #141218; --card: #1d1a23; --sunken: #26222d; --hover: #231f2a; --sel: #2c2238;
+    --tx: #eceaf0; --tx2: #bdb8c6; --tx3: #9c97a6; --tx4: #7a7584;
+    --bd1: #2a2631; --bd2: #36313e; --bd3: #4a4453;
+    --brand: #8b5cc4; --brand-h: #9c70d1; --brand-tx: #c3a6e6; --brand-soft: #2c2238; --brand-soft2: #382a49;
+    --side: #18151d; --hdr: #2e1148; --hdr2: #1e0b32;
+    --ok7: #8fd9ae; --ok6: #3fae74; --ok1: #16301f; --wa7: #f2c985; --wa6: #d08a2a; --wa1: #33260f;
+    --cr7: #f2a5ae; --cr6: #e0485c; --cr1: #3a161c; --in7: #9dc8e8; --in6: #3f8acb; --in1: #14273a; --id1: #26222d;
+    --sh-card: 0 1px 2px rgba(0, 0, 0, 0.3); --sh-raised: 0 4px 14px rgba(0, 0, 0, 0.4); --sh-overlay: 0 20px 40px rgba(0, 0, 0, 0.55);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141218; --card: #1d1a23; --sunken: #26222d; --hover: #231f2a; --sel: #2c2238;
+  --tx: #eceaf0; --tx2: #bdb8c6; --tx3: #9c97a6; --tx4: #7a7584;
+  --bd1: #2a2631; --bd2: #36313e; --bd3: #4a4453;
+  --brand: #8b5cc4; --brand-h: #9c70d1; --brand-tx: #c3a6e6; --brand-soft: #2c2238; --brand-soft2: #382a49;
+  --side: #18151d; --hdr: #2e1148; --hdr2: #1e0b32;
+  --ok7: #8fd9ae; --ok6: #3fae74; --ok1: #16301f; --wa7: #f2c985; --wa6: #d08a2a; --wa1: #33260f;
+  --cr7: #f2a5ae; --cr6: #e0485c; --cr1: #3a161c; --in7: #9dc8e8; --in6: #3f8acb; --in1: #14273a; --id1: #26222d;
+  --sh-card: 0 1px 2px rgba(0, 0, 0, 0.3); --sh-raised: 0 4px 14px rgba(0, 0, 0, 0.4); --sh-overlay: 0 20px 40px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+/* الـ tokens اللي Tailwind بيولّد منها الـ utilities.
+   الألوان الافتراضية بتاعة Tailwind متشالة عن قصد (--color-*: initial). */
+@theme inline {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-p950: var(--p950); --color-p900: var(--p900); --color-p800: var(--p800); --color-p700: var(--p700);
+  --color-p600: var(--p600); --color-p500: var(--p500); --color-p400: var(--p400); --color-p300: var(--p300);
+  --color-p200: var(--p200); --color-p100: var(--p100); --color-p50: var(--p50);
+
+  --color-ok7: var(--ok7); --color-ok6: var(--ok6); --color-ok3: var(--ok3); --color-ok1: var(--ok1);
+  --color-wa7: var(--wa7); --color-wa6: var(--wa6); --color-wa3: var(--wa3); --color-wa1: var(--wa1);
+  --color-cr7: var(--cr7); --color-cr6: var(--cr6); --color-cr3: var(--cr3); --color-cr1: var(--cr1);
+  --color-in7: var(--in7); --color-in6: var(--in6); --color-in3: var(--in3); --color-in1: var(--in1);
+  --color-id6: var(--id6); --color-id1: var(--id1);
+
+  --color-bg: var(--bg); --color-card: var(--card); --color-sunken: var(--sunken);
+  --color-hover: var(--hover); --color-sel: var(--sel);
+  --color-tx: var(--tx); --color-tx2: var(--tx2); --color-tx3: var(--tx3); --color-tx4: var(--tx4);
+  --color-bd1: var(--bd1); --color-bd2: var(--bd2); --color-bd3: var(--bd3);
+  --color-brand: var(--brand); --color-brand-h: var(--brand-h); --color-brand-tx: var(--brand-tx);
+  --color-brand-soft: var(--brand-soft); --color-brand-soft2: var(--brand-soft2);
+  --color-side: var(--side); --color-hdr: var(--hdr); --color-hdr2: var(--hdr2);
+  --color-scrim: var(--scrim);
+
+  --radius-xs: 3px;
+  --radius-sm: 3px;
+  --radius-base: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-card: var(--sh-card);
+  --shadow-raised: var(--sh-raised);
+  --shadow-overlay: var(--sh-overlay);
+  --shadow-focus: var(--sh-focus);
+
+  /* 861px: تحت كده القائمة الجانبية بتبقى drawer (زي الديمو) — nav: و max-nav: */
+  --breakpoint-nav: 53.8125rem;
+
+  --ease-we: cubic-bezier(0.2, 0, 0, 1);
+  --font-sans: var(--font-cairo), Cairo, Arial, sans-serif;
+}
+
+/* حالة الـ shell (بتتظبط من inline script قبل أول رسم — شوف app/layout.tsx) */
+@custom-variant collapsed (:root[data-sidebar="collapsed"] &);
+@custom-variant navopen (:root[data-nav="open"] &);
+
+/* dark: نفس منطق الـ tokens (اختيار المستخدم، وإلا إعداد النظام) */
+@custom-variant dark {
+  :root[data-theme="dark"] & {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) & {
+      @slot;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* الأرقام: LTR + tabular جوه نص عربي */
+@utility num {
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+  }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--tx);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a {
+    color: var(--brand-tx);
+  }
+  :focus-visible {
+    outline: 2px solid var(--p500);
+    outline-offset: 2px;
+  }
+  dialog::backdrop {
+    background: var(--scrim);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media print {
+  [data-print="hide"] {
+    display: none !important;
+  }
 }
