@@ -1,0 +1,17 @@
+{
+  "name": "invoice-tracking",
+  "private": true,
+  "description": "منظومة تتبع المستخلصات — المصرية للاتصالات",
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "npm run dev -w @it/web",
+    "build": "npm run build -w @it/web",
+    "db:start": "node packages/db/scripts/dev-postgres.mjs",
+    "db:migrate": "npm run migrate -w @it/db",
+    "db:seed": "npm run seed -w @it/db",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}

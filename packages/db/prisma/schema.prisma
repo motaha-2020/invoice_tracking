@@ -1,0 +1,819 @@
+// ============================================================================
+// منظومة تتبع المستخلصات — schema قاعدة البيانات (PostgreSQL)
+// الأسماء في الكود camelCase، وفي الجداول snake_case (@@map / @map).
+// الفلوس Decimal(18,2) — الكميات Decimal(18,4). ممنوع Float للفلوس.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────── الهيكل التنظيمي ───────────────────────────
+// رئاسة قطاعات ← قطاع ← (شئون فنية + إدارات عامة) ← إدارة مختصة ← سنترال
+
+model Presidency {
+  id      String   @id @default(cuid())
+  code    String   @unique
+  name    String
+  sectors Sector[]
+
+  @@map("presidencies")
+}
+
+model Sector {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  name         String
+  presidencyId String        @map("presidency_id")
+  presidency   Presidency    @relation(fields: [presidencyId], references: [id])
+  techUnits    TechUnit[]
+  generalDepts GeneralDept[]
+
+  @@index([presidencyId])
+  @@map("sectors")
+}
+
+model TechUnit {
+  id       String @id @default(cuid())
+  code     String @unique
+  name     String
+  sectorId String @map("sector_id")
+  sector   Sector @relation(fields: [sectorId], references: [id])
+
+  @@map("tech_units")
+}
+
+model GeneralDept {
+  id       String @id @default(cuid())
+  code     String @unique
+  name     String
+  sectorId String @map("sector_id")
+  sector   Sector @relation(fields: [sectorId], references: [id])
+  depts    Dept[]
+
+  @@index([sectorId])
+  @@map("general_depts")
+}
+
+model Dept {
+  id            String      @id @default(cuid())
+  code          String      @unique
+  name          String
+  generalDeptId String      @map("general_dept_id")
+  generalDept   GeneralDept @relation(fields: [generalDeptId], references: [id])
+  centrals      Central[]
+
+  @@index([generalDeptId])
+  @@map("depts")
+}
+
+model Central {
+  id       String    @id @default(cuid())
+  code     String    @unique
+  name     String
+  deptId   String    @map("dept_id")
+  dept     Dept      @relation(fields: [deptId], references: [id])
+  projects Project[]
+
+  @@index([deptId])
+  @@map("centrals")
+}
+
+model ProjectType {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  name         String
+  projects     Project[]
+  requiredDocs RequiredDoc[]
+
+  @@map("project_types")
+}
+
+model Project {
+  id               String            @id @default(cuid())
+  code             String            @unique
+  name             String
+  typeId           String            @map("type_id")
+  type             ProjectType       @relation(fields: [typeId], references: [id])
+  centralId        String            @map("central_id")
+  central          Central           @relation(fields: [centralId], references: [id])
+  startDate        DateTime?         @map("start_date") @db.Date
+  notes            String?
+  assignmentOrders AssignmentOrder[]
+
+  @@index([centralId])
+  @@map("projects")
+}
+
+// ─────────────────────────── الشركات والعقود ───────────────────────────
+
+model Company {
+  id            String     @id @default(cuid())
+  code          String     @unique
+  name          String
+  fullName      String     @map("full_name")
+  commercialReg String?    @map("commercial_reg")
+  taxNo         String?    @map("tax_no")
+  email         String?
+  phone         String?
+  address       String?
+  contracts     Contract[]
+
+  @@map("companies")
+}
+
+model Contract {
+  id                   String    @id @default(cuid())
+  contractNo           String    @unique @map("contract_no")
+  companyId            String    @map("company_id")
+  company              Company   @relation(fields: [companyId], references: [id])
+  title                String
+  awardDate            DateTime? @map("award_date") @db.Date
+  startDate            DateTime? @map("start_date") @db.Date
+  endDate              DateTime? @map("end_date") @db.Date
+  currency             String    @default("EGP")
+  contractValue        Decimal?  @map("contract_value") @db.Decimal(18, 2)
+  vatPct               Decimal   @default(14) @map("vat_pct") @db.Decimal(5, 2)
+  // جدول الصرف (من برقية القبول): مجموعهم = 100
+  payMonthlyPct        Decimal   @default(70) @map("pay_monthly_pct") @db.Decimal(5, 2)
+  payAsbuiltPct        Decimal   @default(20) @map("pay_asbuilt_pct") @db.Decimal(5, 2)
+  payHandoverPct       Decimal   @default(10) @map("pay_handover_pct") @db.Decimal(5, 2)
+  planningPayPct       Decimal   @default(100) @map("planning_pay_pct") @db.Decimal(5, 2)
+  finalGuaranteePct    Decimal   @default(5) @map("final_guarantee_pct") @db.Decimal(5, 2)
+  delayFinePctWeek     Decimal?  @map("delay_fine_pct_week") @db.Decimal(5, 2)
+  delayFineCapPct      Decimal?  @map("delay_fine_cap_pct") @db.Decimal(5, 2)
+  warrantyMonths       Int?      @map("warranty_months")
+  outOfScopeUplift     String?   @map("out_of_scope_uplift")
+  // الدمغات بتتدفع مرة واحدة على أمر التكليف (نسبة من قيمته)
+  stampEngineeringPct  Decimal   @default(0.3) @map("stamp_engineering_pct") @db.Decimal(6, 3)
+  stampAppliedArtsPct  Decimal   @default(0.3) @map("stamp_applied_arts_pct") @db.Decimal(6, 3)
+  stampConstructionPct Decimal   @default(0.05) @map("stamp_construction_pct") @db.Decimal(6, 3)
+  taxPct               Decimal?  @map("tax_pct") @db.Decimal(5, 2)
+  retentionPct         Decimal   @default(0) @map("retention_pct") @db.Decimal(5, 2)
+  advancePct           Decimal   @default(0) @map("advance_pct") @db.Decimal(5, 2)
+
+  items            ContractItem[]
+  assignmentOrders AssignmentOrder[]
+  invoices         Invoice[]
+
+  @@index([companyId])
+  @@map("contracts")
+}
+
+/// بند المقايسة — متدرج (1 ← 1-1 ← 1-1-1-1). isGroup = صف عنوان. unitPrice null = مالوش سعر (C5)
+model ContractItem {
+  id          String   @id @default(cuid())
+  contractId  String   @map("contract_id")
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  itemNo      String   @map("item_no")
+  parentNo    String?  @map("parent_no")
+  isGroup     Boolean  @default(false) @map("is_group")
+  description String
+  unit        String?
+  contractQty Decimal? @map("contract_qty") @db.Decimal(18, 4)
+  unitPrice   Decimal? @map("unit_price") @db.Decimal(18, 2)
+  workType    String?  @map("work_type")
+  sortOrder   Int      @default(0) @map("sort_order")
+
+  aoItems      AoItem[]
+  invoiceLines InvoiceLine[]
+
+  @@unique([contractId, itemNo])
+  @@map("contract_items")
+}
+
+// ─────────────────────────── أوامر التكليف ───────────────────────────
+
+enum AoStatus {
+  pending_approval
+  active
+  closed
+
+  @@map("ao_status")
+}
+
+model AssignmentOrder {
+  id                  String    @id @default(cuid())
+  contractId          String    @map("contract_id")
+  contract            Contract  @relation(fields: [contractId], references: [id])
+  aoNo                String    @map("ao_no")
+  aoDate              DateTime? @map("ao_date") @db.Date
+  name                String
+  projectId           String?   @map("project_id")
+  project             Project?  @relation(fields: [projectId], references: [id])
+  status              AoStatus  @default(active)
+  value               Decimal?  @db.Decimal(18, 2)
+  /// الالتزام المالي المعتمد — ممكن يبقى أقل من القيمة، وبيتجدد بخطاب منفصل
+  financialCommitment Decimal?  @map("financial_commitment") @db.Decimal(18, 2)
+  planningAnnexValue  Decimal?  @map("planning_annex_value") @db.Decimal(18, 2)
+  area                String?
+  centralText         String?   @map("central_text")
+  outOfScope          Boolean   @default(false) @map("out_of_scope")
+  duration            String?
+  finalGuaranteePct   Decimal?  @map("final_guarantee_pct") @db.Decimal(5, 2)
+  stampsTotal         Decimal?  @map("stamps_total") @db.Decimal(18, 2)
+  sourceNote          String?   @map("source_note")
+
+  changes   AoChange[]
+  sites     AoSite[]
+  items     AoItem[]
+  materials AoMaterial[]
+  issues    MaterialIssue[]
+  invoices  Invoice[]
+
+  @@unique([contractId, aoNo])
+  @@index([projectId])
+  @@map("assignment_orders")
+}
+
+enum AoChangeKind {
+  increase
+  commitment_renewal
+
+  @@map("ao_change_kind")
+}
+
+/// ملاحق الزيادة وتجديد الالتزام المالي — تاريخ كامل للتغييرات
+model AoChange {
+  id         String          @id @default(cuid())
+  aoId       String          @map("ao_id")
+  ao         AssignmentOrder @relation(fields: [aoId], references: [id], onDelete: Cascade)
+  kind       AoChangeKind
+  changeDate DateTime?       @map("change_date") @db.Date
+  baseValue  Decimal?        @map("base_value") @db.Decimal(18, 2)
+  increase   Decimal?        @db.Decimal(18, 2)
+  newTotal   Decimal?        @map("new_total") @db.Decimal(18, 2)
+  reference  String?
+  note       String?
+
+  @@index([aoId])
+  @@map("ao_changes")
+}
+
+/// مواقع / كابينات أمر التكليف (#75، #76 ...)
+model AoSite {
+  id           String          @id @default(cuid())
+  aoId         String          @map("ao_id")
+  ao           AssignmentOrder @relation(fields: [aoId], references: [id], onDelete: Cascade)
+  code         String
+  name         String?
+  aoItems      AoItem[]
+  invoiceLines InvoiceLine[]
+
+  @@unique([aoId, code])
+  @@map("ao_sites")
+}
+
+model AoItem {
+  id             String          @id @default(cuid())
+  aoId           String          @map("ao_id")
+  ao             AssignmentOrder @relation(fields: [aoId], references: [id], onDelete: Cascade)
+  contractItemId String          @map("contract_item_id")
+  contractItem   ContractItem    @relation(fields: [contractItemId], references: [id])
+  siteId         String?         @map("site_id")
+  site           AoSite?         @relation(fields: [siteId], references: [id])
+  plannedQty     Decimal         @map("planned_qty") @db.Decimal(18, 4)
+
+  @@unique([aoId, contractItemId, siteId])
+  @@map("ao_items")
+}
+
+// ─────────────────────────── المهمات ───────────────────────────
+
+model Material {
+  id          String          @id @default(cuid())
+  code        String          @unique
+  description String
+  unit        String
+  suppliedBy  String?         @map("supplied_by")
+  groupName   String?         @map("group_name")
+  aoMaterials AoMaterial[]
+  issues      MaterialIssue[]
+  invoiceUses InvoiceMaterial[]
+
+  @@map("materials")
+}
+
+model AoMaterial {
+  id         String          @id @default(cuid())
+  aoId       String          @map("ao_id")
+  ao         AssignmentOrder @relation(fields: [aoId], references: [id], onDelete: Cascade)
+  materialId String          @map("material_id")
+  material   Material        @relation(fields: [materialId], references: [id])
+  plannedQty Decimal         @map("planned_qty") @db.Decimal(18, 4)
+
+  @@unique([aoId, materialId])
+  @@map("ao_materials")
+}
+
+/// المنصرف من المخازن (إذن صرف)
+model MaterialIssue {
+  id          String          @id @default(cuid())
+  aoId        String          @map("ao_id")
+  ao          AssignmentOrder @relation(fields: [aoId], references: [id], onDelete: Cascade)
+  materialId  String          @map("material_id")
+  material    Material        @relation(fields: [materialId], references: [id])
+  qty         Decimal         @db.Decimal(18, 4)
+  returnedQty Decimal         @default(0) @map("returned_qty") @db.Decimal(18, 4)
+  issueDate   DateTime        @map("issue_date") @db.Date
+  issueRef    String          @map("issue_ref")
+
+  @@index([aoId, materialId])
+  @@map("material_issues")
+}
+
+// ─────────────────────────── المسار والإعدادات ───────────────────────────
+
+enum Role {
+  admin
+  pmo
+  company
+  supervisor
+  exec_mgr
+  gm
+  tech_affairs
+  tech_office
+  planning
+  sector_head
+  presidency_head
+  committee
+  stores
+  finance
+
+  @@map("role")
+}
+
+/// المحطات (sup, exec, gm, tech, plan, pres, committee, pricing, sector, stores, finance)
+model WorkflowStep {
+  key   String         @id
+  name  String
+  short String
+  role  Role
+  sort  Int            @default(0)
+  usage CategoryStep[]
+
+  @@map("workflow_steps")
+}
+
+/// فئات التجاوز C1..C5 — كل فئة ليها مسار وSLA
+model Category {
+  code  String         @id
+  name  String
+  steps CategoryStep[]
+
+  @@map("categories")
+}
+
+model CategoryStep {
+  categoryCode String       @map("category_code")
+  category     Category     @relation(fields: [categoryCode], references: [code], onDelete: Cascade)
+  stepKey      String       @map("step_key")
+  step         WorkflowStep @relation(fields: [stepKey], references: [key])
+  seq          Int
+  slaDays      Int?         @map("sla_days")
+
+  @@id([categoryCode, stepKey])
+  @@unique([categoryCode, seq])
+  @@map("category_steps")
+}
+
+model DocType {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  name         String
+  requiredIn   RequiredDoc[]
+  attachments  Attachment[]
+
+  @@map("doc_types")
+}
+
+enum DocStage {
+  submit
+  finance
+
+  @@map("doc_stage")
+}
+
+/// المستندات الإلزامية حسب نوع المشروع (submit = عند التقديم، finance = قبل الصرف)
+model RequiredDoc {
+  projectTypeId String      @map("project_type_id")
+  projectType   ProjectType @relation(fields: [projectTypeId], references: [id], onDelete: Cascade)
+  docTypeId     String      @map("doc_type_id")
+  docType       DocType     @relation(fields: [docTypeId], references: [id], onDelete: Cascade)
+  stage         DocStage    @default(submit)
+
+  @@id([projectTypeId, docTypeId, stage])
+  @@map("required_docs")
+}
+
+model ReturnReason {
+  id      String          @id @default(cuid())
+  name    String
+  active  Boolean         @default(true)
+  sort    Int             @default(0)
+  usedIn  StepLogReason[]
+
+  @@map("return_reasons")
+}
+
+model Holiday {
+  date DateTime @id @db.Date
+  name String
+
+  @@map("holidays")
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ─────────────────────────── المستخلصات ───────────────────────────
+
+enum InvoiceStatus {
+  draft
+  active
+  returned
+  on_hold
+  paid
+
+  @@map("invoice_status")
+}
+
+enum InvoiceKind {
+  civil
+  electrical
+  combined
+  planning
+
+  @@map("invoice_kind")
+}
+
+model Invoice {
+  id                String          @id @default(cuid())
+  contractId        String          @map("contract_id")
+  contract          Contract        @relation(fields: [contractId], references: [id])
+  aoId              String          @map("ao_id")
+  ao                AssignmentOrder @relation(fields: [aoId], references: [id])
+  invoiceNo         String          @map("invoice_no")
+  seq               Int             @default(1)
+  period            String?
+  kind              InvoiceKind     @default(civil)
+  pathName          String          @map("path_name")
+  status            InvoiceStatus   @default(draft)
+  currentStep       String?         @map("current_step")
+  since             DateTime        @default(now())
+  category          String?
+  suggestedCategory String?         @map("suggested_category")
+  returnTo          String?         @map("return_to")
+  returnedFrom      String?         @map("returned_from")
+  heldAt            String?         @map("held_at")
+  holdReason        String?         @map("hold_reason")
+  submittedAt       DateTime?       @map("submitted_at")
+  paidAt            DateTime?       @map("paid_at")
+  paymentRef        String?         @map("payment_ref")
+  paymentMethod     String?         @map("payment_method")
+  paymentAmount     Decimal?        @map("payment_amount") @db.Decimal(18, 2)
+  /// مستخلص مرحّل من ملفات الموقف القديمة (من غير بنود تفصيلية)
+  migrated          Boolean         @default(false)
+  migratedAmount    Decimal?        @map("migrated_amount") @db.Decimal(18, 2)
+  createdById       String?         @map("created_by_id")
+  createdBy         User?           @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  revisions     InvoiceRevision[]
+  deductions    InvoiceDeduction[]
+  log           StepLog[]
+  notifications Notification[]
+  emails        EmailOutbox[]
+
+  @@unique([contractId, invoiceNo])
+  @@index([status, currentStep])
+  @@index([aoId])
+  @@map("invoices")
+}
+
+/// كل تقديم / إعادة تقديم = نسخة جديدة من البنود والمهمات والمرفقات
+model InvoiceRevision {
+  id          String            @id @default(cuid())
+  invoiceId   String            @map("invoice_id")
+  invoice     Invoice           @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  n           Int
+  note        String?
+  createdById String?           @map("created_by_id")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  lines       InvoiceLine[]
+  materials   InvoiceMaterial[]
+  attachments Attachment[]
+
+  @@unique([invoiceId, n])
+  @@map("invoice_revisions")
+}
+
+model InvoiceLine {
+  id             String          @id @default(cuid())
+  revisionId     String          @map("revision_id")
+  revision       InvoiceRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  contractItemId String?         @map("contract_item_id")
+  contractItem   ContractItem?   @relation(fields: [contractItemId], references: [id])
+  /// بند مستجد مش في العقد (C5)
+  newItemNo      String?         @map("new_item_no")
+  newDescription String?         @map("new_description")
+  newUnit        String?         @map("new_unit")
+  agreedPrice    Decimal?        @map("agreed_price") @db.Decimal(18, 2)
+  siteId         String?         @map("site_id")
+  site           AoSite?         @relation(fields: [siteId], references: [id])
+  qty            Decimal         @db.Decimal(18, 4)
+  approvedQty    Decimal?        @map("approved_qty") @db.Decimal(18, 4)
+  approveNote    String?         @map("approve_note")
+  sort           Int             @default(0)
+
+  @@index([revisionId])
+  @@map("invoice_lines")
+}
+
+model InvoiceMaterial {
+  id          String          @id @default(cuid())
+  revisionId  String          @map("revision_id")
+  revision    InvoiceRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  materialId  String          @map("material_id")
+  material    Material        @relation(fields: [materialId], references: [id])
+  executedQty Decimal         @map("executed_qty") @db.Decimal(18, 4)
+  billedQty   Decimal?        @map("billed_qty") @db.Decimal(18, 4)
+
+  @@unique([revisionId, materialId])
+  @@map("invoice_materials")
+}
+
+model Attachment {
+  id           String          @id @default(cuid())
+  revisionId   String          @map("revision_id")
+  revision     InvoiceRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  docTypeId    String?         @map("doc_type_id")
+  docType      DocType?        @relation(fields: [docTypeId], references: [id])
+  fileName     String          @map("file_name")
+  storagePath  String          @map("storage_path")
+  mimeType     String          @map("mime_type")
+  size         Int
+  sha256       String
+  uploadedById String?         @map("uploaded_by_id")
+  uploadedAt   DateTime        @default(now()) @map("uploaded_at")
+
+  @@index([revisionId])
+  @@map("attachments")
+}
+
+enum DeductionType {
+  asbuilt
+  handover
+  tax
+  penalty
+  other
+
+  @@map("deduction_type")
+}
+
+/// الاستقطاعات والمحجوز — releasable = بيتصرف لما المرحلة تتحقق (As-Built / التسليم الابتدائي)
+model InvoiceDeduction {
+  id         String        @id @default(cuid())
+  invoiceId  String        @map("invoice_id")
+  invoice    Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  type       DeductionType
+  name       String
+  pct        Decimal?      @db.Decimal(6, 3)
+  amount     Decimal?      @db.Decimal(18, 2)
+  releasable Boolean       @default(false)
+  releasedAt DateTime?     @map("released_at")
+  releaseRef String?       @map("release_ref")
+
+  @@index([invoiceId])
+  @@map("invoice_deductions")
+}
+
+enum StepAction {
+  submit
+  approve
+  return
+  resubmit
+  category
+  qty
+  hold
+  release
+  pay
+  deductions
+
+  @@map("step_action")
+}
+
+/// سجل الحركة — كل انتقال للمستخلص. chargedTo = الجهة اللي اتحسبت عليها الأيام
+model StepLog {
+  id        String          @id @default(cuid())
+  invoiceId String          @map("invoice_id")
+  invoice   Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  action    StepAction
+  fromStep  String?         @map("from_step")
+  toStep    String?         @map("to_step")
+  category  String?
+  note      String?
+  onBehalf  Boolean         @default(false) @map("on_behalf")
+  byId      String?         @map("by_id")
+  by        User?           @relation(fields: [byId], references: [id])
+  at        DateTime        @default(now())
+  reasons   StepLogReason[]
+
+  @@index([invoiceId, at])
+  @@map("step_log")
+}
+
+model StepLogReason {
+  logId    String       @map("log_id")
+  log      StepLog      @relation(fields: [logId], references: [id], onDelete: Cascade)
+  reasonId String       @map("reason_id")
+  reason   ReturnReason @relation(fields: [reasonId], references: [id])
+
+  @@id([logId, reasonId])
+  @@map("step_log_reasons")
+}
+
+// ─────────────────────────── المستخدمين والصلاحيات ───────────────────────────
+
+enum ScopeType {
+  all
+  company
+  presidency
+  sector
+  general_dept
+  dept
+  central
+
+  @@map("scope_type")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  phone        String?
+  passwordHash String?   @map("password_hash")
+  totpSecret   String?   @map("totp_secret")
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  roles             UserRole[]
+  sessions          Session[]
+  invites           InviteToken[]
+  delegationsFrom   Delegation[]   @relation("DelegationFrom")
+  delegationsTo     Delegation[]   @relation("DelegationTo")
+  notifications     Notification[]
+  logEntries        StepLog[]
+  createdInvoices   Invoice[]      @relation("InvoiceCreatedBy")
+  auditEntries      AuditLog[]
+
+  @@map("users")
+}
+
+/// دور + نطاق. المستخدم ممكن يبقى ليه أكتر من صف (أكتر من نطاق)
+model UserRole {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role
+  scopeType ScopeType @map("scope_type")
+  /// id الكيان (company / presidency / sector / general_dept / dept / central) — null لـ all
+  scopeId   String?   @map("scope_id")
+
+  @@unique([userId, role, scopeType, scopeId])
+  @@index([role, scopeType, scopeId])
+  @@map("user_roles")
+}
+
+/// صلاحيات إضافية لكل دور (غير الاعتماد في محطته) — قابلة للتعديل من شاشة الصلاحيات
+model RolePermission {
+  role       Role
+  permission String
+
+  @@id([role, permission])
+  @@map("role_permissions")
+}
+
+model Delegation {
+  id         String   @id @default(cuid())
+  fromUserId String   @map("from_user_id")
+  fromUser   User     @relation("DelegationFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String   @map("to_user_id")
+  toUser     User     @relation("DelegationTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  startsOn   DateTime @map("starts_on") @db.Date
+  endsOn     DateTime @map("ends_on") @db.Date
+  note       String?
+
+  @@map("delegations")
+}
+
+model Session {
+  id         String   @id
+  /// sha256 للتوكن — التوكن نفسه في الكوكي بس
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  ip         String?
+  userAgent  String?  @map("user_agent")
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model InviteToken {
+  id        String    @id
+  /// sha256 للتوكن اللي في رابط الدعوة / استعادة كلمة السر
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose   String    @default("invite")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+
+  @@index([userId])
+  @@map("invite_tokens")
+}
+
+// ─────────────────────────── الإشعارات والتدقيق ───────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  invoiceId String?   @map("invoice_id")
+  invoice   Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+enum EmailStatus {
+  pending
+  sent
+  failed
+
+  @@map("email_status")
+}
+
+/// صندوق الإيميلات الصادرة — الـ worker بيبعتها ويعيد المحاولة
+model EmailOutbox {
+  id        String      @id @default(cuid())
+  toEmail   String      @map("to_email")
+  toName    String?     @map("to_name")
+  subject   String
+  body      String
+  invoiceId String?     @map("invoice_id")
+  invoice   Invoice?    @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  status    EmailStatus @default(pending)
+  attempts  Int         @default(0)
+  lastError String?     @map("last_error")
+  createdAt DateTime    @default(now()) @map("created_at")
+  sentAt    DateTime?   @map("sent_at")
+
+  @@index([status, createdAt])
+  @@map("email_outbox")
+}
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  at       DateTime @default(now())
+  userId   String?  @map("user_id")
+  user     User?    @relation(fields: [userId], references: [id])
+  action   String
+  entity   String
+  entityId String?  @map("entity_id")
+  details  Json?
+
+  @@index([entity, entityId])
+  @@index([at])
+  @@map("audit_log")
+}
+
+/// سجل الرفع من قوالب Excel
+model ImportBatch {
+  id         String   @id @default(cuid())
+  templateId String   @map("template_id")
+  fileName   String   @map("file_name")
+  userId     String?  @map("user_id")
+  rows       Int
+  status     String
+  report     Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("import_batches")
+}

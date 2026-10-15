@@ -23,3 +23,10 @@ Thumbs.db
 
 # ── إعدادات محلية ──
 .claude/
+
+# ── Next.js / build ──
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.npmrc
