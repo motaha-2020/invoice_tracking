@@ -37,4 +37,33 @@ describe("parseWorkbook", () => {
     const s = wb.sheets["المستخدمين"];
     expect(s?.kind === "table" && s.rows.length).toBe(1);
   });
+
+  it("يتعرف على الأعمدة من العناوين لو المستخدم كتب فوق الصف التقني (صف 2)", async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("رئاسات القطاعات");
+    ws.addRow(["كود الرئاسة *", "اسم رئاسة القطاعات *"]);
+    ws.addRow(["C&S", "رئاسة قطاعات القاهرة والجنوبية"]);
+    ws.addRow(["E&W", "رئاسة قطاعات الشرقية والغربية"]);
+    const ws2 = wb.addWorksheet("القطاعات");
+    ws2.addRow(["كود القطاع *", "كود الرئاسة *", "اسم القطاع *"]); // الصف التقني اتمسح خالص
+    ws2.addRow(["S1", "C&S", "قطاع القاهرة"]);
+    const meta = wb.addWorksheet("_meta");
+    meta.addRow(["template_id", "01_الهيكل_التنظيمي"]);
+    const parsed = await parseWorkbook((await wb.xlsx.writeBuffer()) as ArrayBuffer, []);
+    const a = parsed.sheets["رئاسات القطاعات"];
+    expect(a?.kind === "table" && a.rows).toEqual([
+      { __row: 2, code: "C&S", name: "رئاسة قطاعات القاهرة والجنوبية" },
+      { __row: 3, code: "E&W", name: "رئاسة قطاعات الشرقية والغربية" },
+    ]);
+    const b = parsed.sheets["القطاعات"];
+    expect(b?.kind === "table" && b.rows).toEqual([{ __row: 2, code: "S1", presidency_code: "C&S", name: "قطاع القاهرة" }]);
+  });
+});
+
+describe("template-headers.json", () => {
+  it("متزامن مع القوالب في public/templates (لو فشل: node apps/web/scripts/gen-template-headers.mjs)", async () => {
+    const { buildHeaders } = await import("../../../scripts/gen-template-headers.mjs");
+    const json = (await import("./template-headers.json")).default;
+    expect(await buildHeaders()).toEqual(json);
+  });
 });
