@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Badge, CategoryBadge, Num, TBody, THead, Table, TableWrap, Td, Th, Tr } from "@/components/ui";
-import { formatDate } from "@/lib/format";
+import { Badge, CategoryBadge, Money, Num, SlaChip, TBody, THead, Table, TableWrap, Td, Th, Tr } from "@/components/ui";
+import { formatDate, formatMoney } from "@/lib/format";
 import { INVOICE_STATUS } from "@/lib/labels";
 import type { InvoiceListRow, StepInfo } from "../invoices.service";
 
@@ -28,10 +28,7 @@ type InvoiceTableProps = {
   showCompany?: boolean;
 };
 
-/**
- * جدول المستخلصات المشترك (صندوق الوارد والقوائم).
- * TODO: عمود الـ SLA والقيمة لما الحسابات (أيام العمل، الإجماليات) تيجي من @it/domain.
- */
+/** جدول المستخلصات المشترك (المهام الواردة والقوائم والرئيسية) */
 export function InvoiceTable({ rows, steps, showCompany = true }: InvoiceTableProps) {
   return (
     <TableWrap>
@@ -44,14 +41,15 @@ export function InvoiceTable({ rows, steps, showCompany = true }: InvoiceTablePr
             <Th>فئة التجاوز</Th>
             <Th>الجهة الحالية</Th>
             <Th>الحالة</Th>
-            <Th>منذ تاريخ</Th>
+            <Th>المدة المستهدفة</Th>
+            <Th align="end">القيمة المعتمدة</Th>
           </tr>
         </THead>
         <TBody>
           {rows.map((inv) => {
             const st = INVOICE_STATUS[inv.status];
             return (
-              <Tr key={inv.id}>
+              <Tr key={inv.id} flag={inv.sla.k === "late" ? "r" : inv.sla.k === "due" ? "a" : undefined}>
                 <Td>
                   <Link href={`/invoices/${inv.id}`} className="font-bold no-underline hover:underline">
                     <span className="num">{inv.invoiceNo}</span>
@@ -78,7 +76,14 @@ export function InvoiceTable({ rows, steps, showCompany = true }: InvoiceTablePr
                   </Badge>
                 </Td>
                 <Td>
-                  <Num>{formatDate(inv.since)}</Num>
+                  {inv.status === "draft" || inv.status === "paid" ? (
+                    <span className="text-xs text-tx3">منذ <Num>{formatDate(inv.since)}</Num></span>
+                  ) : (
+                    <SlaChip tone={inv.sla.cls} label={inv.sla.label} elapsed={inv.sla.elapsed} sla={inv.sla.sla} />
+                  )}
+                </Td>
+                <Td align="end">
+                  <Money>{formatMoney(inv.gross)}</Money>
                 </Td>
               </Tr>
             );

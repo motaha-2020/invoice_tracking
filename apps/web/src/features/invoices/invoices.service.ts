@@ -1,11 +1,38 @@
 import "server-only";
-import type { InvoiceStatus, Role } from "@it/db";
+import type { InvoiceStatus, Prisma, Role } from "@it/db";
+import { can } from "@/features/auth/permissions";
+import { localDate, slaState, type CategoryCode, type SlaState } from "@it/domain";
 import { cache } from "react";
 import type { SessionUser } from "@/features/auth/auth.types";
 import { inboxWhere, visibleInvoicesWhere, type StepRoleMap } from "@/features/auth/scope";
-import { countByStatus, countInvoices, listInvoices, listWorkflowSteps, type InvoiceListRow } from "./invoices.repo";
+import { getFlowContext, isCategoryCode } from "./flow-config";
+import { countByStatus, countInvoices, grossByIds, listInvoices, listWorkflowSteps, type InvoiceListRow as Row } from "./invoices.repo";
 
-export type { InvoiceListRow } from "./invoices.repo";
+/** صف في قوائم المستخلصات + حالة المدة المستهدفة والقيمة المعتمدة */
+export type InvoiceListRow = Row & { sla: SlaState; gross: number };
+
+/** يضيف الـ SLA (بأيام العمل والعطلات) والقيمة لكل صف */
+async function enrich(rows: Row[]): Promise<InvoiceListRow[]> {
+  const [ctx, gross] = await Promise.all([getFlowContext(), grossByIds(rows.map((r) => r.id))]);
+  const today = localDate(new Date());
+  const cat = (v: string | null): CategoryCode | null => (isCategoryCode(v) ? v : null);
+  return rows.map((r) => ({
+    ...r,
+    gross: gross.get(r.id) ?? 0,
+    sla: slaState(
+      { status: r.status, since: localDate(r.since), currentStep: r.currentStep, category: cat(r.category), suggestedCategory: cat(r.suggestedCategory), returnTo: r.returnTo, holdReason: r.holdReason },
+      today,
+      ctx.config,
+      ctx.holidays,
+      ctx.warnAt,
+    ),
+  }));
+}
+
+/** الأكثر تأخراً أولاً: الأيام المنقضية − المدة المستهدفة */
+export function lateness(r: InvoiceListRow): number {
+  return r.sla.elapsed == null ? -999 : r.sla.elapsed - (r.sla.sla ?? 3);
+}
 
 /** المحطات (مرة لكل request) */
 export const getWorkflowSteps = cache(listWorkflowSteps);
@@ -28,15 +55,23 @@ export async function getStepNames(): Promise<Record<string, StepInfo>> {
   return (await getStepMaps()).names;
 }
 
-/** عدد المستخلصات اللي مستنية المستخدم (للـ sidebar والرئيسية) */
-export const countInbox = cache(async (user: SessionUser): Promise<number> => {
+/**
+ * صندوق الوارد: المستخلصات اللي الدور فيها على المستخدم.
+ * صاحب التجاوز الإداري (PMO / Admin) بيشوف كل المفتوح في نطاقه عشان يقدر يحرّك بالنيابة.
+ */
+const inboxFor = cache(async (user: SessionUser): Promise<Prisma.InvoiceWhereInput> => {
   const { roles } = await getStepMaps();
-  return countInvoices(inboxWhere(user, roles));
+  const turn = inboxWhere(user, roles);
+  if (!(await can(user, "invoice.override"))) return turn;
+  return { OR: [turn, { AND: [visibleInvoicesWhere(user), { status: { in: ["active", "returned", "on_hold"] } }] }] };
 });
 
+/** عدد المستخلصات اللي مستنية المستخدم (للـ sidebar والرئيسية) */
+export const countInbox = cache(async (user: SessionUser): Promise<number> => countInvoices(await inboxFor(user)));
+
 export async function listInbox(user: SessionUser): Promise<InvoiceListRow[]> {
-  const { roles } = await getStepMaps();
-  return listInvoices(inboxWhere(user, roles));
+  const rows = await enrich(await listInvoices(await inboxFor(user)));
+  return rows.sort((a, b) => lateness(b) - lateness(a));
 }
 
 const STATUSES: InvoiceStatus[] = ["draft", "active", "returned", "on_hold", "paid"];
@@ -47,7 +82,13 @@ export function parseStatus(v: unknown): InvoiceStatus | undefined {
 
 export async function listVisibleInvoices(user: SessionUser, filter: { status?: InvoiceStatus } = {}): Promise<InvoiceListRow[]> {
   const scope = visibleInvoicesWhere(user);
-  return listInvoices(filter.status ? { AND: [scope, { status: filter.status }] } : scope);
+  return enrich(await listInvoices(filter.status ? { AND: [scope, { status: filter.status }] } : scope));
+}
+
+/** المستخلصات المتجاوزة للمدة أو التي قاربت على الانتهاء (للرئيسية) */
+export async function listSlaAlerts(user: SessionUser): Promise<InvoiceListRow[]> {
+  const rows = await enrich(await listInvoices({ AND: [visibleInvoicesWhere(user), { status: "active" }] }, { take: 500 }));
+  return rows.filter((r) => r.sla.k === "late" || r.sla.k === "due").sort((a, b) => lateness(b) - lateness(a)).slice(0, 15);
 }
 
 export type HomeStats = {

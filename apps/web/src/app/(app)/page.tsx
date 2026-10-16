@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { Card, CardBody, CardHeader, EmptyState, Kpi, PageHeader, PageSkeleton } from "@/components/ui";
 import { requireUser } from "@/features/auth/session";
 import { hasRole } from "@/features/auth/scope";
-import { getHomeStats } from "@/features/invoices/invoices.service";
+import { InvoiceTable } from "@/features/invoices/components/invoice-table";
+import { getHomeStats, getStepNames, listSlaAlerts } from "@/features/invoices/invoices.service";
 import { formatCount, formatDate } from "@/lib/format";
 
 export default function HomePage() {
@@ -16,7 +17,7 @@ export default function HomePage() {
 
 async function Home() {
   const user = await requireUser();
-  const stats = await getHomeStats(user);
+  const [stats, alerts, steps] = await Promise.all([getHomeStats(user), listSlaAlerts(user), getStepNames()]);
   const isCompany = hasRole(user, "company");
   const s = stats.byStatus;
 
@@ -54,12 +55,15 @@ async function Home() {
       </div>
       <Card>
         <CardHeader title="المستخلصات المتجاوزة للمدة المستهدفة (SLA)" sub="بأيام العمل الرسمية في كل مرحلة اعتماد" />
-        <CardBody>
-          {/* TODO: يتحسب من @it/domain (أيام العمل + SLA الفئة) لما الحزمة تجهز */}
-          <EmptyState title="قيد التطوير">
-            <div className="text-[13px]">ستظهر هنا المستخلصات المتجاوزة للمدة والتي قاربت مدتها على الانتهاء.</div>
-          </EmptyState>
-        </CardBody>
+        {alerts.length === 0 ? (
+          <CardBody>
+            <EmptyState icon={CheckCircle2} title="لا توجد مستخلصات متجاوزة للمدة المستهدفة">
+              <div className="text-[13px]">ستظهر هنا المستخلصات المتجاوزة للمدة والتي قاربت مدتها على الانتهاء.</div>
+            </EmptyState>
+          </CardBody>
+        ) : (
+          <InvoiceTable rows={alerts} steps={steps} showCompany={!isCompany} />
+        )}
       </Card>
     </>
   );
