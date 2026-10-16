@@ -20,7 +20,7 @@ const listSelect = {
   id: true,
   invoiceNo: true,
   seq: true,
-  kind: true,
+  workType: { select: { name: true } },
   pathName: true,
   status: true,
   currentStep: true,

@@ -12,11 +12,15 @@ export type OrgOptions = Record<OptionsKey, SelectOption[]>;
 export type FieldDef = {
   name: string;
   label: string;
-  type: "text" | "email" | "date" | "textarea" | "select";
+  type: "text" | "email" | "date" | "number" | "textarea" | "select" | "checkbox";
   required?: boolean;
   options?: OptionsKey;
   ltr?: boolean;
   hint?: string;
+  /** نص جنب الـ checkbox */
+  checkLabel?: string;
+  /** القيمة في فورم الإضافة (checkbox: "1" = متعلّم) */
+  initial?: string;
   /** ياخد عرض الفورم كله (في الشبكة بعمودين) */
   wide?: boolean;
 };
@@ -34,6 +38,12 @@ export const ENTITY_FIELDS: Record<OrgKind, FieldDef[]> = {
   dept: [nameField("اسم الإدارة المختصة"), { name: "generalDeptId", label: "الإدارة العامة", type: "select", options: "generalDept", required: true, wide: true }],
   central: [nameField("اسم السنترال"), { name: "deptId", label: "الإدارة المختصة", type: "select", options: "dept", required: true, wide: true }],
   projectType: [nameField("نوع المشروع")],
+  workType: [
+    nameField("نوع الأعمال"),
+    { name: "isPlanning", label: "طريقة الصرف", type: "checkbox", checkLabel: "مستخلص تخطيط", hint: "مستخلص التخطيط بيتصرف 100% بعد الانتهاء" },
+    { name: "active", label: "الحالة", type: "checkbox", checkLabel: "شغال (بيظهر في الاختيار)", initial: "1" },
+    { name: "sort", label: "الترتيب", type: "number", ltr: true, initial: "0", hint: "الأصغر بيظهر الأول" },
+  ],
   project: [
     nameField("اسم المشروع / المنطقة"),
     { name: "typeId", label: "نوع المشروع", type: "select", options: "projectType", required: true },

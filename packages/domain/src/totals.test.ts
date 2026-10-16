@@ -15,7 +15,7 @@ describe('invoiceTotals', () => {
   });
 
   it('contract 232 (70/20/10, VAT 14%, withholding 1%) on gross 1,000,000', () => {
-    const t = invoiceTotals({ lines: MILLION, kind: 'civil', terms: T232 });
+    const t = invoiceTotals({ lines: MILLION, isPlanning: false, terms: T232 });
     expect(t.gross).toBe(1_000_000);
     expect(t.byWorkType).toEqual({ مدني: 600_000, كهرباء: 400_000 });
     expect(t.held).toEqual([
@@ -31,14 +31,14 @@ describe('invoiceTotals', () => {
   });
 
   it('contract 231 (90/0/10) has a single holdback', () => {
-    const t = invoiceTotals({ lines: MILLION, kind: 'combined', terms: T231 });
+    const t = invoiceTotals({ lines: MILLION, isPlanning: false, terms: T231 });
     expect(t.held.map((h) => h.type)).toEqual(['handover']);
     expect(t.payableNow).toBe(900_000);
     expect(t.net).toBe(900_000 + 140_000 - 10_000);
   });
 
   it('planning invoices: no holdbacks, paid at planningPayPct', () => {
-    const t = invoiceTotals({ lines: MILLION, kind: 'planning', terms: T232 });
+    const t = invoiceTotals({ lines: MILLION, isPlanning: true, terms: T232 });
     expect(t.held).toEqual([]);
     expect(t.payNowPct).toBe(100);
     expect(t.payableNow).toBe(1_000_000);
@@ -46,7 +46,7 @@ describe('invoiceTotals', () => {
   });
 
   it('VAT on payableNow when finance switches the policy', () => {
-    const t = invoiceTotals({ lines: MILLION, kind: 'civil', terms: T232, policy: { vatBase: 'payableNow', withholdingBase: 'payableNow' } });
+    const t = invoiceTotals({ lines: MILLION, isPlanning: false, terms: T232, policy: { vatBase: 'payableNow', withholdingBase: 'payableNow' } });
     expect(t.vat).toBe(98_000);
     expect(t.deductions[0]?.amount).toBe(7_000);
     expect(t.net).toBe(700_000 + 98_000 - 7_000);
@@ -54,7 +54,7 @@ describe('invoiceTotals', () => {
 
   it('penalties and deduction overrides', () => {
     const t = invoiceTotals({
-      lines: MILLION, kind: 'civil', terms: T232,
+      lines: MILLION, isPlanning: false, terms: T232,
       deductionsOverride: [{ type: 'tax', name: 'خصم منبع', pct: 3 }, { type: 'other', name: 'تسوية', amount: 1234.567 }],
       penalties: [{ amount: 5000 }],
     });
@@ -65,24 +65,24 @@ describe('invoiceTotals', () => {
   });
 
   it('no withholding when taxPct is missing or zero', () => {
-    expect(invoiceTotals({ lines: MILLION, kind: 'civil', terms: { ...T232, taxPct: null } }).deductions).toEqual([]);
-    expect(invoiceTotals({ lines: MILLION, kind: 'civil', terms: { ...T232, taxPct: 0 } }).deductions).toEqual([]);
+    expect(invoiceTotals({ lines: MILLION, isPlanning: false, terms: { ...T232, taxPct: null } }).deductions).toEqual([]);
+    expect(invoiceTotals({ lines: MILLION, isPlanning: false, terms: { ...T232, taxPct: 0 } }).deductions).toEqual([]);
   });
 
   it('unpriced lines count as zero and are reported; missing work type is grouped', () => {
-    const t = invoiceTotals({ lines: [{ unitPrice: null, approvedQty: 5 }, { unitPrice: 10.005, approvedQty: 3 }], kind: 'civil', terms: T232 });
+    const t = invoiceTotals({ lines: [{ unitPrice: null, approvedQty: 5 }, { unitPrice: 10.005, approvedQty: 3 }], isPlanning: false, terms: T232 });
     expect(t.unpricedLines).toBe(1);
     expect(t.gross).toBe(30.02);
     expect(t.byWorkType).toEqual({ [UNKNOWN_WORK_TYPE]: 30.02 });
   });
 
   it('parts reconcile to the cent: payableNow + held = gross', () => {
-    const t = invoiceTotals({ lines: [{ unitPrice: 333.33, approvedQty: 7 }], kind: 'civil', terms: T232 });
+    const t = invoiceTotals({ lines: [{ unitPrice: 333.33, approvedQty: 7 }], isPlanning: false, terms: T232 });
     expect(round(t.payableNow + t.heldTotal)).toBe(t.gross);
   });
 
   it('rejects contract terms that do not sum to 100%', () => {
-    expect(() => invoiceTotals({ lines: MILLION, kind: 'civil', terms: { ...T232, payMonthlyPct: 75 } })).toThrow(DomainError);
+    expect(() => invoiceTotals({ lines: MILLION, isPlanning: false, terms: { ...T232, payMonthlyPct: 75 } })).toThrow(DomainError);
   });
 });
 

@@ -1,4 +1,4 @@
-import type { InvoiceKind, InvoiceStatus, Role, ScopeType } from "@it/db";
+import type { InvoiceStatus, Role, ScopeType } from "@it/db";
 
 /** أسماء الأدوار في الواجهة (من الديمو) */
 export const ROLE_LABELS: Record<Role, string> = {
@@ -42,10 +42,3 @@ export const INVOICE_STATUS: Record<InvoiceStatus, { label: string; tone: Tone }
 export function initialOf(name: string): string {
   return name.replace(/^(م\.|أ\.)\s*/, "").trim().slice(0, 1) || "؟";
 }
-
-export const INVOICE_KIND_LABELS: Record<InvoiceKind, string> = {
-  civil: "مدني",
-  electrical: "كهرباء",
-  combined: "مدني وكهرباء",
-  planning: "تخطيط",
-};

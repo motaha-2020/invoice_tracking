@@ -4,7 +4,7 @@ import type { OrgKind } from "./org.kinds";
 import type { OrgData } from "./org.schema";
 
 /**
- * الكتابة على الهيكل والمشروعات والشركات (إضافة / تعديل / مسح) — كل حركة ومعاها سطر audit في نفس الـ transaction.
+ * الكتابة على الهيكل وأنواع المشروعات والأعمال والمشروعات والشركات (إضافة / تعديل / مسح) — كل حركة ومعاها سطر audit في نفس الـ transaction.
  * الكود بيتكتب في الإضافة بس؛ التعديل بيغير الحقول التانية.
  */
 type Tx = Prisma.TransactionClient;
@@ -19,6 +19,7 @@ function createIn(tx: Tx, d: OrgData, code: string): Promise<{ id: string }> {
     case "dept": return tx.dept.create({ data: { code, ...d.fields }, ...sel });
     case "central": return tx.central.create({ data: { code, ...d.fields }, ...sel });
     case "projectType": return tx.projectType.create({ data: { code, ...d.fields }, ...sel });
+    case "workType": return tx.workType.create({ data: { code, ...d.fields }, ...sel });
     case "project": return tx.project.create({ data: { code, ...d.fields }, ...sel });
     case "company": return tx.company.create({ data: { code, ...d.fields }, ...sel });
   }
@@ -34,6 +35,7 @@ function updateIn(tx: Tx, id: string, d: OrgData): Promise<{ id: string }> {
     case "dept": return tx.dept.update({ where, data: d.fields, ...sel });
     case "central": return tx.central.update({ where, data: d.fields, ...sel });
     case "projectType": return tx.projectType.update({ where, data: d.fields, ...sel });
+    case "workType": return tx.workType.update({ where, data: d.fields, ...sel });
     case "project": return tx.project.update({ where, data: d.fields, ...sel });
     case "company": return tx.company.update({ where, data: d.fields, ...sel });
   }
@@ -49,6 +51,7 @@ function deleteIn(tx: Tx, kind: OrgKind, id: string): Promise<unknown> {
     case "dept": return tx.dept.delete({ where });
     case "central": return tx.central.delete({ where });
     case "projectType": return tx.projectType.delete({ where });
+    case "workType": return tx.workType.delete({ where });
     case "project": return tx.project.delete({ where });
     case "company": return tx.company.delete({ where });
   }
@@ -66,6 +69,7 @@ export function findEntity(kind: OrgKind, id: string): Promise<Named> {
     case "dept": return prisma.dept.findUnique(q);
     case "central": return prisma.central.findUnique(q);
     case "projectType": return prisma.projectType.findUnique(q);
+    case "workType": return prisma.workType.findUnique(q);
     case "project": return prisma.project.findUnique(q);
     case "company": return prisma.company.findUnique(q);
   }
@@ -110,6 +114,9 @@ export async function countDependents(kind: OrgKind, id: string): Promise<{ labe
         await c("مشروع", prisma.project.count({ where: { typeId: id } })),
         await c("مستند إلزامي متظبط على النوع", prisma.requiredDoc.count({ where: { projectTypeId: id } })),
       ];
+    case "workType":
+      // كل المستخلصات (مش النطاق بس) — المسح بيأثر على المنظومة كلها
+      return [await c("مستخلص", prisma.invoice.count({ where: { workTypeId: id } }))];
     case "project":
       return [await c("أمر تكليف", prisma.assignmentOrder.count({ where: { projectId: id } }))];
     case "company":

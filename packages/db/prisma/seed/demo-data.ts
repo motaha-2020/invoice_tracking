@@ -43,14 +43,14 @@ export const ORG = {
 
 /** type = كود نوع المشروع من reference-data */
 export const PROJECTS = [
-  { code: 'PJ1', type: 'FTTH', central: 'C1', name: 'FTTH المنصورة الجديدة — المرحلة 2' },
-  { code: 'PJ2', type: 'MSAN', central: 'C2', name: 'كابينات MSAN جديلة' },
-  { code: 'PJ3', type: 'FTTH', central: 'C3', name: 'FTTH طلخا — قرى المركز' },
-  { code: 'PJ4', type: 'FIBER', central: 'C4', name: 'حلقة ألياف دمياط الجديدة' },
-  { code: 'PJ5', type: 'FTTH', central: 'C5', name: 'FTTH الزقازيق — حي الزهور' },
-  { code: 'PJ6', type: 'CIVIL', central: 'C5', name: 'صيانة غرف تفتيش الزقازيق' },
-  { code: 'PJ7', type: 'FTTH', central: 'C6', name: 'FTTH المعادي — دجلة' },
-  { code: 'PJ8', type: 'MSAN', central: 'C7', name: 'كابينات زهراء المعادي' },
+  { code: 'PJ1', type: 'FIBERIZATION', central: 'C1', name: 'FTTH المنصورة الجديدة — المرحلة 2' },
+  { code: 'PJ2', type: 'ACCESS', central: 'C2', name: 'كابينات MSAN جديلة' },
+  { code: 'PJ3', type: 'FIBERIZATION', central: 'C3', name: 'FTTH طلخا — قرى المركز' },
+  { code: 'PJ4', type: 'FTTS', central: 'C4', name: 'حلقة ألياف دمياط الجديدة' },
+  { code: 'PJ5', type: 'FIBERIZATION', central: 'C5', name: 'FTTH الزقازيق — حي الزهور' },
+  { code: 'PJ6', type: 'USO', central: 'C5', name: 'صيانة غرف تفتيش الزقازيق' },
+  { code: 'PJ7', type: 'FIBERIZATION', central: 'C6', name: 'FTTH المعادي — دجلة' },
+  { code: 'PJ8', type: 'ACCESS', central: 'C7', name: 'كابينات زهراء المعادي' },
 ];
 
 export const COMPANIES = [

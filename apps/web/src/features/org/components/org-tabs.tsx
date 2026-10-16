@@ -1,8 +1,8 @@
-import { Briefcase, FileSpreadsheet, FolderKanban, Layers, Network, type LucideIcon } from "lucide-react";
+import { Briefcase, FileSpreadsheet, FolderKanban, Hammer, Layers, Network, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 
-export const ORG_TABS = ["tree", "projects", "types", "companies", "import"] as const;
+export const ORG_TABS = ["tree", "projects", "types", "work-types", "companies", "import"] as const;
 export type OrgTab = (typeof ORG_TABS)[number];
 
 export function parseOrgTab(v: unknown): OrgTab {
@@ -13,6 +13,7 @@ const TAB_INFO: Record<OrgTab, { label: string; icon: LucideIcon }> = {
   tree: { label: "الهيكل", icon: Network },
   projects: { label: "المشروعات", icon: FolderKanban },
   types: { label: "أنواع المشروعات", icon: Layers },
+  "work-types": { label: "أنواع الأعمال", icon: Hammer },
   companies: { label: "الشركات", icon: Briefcase },
   import: { label: "استيراد", icon: FileSpreadsheet },
 };

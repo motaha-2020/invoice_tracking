@@ -50,21 +50,31 @@ export const DOC_TYPES: { code: string; name: string }[] = [
   { code: 'prelim_handover_report', name: 'محضر التسليم الابتدائي' },
 ];
 
-/** أنواع المشروعات العامة (الـ Admin يقدر يضيف غيرها) — لازمة عشان المستندات الإلزامية */
+/** أنواع المشروعات (الـ Admin يقدر يضيف غيرها) — لازمة عشان المستندات الإلزامية */
 export const PROJECT_TYPES: { code: string; name: string }[] = [
-  { code: 'FTTH', name: 'FTTH — ألياف للمنازل' },
-  { code: 'MSAN', name: 'كابينات MSAN' },
-  { code: 'FIBER', name: 'كوابل ألياف رئيسية' },
-  { code: 'CIVIL', name: 'أعمال مدنية وصيانة' },
+  { code: 'FIBERIZATION', name: 'Fiberization' },
+  { code: 'USO', name: 'خدمة شاملة' },
+  { code: 'FTTS', name: 'FTTS' },
+  { code: 'ACCESS', name: 'إتاحة' },
+  { code: 'CLOSED_COMPOUND', name: 'Closed Compound' },
 ];
 
-/** المستندات الإلزامية عند التقديم لكل نوع مشروع */
-export const REQUIRED_SUBMIT_DOCS: Record<string, string[]> = {
-  FTTH: ['signed_invoice', 'joint_survey', 'site_photos', 'test_report', 'asbuilt_drawings'],
-  MSAN: ['signed_invoice', 'joint_survey', 'site_photos', 'prelim_handover_cert'],
-  FIBER: ['signed_invoice', 'joint_survey', 'test_report', 'asbuilt_drawings'],
-  CIVIL: ['signed_invoice', 'joint_survey', 'site_photos'],
-};
+/** أكواد اتزرعت في نسخ قديمة — بتتشال بس لو مالهاش مشروعات */
+export const LEGACY_PROJECT_TYPES: string[] = ['FTTH', 'MSAN', 'FIBER', 'CIVIL'];
+
+/** المستندات الإلزامية عند التقديم (نفس القائمة لكل نوع — الـ Admin يعدّلها من شاشة المسار) */
+export const REQUIRED_SUBMIT_DOCS: string[] = [
+  'signed_invoice', 'joint_survey', 'site_photos', 'test_report', 'asbuilt_drawings',
+];
+
+/** أنواع الأعمال في المستخلص — isPlanning = بيتصرف 100% بعد الانتهاء من غير محجوز */
+export const WORK_TYPES: { code: string; name: string; isPlanning?: true }[] = [
+  { code: 'CIVIL', name: 'أعمال مدنية' },
+  { code: 'CIVIL_MAINT', name: 'صيانة مدني' },
+  { code: 'ELECTRICAL', name: 'أعمال كهربية' },
+  { code: 'INTEGRATED', name: 'أعمال متكاملة' },
+  { code: 'PLANNING', name: 'تخطيط ورسومات', isPlanning: true },
+];
 
 /** المستندات الإلزامية قبل الصرف (كل الأنواع) */
 export const REQUIRED_FINANCE_DOCS: string[] = [

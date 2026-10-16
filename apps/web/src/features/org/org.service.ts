@@ -5,7 +5,16 @@ import { can } from "@/features/auth/permissions";
 import { visibleInvoicesWhere } from "@/features/auth/scope";
 import { AppError } from "@/lib/errors";
 import { KIND_LABELS, dependentsMessage, type OrgKind } from "./org.kinds";
-import { invoiceCountsByCompany, invoiceCountsByProject, listCompanies, listOrgLevels, listProjectTypes, listProjects } from "./org.repo";
+import {
+  invoiceCountsByCompany,
+  invoiceCountsByProject,
+  invoiceCountsByWorkType,
+  listCompanies,
+  listOrgLevels,
+  listProjectTypes,
+  listProjects,
+  listWorkTypes,
+} from "./org.repo";
 import type { OrgData } from "./org.schema";
 import { buildIndex, nodeKey, pathOf, rollupCounts, type FlatNode, type NodeCounts } from "./org.tree";
 import { countDependents, createEntity, deleteEntity, findEntity, updateEntity } from "./org-write.repo";
@@ -30,6 +39,8 @@ export type ProjectRow = {
 
 export type ProjectTypeRow = { id: string; code: string; name: string; projects: number; requiredDocs: number };
 
+export type WorkTypeRow = { id: string; code: string; name: string; isPlanning: boolean; sort: number; active: boolean; invoices: number };
+
 export type CompanyRow = {
   id: string;
   code: string;
@@ -48,20 +59,24 @@ export type OrgPageData = {
   nodes: OrgNodeRow[];
   projects: ProjectRow[];
   types: ProjectTypeRow[];
+  workTypes: WorkTypeRow[];
   companies: CompanyRow[];
 };
 
 /** كل بيانات شاشة /org مرة واحدة لكل request. عدّادات المستخلصات جوه نطاق المستخدم بس */
 export const getOrgPageData = cache(async (user: SessionUser): Promise<OrgPageData> => {
   const scope = visibleInvoicesWhere(user);
-  const [[pres, sectors, techUnits, gdepts, depts, centrals], projects, types, companies, invByProject, invByCompany] = await Promise.all([
-    listOrgLevels(),
-    listProjects(),
-    listProjectTypes(),
-    listCompanies(),
-    invoiceCountsByProject(scope),
-    invoiceCountsByCompany(scope),
-  ]);
+  const [[pres, sectors, techUnits, gdepts, depts, centrals], projects, types, workTypes, companies, invByProject, invByCompany, invByWorkType] =
+    await Promise.all([
+      listOrgLevels(),
+      listProjects(),
+      listProjectTypes(),
+      listWorkTypes(),
+      listCompanies(),
+      invoiceCountsByProject(scope),
+      invoiceCountsByCompany(scope),
+      invoiceCountsByWorkType(scope),
+    ]);
 
   const flat: FlatNode[] = [
     ...pres.map((n) => ({ kind: "presidency" as const, id: n.id, code: n.code, name: n.name, parentId: null })),
@@ -103,6 +118,7 @@ export const getOrgPageData = cache(async (user: SessionUser): Promise<OrgPageDa
       };
     }),
     types: types.map((t) => ({ id: t.id, code: t.code, name: t.name, projects: t._count.projects, requiredDocs: t._count.requiredDocs })),
+    workTypes: workTypes.map((w) => ({ ...w, invoices: invByWorkType.get(w.id) ?? 0 })),
     companies: companies.map(({ _count, ...c }) => ({ ...c, contracts: _count.contracts, invoices: invByCompany.get(c.id) ?? 0 })),
   };
 });

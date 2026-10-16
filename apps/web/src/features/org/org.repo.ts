@@ -40,6 +40,19 @@ export function listProjectTypes() {
   });
 }
 
+export function listWorkTypes() {
+  return prisma.workType.findMany({
+    select: { ...node, isPlanning: true, sort: true, active: true },
+    orderBy: [{ sort: "asc" }, { code: "asc" }],
+  });
+}
+
+/** عدد المستخلصات لكل نوع أعمال (جوه النطاق اللي اتبعت) */
+export async function invoiceCountsByWorkType(where: Prisma.InvoiceWhereInput): Promise<Map<string, number>> {
+  const rows = await prisma.invoice.groupBy({ by: ["workTypeId"], where: { AND: [where, { workTypeId: { not: null } }] }, _count: { _all: true } });
+  return new Map(rows.map((r) => [r.workTypeId!, r._count._all]));
+}
+
 export function listCompanies() {
   return prisma.company.findMany({
     select: {

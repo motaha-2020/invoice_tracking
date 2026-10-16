@@ -94,6 +94,20 @@ model ProjectType {
   @@map("project_types")
 }
 
+/// نوع الأعمال في المستخلص (مدني، كهرباء، متكامل، تخطيط ...) — قائمة بيديرها الـ Admin.
+/// isPlanning = مستخلص التخطيط بيتصرف 100% بعد الانتهاء (مفيش محجوز As-Built ولا تسليم)
+model WorkType {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  name       String
+  isPlanning Boolean   @default(false) @map("is_planning")
+  sort       Int       @default(0)
+  active     Boolean   @default(true)
+  invoices   Invoice[]
+
+  @@map("work_types")
+}
+
 model Project {
   id               String            @id @default(cuid())
   code             String            @unique
@@ -448,15 +462,6 @@ enum InvoiceStatus {
   @@map("invoice_status")
 }
 
-enum InvoiceKind {
-  civil
-  electrical
-  combined
-  planning
-
-  @@map("invoice_kind")
-}
-
 model Invoice {
   id                String          @id @default(cuid())
   contractId        String          @map("contract_id")
@@ -466,7 +471,8 @@ model Invoice {
   invoiceNo         String          @map("invoice_no")
   seq               Int             @default(1)
   period            String?
-  kind              InvoiceKind     @default(civil)
+  workTypeId        String?         @map("work_type_id")
+  workType          WorkType?       @relation(fields: [workTypeId], references: [id], onDelete: Restrict)
   pathName          String          @map("path_name")
   status            InvoiceStatus   @default(draft)
   currentStep       String?         @map("current_step")
@@ -499,6 +505,7 @@ model Invoice {
   @@unique([contractId, invoiceNo])
   @@index([status, currentStep])
   @@index([aoId])
+  @@index([workTypeId])
   @@map("invoices")
 }
 

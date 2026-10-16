@@ -1,4 +1,4 @@
-import { Briefcase, Building, Building2, FolderKanban, Landmark, Layers, RadioTower, Wrench, type LucideIcon } from "lucide-react";
+import { Briefcase, Building, Building2, FolderKanban, Hammer, Landmark, Layers, RadioTower, Wrench, type LucideIcon } from "lucide-react";
 import type { OrgKind } from "../org.kinds";
 
 export const KIND_ICONS: Record<OrgKind, LucideIcon> = {
@@ -9,6 +9,7 @@ export const KIND_ICONS: Record<OrgKind, LucideIcon> = {
   dept: Briefcase,
   central: RadioTower,
   projectType: Layers,
+  workType: Hammer,
   project: FolderKanban,
   company: Briefcase,
 };

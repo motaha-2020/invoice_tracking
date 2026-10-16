@@ -28,8 +28,6 @@ export type ScopeType = 'all' | 'company' | 'presidency' | 'sector' | 'general_d
 
 export type InvoiceStatus = 'draft' | 'active' | 'returned' | 'on_hold' | 'paid';
 
-export type InvoiceKind = 'civil' | 'electrical' | 'combined' | 'planning';
-
 export type StepAction =
   | 'submit'
   | 'approve'

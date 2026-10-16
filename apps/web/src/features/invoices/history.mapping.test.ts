@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HOLD_REASON_AO, inferInvoiceKind, mapStepName, normalizeArabic } from "./history.mapping";
+import { HOLD_REASON_AO, inferWorkTypeCode, mapStepName, normalizeArabic } from "./history.mapping";
 
 describe("mapStepName", () => {
   it.each([
@@ -50,17 +50,24 @@ describe("mapStepName", () => {
   });
 });
 
-describe("inferInvoiceKind", () => {
+describe("inferWorkTypeCode", () => {
   it("كهربي", () => {
-    expect(inferInvoiceKind("مستخلص الأعمال الكهربية - سنترال رابعة")).toBe("electrical");
-    expect(inferInvoiceKind("كهرباء الكبائن")).toBe("electrical");
+    expect(inferWorkTypeCode("مستخلص الأعمال الكهربية - سنترال رابعة")).toBe("ELECTRICAL");
+    expect(inferWorkTypeCode("كهرباء الكبائن")).toBe("ELECTRICAL");
   });
   it("تخطيط", () => {
-    expect(inferInvoiceKind("فاتورة تخطيط")).toBe("planning");
+    expect(inferWorkTypeCode("فاتورة تخطيط")).toBe("PLANNING");
+  });
+  it("صيانة مدني (بالتاء المربوطة أو الهاء)", () => {
+    expect(inferWorkTypeCode("صيانة غرف التفتيش")).toBe("CIVIL_MAINT");
+    expect(inferWorkTypeCode("صيانه مدنى")).toBe("CIVIL_MAINT");
+  });
+  it("أعمال متكاملة", () => {
+    expect(inferWorkTypeCode("الأعمال المتكاملة - كمبوند")).toBe("INTEGRATED");
   });
   it("غير كده مدني", () => {
-    expect(inferInvoiceKind("حى الحدق - سنترال رابعة / 6 كبائن")).toBe("civil");
-    expect(inferInvoiceKind("")).toBe("civil");
+    expect(inferWorkTypeCode("حى الحدق - سنترال رابعة / 6 كبائن")).toBe("CIVIL");
+    expect(inferWorkTypeCode("")).toBe("CIVIL");
   });
 });
 

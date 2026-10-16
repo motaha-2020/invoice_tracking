@@ -41,8 +41,9 @@ export async function loadUsersByEmail(emails: string[]): Promise<UserLookup> {
 }
 
 export async function loadExistingProjects(): Promise<ExistingProjectsData> {
-  const [types, centrals, projects] = await Promise.all([
+  const [types, workTypes, centrals, projects] = await Promise.all([
     prisma.projectType.findMany({ select: { code: true, name: true } }),
+    prisma.workType.findMany({ select: { code: true, name: true, isPlanning: true } }),
     prisma.central.findMany({ select: { code: true, name: true } }),
     prisma.project.findMany({
       select: { code: true, name: true, startDate: true, notes: true, type: { select: { code: true } }, central: { select: { code: true } } },
@@ -50,6 +51,7 @@ export async function loadExistingProjects(): Promise<ExistingProjectsData> {
   ]);
   return {
     types: toMap(types, (r) => ({ name: r.name })),
+    workTypes: toMap(workTypes, (r) => ({ name: r.name, isPlanning: r.isPlanning })),
     centrals: toMap(centrals, (r) => ({ name: r.name })),
     projects: toMap(projects, (r) => ({
       name: r.name,
@@ -116,6 +118,11 @@ async function linkGm(tx: Tx, userId: string, generalDeptId: string) {
 export async function upsertProjectsRow(tx: Tx, r: ProjectsImportRow): Promise<void> {
   if (r.kind === "type") {
     await tx.projectType.upsert({ where: { code: r.code }, create: { code: r.code, name: r.name }, update: { name: r.name } });
+    return;
+  }
+  if (r.kind === "workType") {
+    const flag = r.isPlanning !== null ? { isPlanning: r.isPlanning } : {};
+    await tx.workType.upsert({ where: { code: r.code }, create: { code: r.code, name: r.name, ...flag }, update: { name: r.name, ...flag } });
     return;
   }
   const startDate = r.startDate ? new Date(`${r.startDate}T00:00:00Z`) : null;

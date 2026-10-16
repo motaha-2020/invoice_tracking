@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma, type InvoiceKind, type InvoiceStatus, type Prisma } from "@it/db";
+import { prisma, type InvoiceStatus, type Prisma } from "@it/db";
 
 /** ترحيل المستخلصات (قالب 11) — القراءة للفحص والكتابة جوه transaction الاستيراد */
 type Tx = Prisma.TransactionClient;
@@ -13,6 +13,10 @@ export function listAosForHistory(contractIds: string[]) {
     where: { contractId: { in: contractIds } },
     select: { id: true, contractId: true, aoNo: true, status: true },
   });
+}
+
+export function listWorkTypesForHistory() {
+  return prisma.workType.findMany({ select: { id: true, code: true } });
 }
 
 export function listExistingInvoices(contractIds: string[], invoiceNos: string[]) {
@@ -59,7 +63,7 @@ export function createMigratedInvoice(
     aoId: string;
     invoiceNo: string;
     pathName: string;
-    kind: InvoiceKind;
+    workTypeId: string | null;
     migratedAmount: number;
     paymentAmount: number | null;
     submittedAt: Date | null;

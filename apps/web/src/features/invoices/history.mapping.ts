@@ -1,7 +1,7 @@
 /**
- * ترحيل المستخلصات (قالب 11): ترجمة "المحطة الحالية" العربي لحالة + محطة، واستنتاج نوع المستخلص — دوال صافية.
+ * ترحيل المستخلصات (قالب 11): ترجمة "المحطة الحالية" العربي لحالة + محطة، واستنتاج نوع الأعمال — دوال صافية.
  */
-import type { InvoiceKind, InvoiceStatus } from "@it/db";
+import type { InvoiceStatus } from "@it/db";
 
 export type MigratedState = {
   status: InvoiceStatus;
@@ -57,10 +57,17 @@ export function mapStepName(name: string): MigratedState | null {
 /** الحالة الافتراضية لمحطة مش معروفة */
 export const UNKNOWN_STEP_STATE: MigratedState = active("sup");
 
-/** نوع المستخلص من اسم المسار: كهربي ← electrical، تخطيط ← planning، غير كده مدني */
-export function inferInvoiceKind(pathName: string): InvoiceKind {
+/** كلمة في اسم المسار ← كود نوع الأعمال (من seed المرجعي). الترتيب مهم: أول كلمة تطابق بتكسب */
+const WORK_TYPE_KEYWORDS: [keyword: string, code: string][] = [
+  ["كهرب", "ELECTRICAL"],
+  ["تخطيط", "PLANNING"],
+  ["صيانه", "CIVIL_MAINT"],
+  ["متكامل", "INTEGRATED"],
+];
+export const DEFAULT_WORK_TYPE_CODE = "CIVIL";
+
+/** كود نوع الأعمال من اسم المسار: كهرب ← ELECTRICAL، تخطيط ← PLANNING، صيانة ← CIVIL_MAINT، متكامل ← INTEGRATED، غير كده CIVIL */
+export function inferWorkTypeCode(pathName: string): string {
   const t = normalizeArabic(pathName);
-  if (t.includes("كهرب")) return "electrical";
-  if (t.includes("تخطيط")) return "planning";
-  return "civil";
+  return WORK_TYPE_KEYWORDS.find(([k]) => t.includes(k))?.[1] ?? DEFAULT_WORK_TYPE_CODE;
 }

@@ -6,7 +6,7 @@
 export const ORG_LEVELS = ["presidency", "sector", "techUnit", "generalDept", "dept", "central"] as const;
 export type OrgLevel = (typeof ORG_LEVELS)[number];
 
-export const ORG_KINDS = [...ORG_LEVELS, "projectType", "project", "company"] as const;
+export const ORG_KINDS = [...ORG_LEVELS, "projectType", "workType", "project", "company"] as const;
 export type OrgKind = (typeof ORG_KINDS)[number];
 
 /** fem = مؤنث (عشان "تحته" / "تحتها" في الرسايل) */
@@ -20,6 +20,7 @@ export const KIND_LABELS: Record<OrgKind, KindInfo> = {
   dept: { one: "إدارة مختصة", many: "الإدارات المختصة", fem: true },
   central: { one: "سنترال", many: "السنترالات", fem: false },
   projectType: { one: "نوع مشروع", many: "أنواع المشروعات", fem: false },
+  workType: { one: "نوع أعمال", many: "أنواع الأعمال", fem: false },
   project: { one: "مشروع", many: "المشروعات", fem: false },
   company: { one: "شركة", many: "الشركات", fem: true },
 };

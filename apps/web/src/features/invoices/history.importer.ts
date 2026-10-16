@@ -1,12 +1,11 @@
 import "server-only";
-import type { InvoiceKind } from "@it/db";
 import { date, isExampleRow, num, required, text } from "@/features/imports/cells";
 import type { Importer, RowResult } from "@/features/imports/import.types";
 import { registerImporter } from "@/features/imports/registry";
 import { aoScopeWhere, isUnscoped } from "@/features/materials/ao-scope";
 import { normalizeAoNo, normalizeContractNo } from "@/features/materials/material-keys";
 import { aoIdsInScope } from "@/features/materials/materials.repo";
-import { inferInvoiceKind, mapStepName, UNKNOWN_STEP_STATE, type MigratedState } from "./history.mapping";
+import { inferWorkTypeCode, mapStepName, UNKNOWN_STEP_STATE, type MigratedState } from "./history.mapping";
 import {
   createMigratedInvoice,
   ensurePendingAo,
@@ -14,6 +13,7 @@ import {
   listAosForHistory,
   listContractsForHistory,
   listExistingInvoices,
+  listWorkTypesForHistory,
   updateMigratedStatus,
   type LogEntry,
 } from "./history.repo";
@@ -32,7 +32,8 @@ type Row = MigratedState & {
   aoNo: string;
   invoiceNo: string;
   pathName: string;
-  kind: InvoiceKind;
+  /** نوع الأعمال المستنتج من اسم المسار — null لو الكود مش متسجل في أنواع الأعمال */
+  workTypeId: string | null;
   amountExcl: number;
   amountIncl: number | null;
   /** ISO — المعاينة بتتخزن JSON */
@@ -63,6 +64,7 @@ export const historyImporter: Importer<Row> = {
     const existing = new Map(
       (await listExistingInvoices(contractIds, [...new Set(raw.map((r) => text(r.invoice_no)).filter(Boolean))])).map((i) => [`${i.contractId}|${i.invoiceNo}`, i]),
     );
+    const workTypes = new Map((await listWorkTypesForHistory()).map((w) => [w.code, w.id]));
     const seen = new Map<string, number>();
 
     const rows = raw.map((r): RowResult<Row> => {
@@ -80,6 +82,9 @@ export const historyImporter: Importer<Row> = {
       if (!aoNo) errors.push("رقم أمر التكليف إلزامي");
       if (!invoiceNo) errors.push("رقم المستخلص إلزامي");
       if (path.error) errors.push(path.error);
+      const workTypeCode = inferWorkTypeCode(path.value ?? "");
+      const workTypeId = workTypes.get(workTypeCode) ?? null;
+      if (path.value && !workTypeId) warnings.push(`نوع الأعمال ${workTypeCode} مش متسجل — المستخلص هيتسجل من غير نوع أعمال`);
 
       // ── المحطة ← الحالة ──
       const stepName = text(r.current_step);
@@ -161,7 +166,7 @@ export const historyImporter: Importer<Row> = {
           aoNo,
           invoiceNo,
           pathName: path.value!,
-          kind: inferInvoiceKind(path.value!),
+          workTypeId,
           amountExcl: excl.value!,
           amountIncl: incl.value ?? null,
           since: since.value?.toISOString() ?? null,
@@ -238,7 +243,7 @@ export const historyImporter: Importer<Row> = {
           aoId,
           invoiceNo: d.invoiceNo,
           pathName: d.pathName,
-          kind: d.kind,
+          workTypeId: d.workTypeId,
           migratedAmount: d.amountExcl,
           paymentAmount: paid ? (d.amountIncl ?? d.amountExcl) : null,
           submittedAt: d.status === "draft" ? null : since,

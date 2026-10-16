@@ -1,5 +1,5 @@
 /**
- * zod schemas لفورم الإضافة والتعديل (الهيكل + أنواع المشروعات + المشروعات + الشركات).
+ * zod schemas لفورم الإضافة والتعديل (الهيكل + أنواع المشروعات والأعمال + المشروعات + الشركات).
  * الكود بيتكتب مرة واحدة عند الإضافة ومش بيتعدل بعد كده — فـ schema التعديل مفيهوش code.
  */
 import { z } from "zod";
@@ -36,6 +36,15 @@ const optDate = z
   .refine((v) => !v || (/^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`))), "التاريخ مش صحيح")
   .transform((v) => (v ? new Date(`${v}T00:00:00Z`) : null));
 
+/** checkbox: بيتبعت "1" لو متعلّم، وغير كده مش بيتبعت خالص */
+const flag = z.string().optional().transform((v) => v === "1" || v === "on");
+const sortNo = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? Number(v) : 0))
+  .pipe(z.number("الترتيب لازم يبقى رقم").int("الترتيب لازم يبقى رقم صحيح").min(0, "الترتيب من 0 لـ 9999").max(9999, "الترتيب من 0 لـ 9999"));
+
 /** الحقول القابلة للتعديل لكل نوع (من غير الكود) */
 const FIELDS = {
   presidency: { name: name() },
@@ -45,6 +54,7 @@ const FIELDS = {
   dept: { name: name(), generalDeptId: ref("اختار الإدارة العامة") },
   central: { name: name(), deptId: ref("اختار الإدارة المختصة") },
   projectType: { name: name() },
+  workType: { name: name(), isPlanning: flag, active: flag, sort: sortNo },
   project: {
     name: name(),
     typeId: ref("اختار نوع المشروع"),

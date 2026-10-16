@@ -5,8 +5,9 @@ import { commitRows } from "./import-commit";
 import { loadExistingProjects, upsertProjectsRow } from "./org-import.repo";
 import { tableRows } from "./org.importer";
 import { PROJECTS_SHEET, TYPES_SHEET, validateProjectSheets, type ProjectsImportRow } from "./projects-import.rules";
+import { WORK_TYPES_SHEET } from "./work-types-import.rules";
 
-/** قالب 02 — أنواع المشروعات + المشروعات (كل مشروع مربوط بسنترال) */
+/** قالب 02 — أنواع المشروعات + أنواع الأعمال (اختياري) + المشروعات (كل مشروع مربوط بسنترال) */
 export const projectsImporter: Importer<ProjectsImportRow> = {
   templateId: "02_المشروعات",
   title: "المشروعات وأنواعها",
@@ -14,6 +15,7 @@ export const projectsImporter: Importer<ProjectsImportRow> = {
   permission: "master.import",
   sheets: [
     { name: TYPES_SHEET, kind: "table" },
+    { name: WORK_TYPES_SHEET, kind: "table", required: false },
     { name: PROJECTS_SHEET, kind: "table" },
   ],
 

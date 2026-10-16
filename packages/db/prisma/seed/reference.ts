@@ -4,14 +4,16 @@
 //    المستندات الإلزامية، الإعدادات) بتتزرع بس لو مش موجودة، وعمرها ما بتتكتب فوقها.
 import type { PrismaClient } from '../../src/index';
 import {
-  CATEGORIES, DOC_TYPES, HOLIDAYS_2026, PERMISSIONS, PROJECT_TYPES, REQUIRED_FINANCE_DOCS,
-  REQUIRED_SUBMIT_DOCS, RETURN_REASONS, SETTINGS, WORKFLOW_STEPS,
+  CATEGORIES, DOC_TYPES, HOLIDAYS_2026, LEGACY_PROJECT_TYPES, PERMISSIONS, PROJECT_TYPES,
+  REQUIRED_FINANCE_DOCS, REQUIRED_SUBMIT_DOCS, RETURN_REASONS, SETTINGS, WORK_TYPES, WORKFLOW_STEPS,
 } from './reference-data';
 
 export async function seedReference(db: PrismaClient): Promise<void> {
   await seedSteps(db);
   await seedCategories(db);
   await seedDocs(db);
+  await removeLegacyProjectTypes(db);
+  await seedWorkTypes(db);
   await seedReturnReasons(db);
   await seedHolidays(db);
   await seedPermissions(db);
@@ -56,7 +58,7 @@ async function seedDocs(db: PrismaClient) {
   for (const t of PROJECT_TYPES) {
     const type = await db.projectType.upsert({ where: { code: t.code }, create: t, update: {} });
     const plan = [
-      { stage: 'submit' as const, codes: REQUIRED_SUBMIT_DOCS[t.code] ?? [] },
+      { stage: 'submit' as const, codes: REQUIRED_SUBMIT_DOCS },
       { stage: 'finance' as const, codes: REQUIRED_FINANCE_DOCS },
     ];
     for (const { stage, codes } of plan) {
@@ -69,6 +71,30 @@ async function seedDocs(db: PrismaClient) {
     }
   }
   log('project_types', PROJECT_TYPES.length, `${seeded} required-doc list(s) seeded`);
+}
+
+/** الأنواع القديمة بتتشال بس لو مفيش مشروع عليها (ومستنداتها الإلزامية الأول) */
+async function removeLegacyProjectTypes(db: PrismaClient) {
+  const removed: string[] = [];
+  for (const code of LEGACY_PROJECT_TYPES) {
+    const type = await db.projectType.findUnique({ where: { code }, select: { id: true, _count: { select: { projects: true } } } });
+    if (!type || type._count.projects > 0) continue;
+    await db.$transaction([
+      db.requiredDoc.deleteMany({ where: { projectTypeId: type.id } }),
+      db.projectType.delete({ where: { id: type.id } }),
+    ]);
+    removed.push(code);
+  }
+  if (removed.length) console.log(`  ✓ legacy project types removed: ${removed.join(', ')}`);
+}
+
+/** بتتزرع بس لو مش موجودة — الـ Admin بيعدّل الاسم والترتيب من شاشة الهيكل */
+async function seedWorkTypes(db: PrismaClient) {
+  for (const [sort, w] of WORK_TYPES.entries()) {
+    const data = { code: w.code, name: w.name, isPlanning: w.isPlanning ?? false, sort };
+    await db.workType.upsert({ where: { code: w.code }, create: data, update: {} });
+  }
+  log('work_types', WORK_TYPES.length);
 }
 
 async function seedReturnReasons(db: PrismaClient) {

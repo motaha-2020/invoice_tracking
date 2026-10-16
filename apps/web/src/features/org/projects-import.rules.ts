@@ -1,5 +1,5 @@
 /**
- * قواعد قالب 02 (أنواع المشروعات + المشروعات) — صافية.
+ * قواعد قالب 02 (أنواع المشروعات + أنواع الأعمال + المشروعات) — صافية.
  * نوع المشروع: من المنظومة أو من شيت الأنواع في نفس الملف. السنترال: من المنظومة بس (قالب 01).
  * الخلايا الاختيارية الفاضية في صف تحديث = سيب القيمة القديمة زي ما هي.
  */
@@ -17,13 +17,14 @@ import {
   rowLabel,
   take,
 } from "./import-rules.shared";
+import { WORK_TYPES_SHEET, validateWorkType, type ExistingWorkType, type WorkTypeImportRow } from "./work-types-import.rules";
 
 export const TYPES_SHEET = "أنواع المشروعات";
 export const PROJECTS_SHEET = "المشروعات";
 
 const TYPE_EXAMPLES = [
-  { code: "FTTH", name: "FTTH — ألياف للمنازل" },
-  { code: "MSAN", name: "إحلال كابينات MSAN" },
+  { code: "FIBERIZATION", name: "Fiberization" },
+  { code: "ACCESS", name: "إتاحة" },
 ];
 const PROJECT_EXAMPLES = [{ code: "PJ-RABAA", name: "حى الحدق — سنترال رابعة" }];
 
@@ -38,12 +39,14 @@ export type ExistingProject = {
 
 export type ExistingProjectsData = {
   types: ReadonlyMap<string, { name: string }>;
+  workTypes: ReadonlyMap<string, ExistingWorkType>;
   centrals: ReadonlyMap<string, { name: string }>;
   projects: ReadonlyMap<string, ExistingProject>;
 };
 
 export type ProjectsImportRow =
   | { kind: "type"; code: string; name: string }
+  | WorkTypeImportRow
   | {
       kind: "project";
       code: string;
@@ -70,6 +73,9 @@ export function validateProjectSheets(
     const c = r.data?.code ?? normalizeCode(row.code);
     if (c && !fileTypes.has(c)) fileTypes.set(c, r.data !== undefined);
   }
+
+  const seenWorkTypes = new SeenCodes();
+  for (const row of sheets[WORK_TYPES_SHEET] ?? []) out.push(validateWorkType(row, existing.workTypes, seenWorkTypes));
 
   const seenProjects = new SeenCodes();
   for (const row of sheets[PROJECTS_SHEET] ?? []) out.push(validateProject(row, existing, fileTypes, seenProjects));

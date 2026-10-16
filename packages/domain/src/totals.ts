@@ -1,7 +1,7 @@
 import { amountInWordsEGP } from './arabic-words';
 import { DomainError } from './errors';
 import { pctOf, round2, sumBy } from './money';
-import type { DeductionType, InvoiceKind } from './types';
+import type { DeductionType } from './types';
 
 /*
  * الحسابات المالية للمستخلص.
@@ -80,7 +80,8 @@ export interface HeldAmount {
 
 export interface InvoiceTotalsInput {
   lines: readonly TotalsLine[];
-  kind: InvoiceKind;
+  /** نوع الأعمال تخطيط (رسومات) = بيتصرف planningPayPct% بعد الانتهاء من غير محجوز */
+  isPlanning: boolean;
   terms: PaymentTerms;
   /** بيستبدل الاستقطاعات الافتراضية (الخصم من المنبع) — المالية بتعدّلها */
   deductionsOverride?: readonly DeductionInput[];
@@ -117,8 +118,8 @@ function grossOf(lines: readonly TotalsLine[]): { gross: number; byWorkType: Rec
   return { gross: sumBy(Object.values(byWorkType), (v) => v), byWorkType };
 }
 
-function heldOf(gross: number, kind: InvoiceKind, t: PaymentTerms): HeldAmount[] {
-  if (kind === 'planning') return [];
+function heldOf(gross: number, isPlanning: boolean, t: PaymentTerms): HeldAmount[] {
+  if (isPlanning) return [];
   const sum = t.payMonthlyPct + t.payAsbuiltPct + t.payHandoverPct;
   if (Math.abs(sum - 100) > PCT_TOLERANCE) {
     throw new DomainError('TERMS_PCT_SUM', `نسب الصرف في العقد مجموعها ${sum}% بدل 100%`);
@@ -147,12 +148,12 @@ function deductionsOf(input: InvoiceTotalsInput, base: number): Deduction[] {
 /** إجمالي وضريبة ومحجوز واستقطاعات وصافي المستخلص (المعادلة في أول الملف). */
 export function invoiceTotals(input: InvoiceTotalsInput): InvoiceTotals {
   const policy = input.policy ?? TOTALS_POLICY;
-  const { terms, kind } = input;
+  const { terms, isPlanning } = input;
   const { gross, byWorkType } = grossOf(input.lines);
-  const held = heldOf(gross, kind, terms);
+  const held = heldOf(gross, isPlanning, terms);
   const heldTotal = sumBy(held, (h) => h.amount);
-  const payNowPct = kind === 'planning' ? terms.planningPayPct : terms.payMonthlyPct;
-  const payableNow = kind === 'planning' ? pctOf(gross, terms.planningPayPct) : round2(gross - heldTotal);
+  const payNowPct = isPlanning ? terms.planningPayPct : terms.payMonthlyPct;
+  const payableNow = isPlanning ? pctOf(gross, terms.planningPayPct) : round2(gross - heldTotal);
   const vat = pctOf(policy.vatBase === 'gross' ? gross : payableNow, terms.vatPct);
   const deductions = deductionsOf(input, policy.withholdingBase === 'gross' ? gross : payableNow);
   const deductionsTotal = sumBy(deductions, (d) => d.amount);

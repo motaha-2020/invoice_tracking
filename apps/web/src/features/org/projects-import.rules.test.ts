@@ -6,6 +6,7 @@ let n = 3;
 const row = (v: Record<string, unknown>): RawRow => ({ __row: n++, ...v });
 const existing = (projects: [string, ExistingProject][] = []): ExistingProjectsData => ({
   types: new Map([["FTTH", { name: "FTTH" }]]),
+  workTypes: new Map([["CIVIL", { name: "أعمال مدنية", isPlanning: false }]]),
   centrals: new Map([
     ["C-1", { name: "سنترال 1" }],
     ["C-2", { name: "سنترال 2" }],
@@ -76,5 +77,28 @@ describe("validateProjectSheets", () => {
     );
     expect(moved!.status).toBe("update");
     expect(moved!.warnings.join()).toContain("هيتنقل");
+  });
+
+  it("أنواع الأعمال: جديد بعلامة التخطيط، والخلية الفاضية في التحديث مش تغيير", () => {
+    const rows = validateProjectSheets(
+      {
+        "أنواع الأعمال": [
+          row({ code: "planning", name: "تخطيط ورسومات", is_planning: "نعم" }),
+          row({ code: "CIVIL", name: "أعمال مدنية", is_planning: "" }),
+          row({ code: "CIVIL", name: "مدني", is_planning: "لا" }),
+          row({ code: "ELEC", name: "" }),
+        ],
+      },
+      existing(),
+    );
+    expect(rows.map((r) => r.status)).toEqual(["create", "skip", "error", "error"]);
+    expect(rows[0]!.data).toEqual({ kind: "workType", code: "PLANNING", name: "تخطيط ورسومات", isPlanning: true });
+    expect(rows[2]!.errors.join()).toContain("متكرر");
+  });
+
+  it("أنواع الأعمال: تغيير الاسم أو علامة التخطيط ← update", () => {
+    const [r] = validateProjectSheets({ "أنواع الأعمال": [row({ code: "CIVIL", name: "أعمال مدنية", is_planning: "نعم" })] }, existing());
+    expect(r!.status).toBe("update");
+    expect(r!.data).toMatchObject({ isPlanning: true });
   });
 });

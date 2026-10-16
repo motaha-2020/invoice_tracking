@@ -1,6 +1,6 @@
 import { Badge, CategoryBadge, Num, TBody, THead, Table, TableWrap, Td, Th, Tr } from "@/components/ui";
 import { formatDate } from "@/lib/format";
-import { INVOICE_KIND_LABELS, INVOICE_STATUS } from "@/lib/labels";
+import { INVOICE_STATUS } from "@/lib/labels";
 import type { InvoiceListRow, StepInfo } from "../invoices.service";
 
 /** مين ماسك المستخلص دلوقتي (نفس holderLabel في الديمو) */
@@ -61,7 +61,8 @@ export function InvoiceTable({ rows, steps, showCompany = true }: InvoiceTablePr
                 <Td>
                   <div>{inv.pathName || inv.ao.project?.name || "—"}</div>
                   <div className="text-xs text-tx3">
-                    {inv.ao.project?.central.name ?? "—"} · {INVOICE_KIND_LABELS[inv.kind]}
+                    {inv.ao.project?.central.name ?? "—"}
+                    {inv.workType && ` · ${inv.workType.name}`}
                   </div>
                 </Td>
                 <Td>

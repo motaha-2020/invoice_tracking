@@ -14,11 +14,13 @@ import { CompaniesTable, TypesTable } from "./master-tables";
 import { OrgTabs, parseOrgTab, type OrgTab } from "./org-tabs";
 import { OrgTree } from "./org-tree";
 import { ProjectsTable } from "./projects-table";
+import { WorkTypesTable } from "./work-types-table";
 
 const ADD_FOR_TAB: Partial<Record<OrgTab, { kind: OrgKind; label: string }>> = {
   tree: { kind: "presidency", label: "رئاسة قطاعات" },
   projects: { kind: "project", label: "مشروع" },
   types: { kind: "projectType", label: "نوع مشروع" },
+  "work-types": { kind: "workType", label: "نوع أعمال" },
   companies: { kind: "company", label: "شركة" },
 };
 
@@ -63,7 +65,13 @@ export async function OrgScreen({ tabParam }: { tabParam: Promise<unknown> }) {
       <OrgTabs
         current={tab}
         showImport={canEdit}
-        counts={{ tree: count("central"), projects: data.projects.length, types: data.types.length, companies: data.companies.length }}
+        counts={{
+          tree: count("central"),
+          projects: data.projects.length,
+          types: data.types.length,
+          "work-types": data.workTypes.length,
+          companies: data.companies.length,
+        }}
       />
       <TabBody tab={tab} data={data} canEdit={canEdit} />
     </OrgDialogsProvider>
@@ -76,6 +84,8 @@ function TabBody({ tab, data, canEdit }: { tab: OrgTab; data: OrgPageData; canEd
       return <ProjectsTable projects={data.projects} types={data.types} />;
     case "types":
       return <TypesTable types={data.types} canEdit={canEdit} />;
+    case "work-types":
+      return <WorkTypesTable workTypes={data.workTypes} canEdit={canEdit} />;
     case "companies":
       return <CompaniesTable companies={data.companies} canEdit={canEdit} />;
     case "import":
@@ -106,6 +116,6 @@ function ImportSection() {
 
 const HINTS: Record<string, string> = {
   [orgImporter.templateId]: "رئاسات ← قطاعات ← إدارات عامة وشئون فنية ← إدارات مختصة ← سنترالات",
-  [projectsImporter.templateId]: "أنواع المشروعات والمشروعات وربط كل مشروع بالسنترال",
+  [projectsImporter.templateId]: "أنواع المشروعات وأنواع الأعمال والمشروعات وربط كل مشروع بالسنترال",
   [companiesImporter.templateId]: "الشركات المنفذة وإيميل المستخلصات بتاع كل شركة",
 };

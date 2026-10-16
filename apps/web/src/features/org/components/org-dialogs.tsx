@@ -91,8 +91,10 @@ function EntityForm({ kind, record, defaults, options, onDone, onCancel }: FormP
   }, initial);
   const uid = useId();
   const fe = state.fieldErrors ?? {};
-  const value = (name: string) => state.values?.[name] ?? record?.[name] ?? defaults?.[name] ?? "";
   const fields = ENTITY_FIELDS[kind];
+  const initialOf = (name: string) => (record ? "" : (fields.find((f) => f.name === name)?.initial ?? ""));
+  // بعد محاولة فاشلة: القيم اللي اتبعتت بس (الـ checkbox الفاضي مش بيتبعت، فمايرجعش لقيمة السجل)
+  const value = (name: string) => (state.values ? (state.values[name] ?? "") : (record?.[name] ?? defaults?.[name] ?? initialOf(name)));
 
   return (
     <form action={action} noValidate className="flex flex-col gap-3.5">
@@ -156,13 +158,20 @@ function FieldInput({ f, id, value, error, options }: { f: FieldDef; id: string;
         <OptionList list={options} />
       </Select>
     );
+  } else if (f.type === "checkbox") {
+    control = (
+      <label className="flex h-[34px] items-center gap-2 text-sm">
+        <input id={id} name={f.name} type="checkbox" value="1" defaultChecked={value === "1"} aria-invalid={error ? true : undefined} /> {f.checkLabel}
+      </label>
+    );
   } else if (f.type === "textarea") {
     control = <Textarea {...common} rows={3} />;
   } else {
-    control = <Input {...common} type={f.type} dir={f.ltr || f.type === "date" ? "ltr" : undefined} className={f.ltr ? "text-start" : undefined} />;
+    const numeric = f.type === "number" ? { inputMode: "numeric", min: 0, step: 1 } as const : {};
+    control = <Input {...common} {...numeric} type={f.type} dir={f.ltr || f.type === "date" ? "ltr" : undefined} className={f.ltr ? "text-start" : undefined} />;
   }
   return (
-    <Field label={f.label} htmlFor={id} required={f.required} hint={f.hint} error={error} className={cn(f.wide && "col-span-2 max-sm:col-span-1")}>
+    <Field label={f.label} htmlFor={f.type === "checkbox" ? undefined : id} required={f.required} hint={f.hint} error={error} className={cn(f.wide && "col-span-2 max-sm:col-span-1")}>
       {control}
     </Field>
   );
