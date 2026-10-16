@@ -27,7 +27,7 @@ export const ALLOWED_TYPES: Readonly<Record<string, string>> = {
 };
 
 function root(): string {
-  return path.resolve(process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads"));
+  return path.resolve(/*turbopackIgnore: true*/ process.env.UPLOAD_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "uploads"));
 }
 
 export function extOf(fileName: string): string {
@@ -38,7 +38,7 @@ export function extOf(fileName: string): string {
 /** المسار الكامل لملف — بيرفض أي مسار بيطلع برّه UPLOAD_DIR */
 function resolve(rel: string): string {
   const base = root();
-  const full = path.resolve(base, rel);
+  const full = path.resolve(/*turbopackIgnore: true*/ base, rel);
   if (!full.startsWith(base + path.sep)) throw new Error("invalid storage path");
   return full;
 }
@@ -50,15 +50,15 @@ export async function saveFile(data: Buffer, fileName: string): Promise<{ storag
   const now = new Date();
   const rel = path.posix.join(String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, "0"), `${randomBytes(16).toString("hex")}.${ext}`);
   const full = resolve(rel);
-  await mkdir(path.dirname(full), { recursive: true });
-  await writeFile(full, data, { flag: "wx" });
+  await mkdir(/*turbopackIgnore: true*/ path.dirname(full), { recursive: true });
+  await writeFile(/*turbopackIgnore: true*/ full, data, { flag: "wx" });
   return { storagePath: rel, sha256: createHash("sha256").update(data).digest("hex"), mimeType };
 }
 
 export function readStoredFile(rel: string): Promise<Buffer> {
-  return readFile(resolve(rel));
+  return readFile(/*turbopackIgnore: true*/ resolve(rel));
 }
 
 export async function removeStoredFile(rel: string): Promise<void> {
-  await rm(resolve(rel), { force: true });
+  await rm(/*turbopackIgnore: true*/ resolve(rel), { force: true });
 }
