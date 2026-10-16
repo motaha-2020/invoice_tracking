@@ -166,8 +166,10 @@ export const USERS: { name: string; email: string; role: Role; scope: ScopeRef }
   { name: 'رئاسة الدلتا', email: 'pres.pr1@example.test', role: 'presidency_head', scope: at('presidency', 'PR1') },
   { name: 'رئاسة القاهرة', email: 'pres.pr2@example.test', role: 'presidency_head', scope: at('presidency', 'PR2') },
   { name: 'أمانة اللجنة العليا', email: 'committee@example.test', role: 'committee', scope: all },
-  { name: 'مخازن الدلتا', email: 'stores.pr1@example.test', role: 'stores', scope: at('presidency', 'PR1') },
-  { name: 'مخازن القاهرة', email: 'stores.pr2@example.test', role: 'stores', scope: at('presidency', 'PR2') },
+  // المخازن نطاقها القطاع (قرار التشغيل)
+  { name: 'مخازن الدقهلية', email: 'stores.s1@example.test', role: 'stores', scope: at('sector', 'S1') },
+  { name: 'مخازن الشرقية', email: 'stores.s2@example.test', role: 'stores', scope: at('sector', 'S2') },
+  { name: 'مخازن جنوب القاهرة', email: 'stores.s3@example.test', role: 'stores', scope: at('sector', 'S3') },
   { name: 'المالية', email: 'finance@example.test', role: 'finance', scope: all },
   { name: 'المكتب الفني — الدقهلية', email: 'office.s1@example.test', role: 'tech_office', scope: at('sector', 'S1') },
 ];

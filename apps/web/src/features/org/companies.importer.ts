@@ -10,7 +10,7 @@ export const companiesImporter: Importer<CompanyImportRow> = {
   templateId: "03_الشركات",
   title: "الشركات المنفذة",
   templateFile: "03_الشركات.xlsx",
-  permission: "master.import",
+  permission: "org.manage",
   sheets: [{ name: COMPANIES_SHEET, kind: "table" }],
 
   async validate(wb: ParsedWorkbook) {

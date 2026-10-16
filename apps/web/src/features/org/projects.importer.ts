@@ -12,7 +12,7 @@ export const projectsImporter: Importer<ProjectsImportRow> = {
   templateId: "02_المشروعات",
   title: "المشروعات وأنواعها",
   templateFile: "02_المشروعات.xlsx",
-  permission: "master.import",
+  permission: "org.manage",
   sheets: [
     { name: TYPES_SHEET, kind: "table" },
     { name: WORK_TYPES_SHEET, kind: "table", required: false },

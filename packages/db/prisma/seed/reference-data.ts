@@ -122,6 +122,7 @@ export const PERMISSIONS: Record<string, Role[]> = {
   'invoice.viewAll': ['admin', 'pmo'],
   'invoice.override': ['admin', 'pmo'],
   'master.import': ['admin', 'tech_affairs'],
+  'org.manage': ['admin', 'pmo', 'tech_affairs'],
   'issues.import': ['admin', 'stores'],
   'users.manage': ['admin'],
   'workflow.config': ['admin', 'pmo'],

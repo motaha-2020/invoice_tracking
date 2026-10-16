@@ -11,7 +11,7 @@ export const orgImporter: Importer<OrgImportRow> = {
   templateId: "01_الهيكل_التنظيمي",
   title: "الهيكل التنظيمي",
   templateFile: "01_الهيكل_التنظيمي.xlsx",
-  permission: "master.import",
+  permission: "org.manage",
   sheets: ORG_SHEETS.map((s) => ({ name: s.sheet, kind: "table" as const })),
 
   async validate(wb: ParsedWorkbook) {
