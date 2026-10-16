@@ -5,6 +5,9 @@ import { Suspense } from "react";
 import { Card, CardHeader, EmptyState, Kpi, PageHeader, PageSkeleton } from "@/components/ui";
 import { AoTable } from "@/features/contracts/components/ao-table";
 import { BoqTable } from "@/features/contracts/components/boq-table";
+import { ContractEditButton } from "@/features/contracts/components/contract-edit";
+import { ContractFiles } from "@/features/contracts/components/contract-files";
+import { getContractEditValues, listContractFiles } from "@/features/contracts/contract-edit.service";
 import { TermsCard } from "@/features/contracts/components/terms-card";
 import { getContractView } from "@/features/contracts/contracts.service";
 import { requireNavAccess } from "@/features/shell/nav.service";
@@ -28,6 +31,7 @@ async function ContractContent({ params }: { params: Params }) {
   const view = await getContractView(user, id);
   if (!view) notFound();
   const { contract: c, stats } = view;
+  const [editValues, files] = await Promise.all([getContractEditValues(user, c.id), listContractFiles(c.id)]);
 
   return (
     <>
@@ -43,7 +47,9 @@ async function ContractContent({ params }: { params: Params }) {
         <Kpi icon={Wallet} label="القيمة المفوترة" value={formatMoney(stats.billed, { decimals: 0 })} sub="المستخلصات عدا المسودات" />
       </div>
 
-      <TermsCard view={view} />
+      <TermsCard view={view} actions={editValues && <ContractEditButton contractId={c.id} values={editValues} />} />
+
+      <ContractFiles contractId={c.id} files={files} canEdit={!!editValues} />
 
       <Card className="mt-5">
         <CardHeader title="أوامر التكليف" sub={<span className="num">{view.aos.length}</span>} />
