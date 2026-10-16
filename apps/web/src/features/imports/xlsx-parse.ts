@@ -1,6 +1,7 @@
 import "server-only";
 import ExcelJS from "exceljs";
 import type { ParsedSheet, ParsedWorkbook, RawRow } from "./import.types";
+import TEMPLATE_HEADERS from "./template-headers.json";
 
 /** أقصى حجم لملف الاستيراد — المقايسة الكبيرة ~50KB، فده كافي جداً */
 export const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
@@ -32,15 +33,37 @@ function exampleText(v: unknown): string {
 /** فاصل بين خلايا الصف عند مقارنته بصفوف المثال (مستحيل يظهر في بيانات حقيقية) */
 const SEP = "\u0001";
 
-function parseTable(ws: ExcelJS.Worksheet, examples: string[][] = [], skipped: number[] = []): ParsedSheet {
-  const exampleKeys = new Set(examples.map((e) => e.join(SEP)));
-  const keys: (string | null)[] = [];
+const KEY_RE = /^[a-z][a-z0-9_]*$/;
+
+/** عنوان العمود العربي بشكل موحّد (من غير * ولا مسافات زيادة) — نفس normHeader في scripts/gen-template-headers.mjs */
+export const normHeader = (s: string) => s.replace(/\*/g, "").replace(/\u0640/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+
+/**
+ * أسماء الأعمدة التقنية: من صف 2 في القالب. لو المستخدم كتب بياناته فوق الصف ده أو مسحه
+ * (أشهر غلطة — بيبدأ يكتب تحت العناوين على طول)، بنعرف الأعمدة من العناوين العربي في صف 1
+ * (template-headers.json) والبيانات بتبدأ من صف 2.
+ */
+function columnKeys(ws: ExcelJS.Worksheet, headers?: Record<string, string>): { keys: (string | null)[]; start: number } {
+  const row2: (string | null)[] = [];
   ws.getRow(2).eachCell({ includeEmpty: true }, (cell, col) => {
     const k = cellValue(cell.value);
-    keys[col] = typeof k === "string" && k.trim() ? k.trim() : null;
+    row2[col] = typeof k === "string" && k.trim() ? k.trim() : null;
   });
+  const filled = row2.filter((k): k is string => !!k);
+  if (!headers || (filled.length > 0 && filled.every((k) => KEY_RE.test(k)))) return { keys: row2, start: 3 };
+  const keys: (string | null)[] = [];
+  ws.getRow(1).eachCell({ includeEmpty: true }, (cell, col) => {
+    const h = cellValue(cell.value);
+    keys[col] = typeof h === "string" ? (headers[normHeader(h)] ?? null) : null;
+  });
+  return keys.some(Boolean) ? { keys, start: 2 } : { keys: row2, start: 3 };
+}
+
+function parseTable(ws: ExcelJS.Worksheet, examples: string[][] = [], skipped: number[] = [], headers?: Record<string, string>): ParsedSheet {
+  const exampleKeys = new Set(examples.map((e) => e.join(SEP)));
+  const { keys, start } = columnKeys(ws, headers);
   const rows: RawRow[] = [];
-  for (let r = 3; r <= ws.rowCount; r++) {
+  for (let r = start; r <= ws.rowCount; r++) {
     const row = ws.getRow(r);
     const out: RawRow = { __row: r };
     let any = false;
@@ -89,13 +112,15 @@ export async function parseWorkbook(buffer: ArrayBuffer, kvSheets: string[]): Pr
   } catch {
     examples = {};
   }
+  const templateId = metaVal(1);
+  const headers = (templateId ? (TEMPLATE_HEADERS as Record<string, Record<string, Record<string, string>>>)[templateId] : undefined) ?? {};
   const sheets: Record<string, ParsedSheet> = {};
   const skippedExamples: Record<string, number[]> = {};
   wb.eachSheet((ws) => {
     if (ws.name === "_meta" || ws.name === "تعليمات") return;
     const skipped: number[] = [];
-    sheets[ws.name] = kvSheets.includes(ws.name) ? parseKv(ws) : parseTable(ws, examples[ws.name], skipped);
+    sheets[ws.name] = kvSheets.includes(ws.name) ? parseKv(ws) : parseTable(ws, examples[ws.name], skipped, headers[ws.name]);
     if (skipped.length) skippedExamples[ws.name] = skipped;
   });
-  return { templateId: metaVal(1), templateVersion: metaVal(2), sheets, skippedExamples };
+  return { templateId, templateVersion: metaVal(2), sheets, skippedExamples };
 }

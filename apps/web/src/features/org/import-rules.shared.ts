@@ -7,15 +7,15 @@ import type { RawRow, RowResult, RowStatus } from "../imports/import.types";
 export const CODE_MAX = 40;
 export const NAME_MAX = 200;
 
-/** حروف (عربي أو إنجليزي) وأرقام و - _ . / بس، ويبدأ بحرف أو رقم */
-export const CODE_RE = /^[\p{L}\p{N}][\p{L}\p{N}._\-/]*$/u;
+/** حروف (عربي أو إنجليزي) وأرقام و - _ . / & بس، ويبدأ بحرف أو رقم (مثال: C&S) */
+export const CODE_RE = /^[\p{L}\p{N}][\p{L}\p{N}._\-/&]*$/u;
 
 /** كود فريد: بيتوحّد (من غير مسافات، حروف كبيرة) ويتأكد من الشكل والطول */
 export function codeCell(v: unknown, label = "الكود"): Cell<string> {
   const c = normalizeCode(v);
   if (!c) return { error: `${label} إلزامي` };
   if (c.length > CODE_MAX) return { error: `${label} "${c}" يتجاوز ${CODE_MAX} حرفاً` };
-  if (!CODE_RE.test(c)) return { error: `${label} "${c}" يتضمن رموزاً غير مسموحة (المسموح: الحروف والأرقام و - _ . / فقط)` };
+  if (!CODE_RE.test(c)) return { error: `${label} "${c}" يتضمن رموزاً غير مسموحة (المسموح: الحروف والأرقام و - _ . / & فقط)` };
   return { value: c };
 }
 
