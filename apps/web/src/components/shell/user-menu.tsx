@@ -35,7 +35,7 @@ export function UserMenu({ name, email, roles }: UserMenuProps) {
                 <Badge tone="n">{r.scope}</Badge>
               </div>
             ))}
-            {roles.length === 0 && <Badge tone="a">مفيش دور متحدد للحساب ده</Badge>}
+            {roles.length === 0 && <Badge tone="a">لم يُحدَّد دور وظيفي لهذا الحساب</Badge>}
           </div>
         </div>
         <form action={logoutAction}>

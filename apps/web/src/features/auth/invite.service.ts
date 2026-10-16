@@ -21,22 +21,22 @@ export async function createInvite(actor: SessionUser, userId: string, purpose: 
   if (!(await can(actor, "users.manage"))) throw new AppError("FORBIDDEN");
 
   const user = await findUserForInvite(userId);
-  if (!user) throw new AppError("NOT_FOUND", "المستخدم ده مش موجود");
-  if (!user.active) throw new AppError("VALIDATION", "المستخدم ده موقوف — فعّله الأول");
+  if (!user) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
+  if (!user.active) throw new AppError("VALIDATION", "حساب المستخدم موقوف — يرجى تفعيله أولاً");
 
   const token = randomBytes(32).toString("base64url");
   const link = `${env.appUrl}/invite/${token}`;
-  const subject = purpose === "invite" ? "دعوة لمنظومة تتبع المستخلصات" : "استعادة كلمة السر — منظومة تتبع المستخلصات";
+  const subject = purpose === "invite" ? "دعوة لمنظومة تتبع المستخلصات" : "إعادة تعيين كلمة المرور — منظومة تتبع المستخلصات";
   const body = [
     `السيد/ ${user.name}`,
     "تحية طيبة وبعد،",
     "",
     purpose === "invite"
-      ? "تم إنشاء حساب لحضرتك على منظومة تتبع المستخلصات. افتح الرابط ده واختار كلمة السر:"
-      : "اتطلب إعادة تعيين كلمة السر لحسابك. افتح الرابط ده واختار كلمة سر جديدة:",
+      ? "تم إنشاء حساب لسيادتكم على منظومة تتبع المستخلصات. يرجى فتح الرابط التالي لتعيين كلمة المرور:"
+      : "ورد طلب لإعادة تعيين كلمة المرور الخاصة بحسابكم. يرجى فتح الرابط التالي لتعيين كلمة مرور جديدة:",
     link,
     "",
-    "الرابط صالح لمدة 72 ساعة ولمرة واحدة بس. لو ما طلبتش ده تجاهل الرسالة.",
+    "الرابط صالح لمدة 72 ساعة ولمرة واحدة فقط. في حال عدم تقديمكم لهذا الطلب يرجى تجاهل هذه الرسالة.",
     "",
     "منظومة تتبع المستخلصات — المصرية للاتصالات",
   ].join("\n");

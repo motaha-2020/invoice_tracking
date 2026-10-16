@@ -63,7 +63,7 @@ export function CommandPalette({ items }: { items: PaletteItem[] }) {
         aria-label="بحث"
       >
         <Search className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
-        <span className="max-xl:hidden">ابحث عن صفحة…</span>
+        <span className="max-xl:hidden">البحث عن صفحة…</span>
         <kbd className="ms-auto rounded-[3px] bg-white/16 px-1.5 font-[inherit] text-[11px] max-xl:hidden">Ctrl K</kbd>
       </button>
 
@@ -80,7 +80,7 @@ export function CommandPalette({ items }: { items: PaletteItem[] }) {
           <input
             ref={inputRef}
             value={q}
-            placeholder="اكتب اسم صفحة…"
+            placeholder="أدخل اسم الصفحة…"
             className="h-[52px] flex-1 border-0 bg-transparent text-[15px] outline-0"
             onChange={(e) => {
               setQ(e.target.value);
@@ -130,7 +130,7 @@ export function CommandPalette({ items }: { items: PaletteItem[] }) {
           ) : (
             <div className="px-5 py-8 text-center text-tx3">
               <SearchX className="mx-auto mb-2 size-6" aria-hidden />
-              مفيش نتائج
+              لا توجد نتائج
             </div>
           )}
         </div>

@@ -29,7 +29,7 @@ export function CopyLink({ link }: { link: string }) {
           }
         }}
       >
-        {copied ? <Check aria-hidden /> : <Copy aria-hidden />} {copied ? "اتنسخ" : "نسخ"}
+        {copied ? <Check aria-hidden /> : <Copy aria-hidden />} {copied ? "تم النسخ" : "نسخ"}
       </Button>
     </div>
   );

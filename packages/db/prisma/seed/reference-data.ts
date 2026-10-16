@@ -3,31 +3,31 @@
 import type { Role } from '../../src/index';
 
 export const WORKFLOW_STEPS: { key: string; name: string; short: string; role: Role }[] = [
-  { key: 'company', name: 'الشركة المنفذة', short: 'الشركة', role: 'company' },
-  { key: 'sup', name: 'مراجعة وتوقيع مشرف التنفيذ', short: 'مشرف التنفيذ', role: 'supervisor' },
+  { key: 'company', name: 'المقاول', short: 'المقاول', role: 'company' },
+  { key: 'sup', name: 'مراجعة مشرف التنفيذ', short: 'مشرف التنفيذ', role: 'supervisor' },
   { key: 'exec', name: 'مراجعة واعتماد مدير التنفيذ', short: 'إدارة التنفيذ', role: 'exec_mgr' },
   { key: 'gm', name: 'مراجعة واعتماد المدير العام', short: 'المدير العام', role: 'gm' },
-  { key: 'tech', name: 'المراجعة الفنية والاعتماد', short: 'الشئون الفنية', role: 'tech_affairs' },
-  { key: 'plan', name: 'مراجعة التخطيط لمذكرة التجاوز', short: 'التخطيط', role: 'planning' },
-  { key: 'pres', name: 'موافقة رئاسة القطاعات على التجاوز', short: 'رئاسة القطاعات', role: 'presidency_head' },
-  { key: 'committee', name: 'اللجنة العليا / تعديل أمر التكليف', short: 'اللجنة العليا', role: 'committee' },
+  { key: 'tech', name: 'المراجعة الفنية — الشئون الفنية', short: 'الشئون الفنية', role: 'tech_affairs' },
+  { key: 'plan', name: 'مراجعة التخطيط', short: 'التخطيط', role: 'planning' },
+  { key: 'pres', name: 'موافقة رئاسة القطاعات', short: 'رئاسة القطاعات', role: 'presidency_head' },
+  { key: 'committee', name: 'اللجنة العليا', short: 'اللجنة العليا', role: 'committee' },
   { key: 'pricing', name: 'تسعير البند المستجد', short: 'التسعير', role: 'planning' },
   { key: 'sector', name: 'اعتماد رئيس القطاع', short: 'رئيس القطاع', role: 'sector_head' },
   { key: 'stores', name: 'مراجعة المخازن والمشتريات', short: 'المخازن والمشتريات', role: 'stores' },
-  { key: 'finance', name: 'الصرف من المالية', short: 'المالية', role: 'finance' },
+  { key: 'finance', name: 'السداد — الإدارة المالية', short: 'الإدارة المالية', role: 'finance' },
 ];
 
 /** المسار لكل فئة: [محطة، SLA بأيام العمل] — null = من غير SLA (مشرف التنفيذ) */
 export const CATEGORIES: { code: string; name: string; path: [string, number | null][] }[] = [
-  { code: 'C1', name: 'لا يوجد تجاوز بنود ولا إجمالي',
+  { code: 'C1', name: 'لا يوجد تجاوز في البنود أو في إجمالي أمر التكليف',
     path: [['sup', null], ['exec', 2], ['gm', 1], ['tech', 2], ['stores', 2], ['finance', 3]] },
-  { code: 'C2', name: 'بند متجاوز والإجمالي لم يتجاوز',
+  { code: 'C2', name: 'تجاوز في بند أو أكثر دون تجاوز إجمالي أمر التكليف',
     path: [['sup', null], ['exec', 1], ['gm', 1], ['tech', 4], ['plan', 3], ['stores', 2], ['finance', 3]] },
-  { code: 'C3', name: 'الإجمالي تجاوز أمر التكليف حتى 25%',
+  { code: 'C3', name: 'تجاوز إجمالي أمر التكليف بنسبة لا تزيد على 25%',
     path: [['sup', null], ['exec', 1], ['gm', 1], ['tech', 4], ['plan', 3], ['sector', 1], ['stores', 2], ['finance', 3]] },
-  { code: 'C4', name: 'تجاوز أكثر من 25% من أمر التكليف',
+  { code: 'C4', name: 'تجاوز إجمالي أمر التكليف بنسبة تزيد على 25%',
     path: [['sup', null], ['exec', 1], ['gm', 1], ['tech', 4], ['plan', 3], ['pres', 1], ['committee', 7], ['sector', 1], ['stores', 2], ['finance', 3]] },
-  { code: 'C5', name: 'بند مستجد ليس له سعر في العقد',
+  { code: 'C5', name: 'بند مستجد غير مُسعّر في التعاقد',
     path: [['sup', null], ['exec', 1], ['gm', 1], ['tech', 4], ['plan', 3], ['pricing', 10], ['pres', 1], ['committee', 7], ['sector', 1], ['stores', 2], ['finance', 3]] },
 ];
 
@@ -37,17 +37,17 @@ export const DOC_TYPES: { code: string; name: string }[] = [
   { code: 'joint_survey', name: 'محضر الحصر المشترك' },
   { code: 'site_photos', name: 'صور الموقع' },
   { code: 'test_report', name: 'محضر الاختبارات والقياسات' },
-  { code: 'prelim_handover_cert', name: 'شهادة التسليم الابتدائي' },
+  { code: 'prelim_handover_cert', name: 'شهادة الاستلام الابتدائي' },
   { code: 'warranty_cert', name: 'شهادة الضمان' },
-  { code: 'asbuilt_drawings', name: 'رسومات As-Built' },
-  { code: 'stores_return_ack', name: 'إقرار المخازن بالمرتجع' },
+  { code: 'asbuilt_drawings', name: 'رسومات ما بعد التنفيذ (As-Built)' },
+  { code: 'stores_return_ack', name: 'إقرار المخازن باستلام المهمات المُعادة' },
   { code: 'overrun_memo', name: 'مذكرة التجاوز' },
   // مستندات المالية (من شروط أوامر التكليف وجدول الصرف)
   { code: 'social_insurance_clearance', name: 'شهادة تسوية موقف التأمينات الاجتماعية' },
   { code: 'irregular_labor_payment', name: 'ما يفيد سداد نسبة العمالة غير المنتظمة' },
   { code: 'final_guarantee_letter', name: 'خطاب الضمان النهائي' },
-  { code: 'asbuilt_maps', name: 'خرائط As-Built' },
-  { code: 'prelim_handover_report', name: 'محضر التسليم الابتدائي' },
+  { code: 'asbuilt_maps', name: 'خرائط ما بعد التنفيذ (As-Built)' },
+  { code: 'prelim_handover_report', name: 'محضر الاستلام الابتدائي' },
 ];
 
 /** أنواع المشروعات (الـ Admin يقدر يضيف غيرها) — لازمة عشان المستندات الإلزامية */
@@ -91,7 +91,7 @@ export const RETURN_REASONS: { id: string; name: string }[] = [
   { id: 'rr2', name: 'مستند مطلوب غير مرفق' },
   { id: 'rr3', name: 'الكميات غير مطابقة للحصر' },
   { id: 'rr4', name: 'تجاوز غير مبرر عن أمر التكليف' },
-  { id: 'rr5', name: 'المهمات غير مطابقة للمنصرف' },
+  { id: 'rr5', name: 'المهمات غير مطابقة للمنصرف من المخازن' },
   { id: 'rr6', name: 'خطأ في الحسابات أو الأسعار' },
   { id: 'rr7', name: 'اختلاف في بيانات العقد أو أمر التكليف' },
   { id: 'rr8', name: 'صور أو رسومات غير واضحة' },
@@ -141,4 +141,43 @@ export const SETTINGS: Record<string, string | number | boolean> = {
   smtpSecure: false,
   smtpFrom: '',
   smtpFromName: 'منظومة تتبع المستخلصات',
+};
+
+/**
+ * النصوص السابقة للبيانات المرجعية (قبل توحيد المصطلحات وفق docs/glossary.md).
+ * تُحدَّث إلى القيم الحالية أعلاه فقط إذا كانت القيمة المخزنة ما زالت مطابقة للنص القديم،
+ * حتى لا تُستبدل أي تعديلات أجراها مدير النظام.
+ */
+export const LEGACY_TEXT: {
+  steps: { key: string; name?: string; short?: string }[];
+  categories: { code: string; name: string }[];
+  docTypes: { code: string; name: string }[];
+  returnReasons: { id: string; name: string }[];
+} = {
+  steps: [
+    { key: 'company', name: 'الشركة المنفذة', short: 'الشركة' },
+    { key: 'sup', name: 'مراجعة وتوقيع مشرف التنفيذ' },
+    { key: 'tech', name: 'المراجعة الفنية والاعتماد' },
+    { key: 'plan', name: 'مراجعة التخطيط لمذكرة التجاوز' },
+    { key: 'pres', name: 'موافقة رئاسة القطاعات على التجاوز' },
+    { key: 'committee', name: 'اللجنة العليا / تعديل أمر التكليف' },
+    { key: 'finance', name: 'الصرف من المالية', short: 'المالية' },
+  ],
+  categories: [
+    { code: 'C1', name: 'لا يوجد تجاوز بنود ولا إجمالي' },
+    { code: 'C2', name: 'بند متجاوز والإجمالي لم يتجاوز' },
+    { code: 'C3', name: 'الإجمالي تجاوز أمر التكليف حتى 25%' },
+    { code: 'C4', name: 'تجاوز أكثر من 25% من أمر التكليف' },
+    { code: 'C5', name: 'بند مستجد ليس له سعر في العقد' },
+  ],
+  docTypes: [
+    { code: 'prelim_handover_cert', name: 'شهادة التسليم الابتدائي' },
+    { code: 'asbuilt_drawings', name: 'رسومات As-Built' },
+    { code: 'stores_return_ack', name: 'إقرار المخازن بالمرتجع' },
+    { code: 'asbuilt_maps', name: 'خرائط As-Built' },
+    { code: 'prelim_handover_report', name: 'محضر التسليم الابتدائي' },
+  ],
+  returnReasons: [
+    { id: 'rr5', name: 'المهمات غير مطابقة للمنصرف' },
+  ],
 };

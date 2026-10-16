@@ -21,29 +21,29 @@ export type PreviewSummary = {
 /** الخطوة 1: قراءة الملف + فحصه + تخزين المعاينة (من غير أي تعديل على البيانات) */
 export async function previewImport(templateId: string, file: File, ctx: ImportContext): Promise<PreviewSummary> {
   const importer = getImporter(templateId);
-  if (!importer) throw new AppError("NOT_FOUND", "نوع القالب ده مش معروف");
+  if (!importer) throw new AppError("NOT_FOUND", "نوع النموذج غير معروف");
   if (!(await can(ctx.user, importer.permission))) throw new AppError("FORBIDDEN");
-  if (file.size === 0) throw new AppError("VALIDATION", "الملف فاضي");
-  if (file.size > MAX_IMPORT_BYTES) throw new AppError("VALIDATION", "الملف أكبر من 10 ميجا");
-  if (!/\.xlsx$/i.test(file.name)) throw new AppError("VALIDATION", "لازم ملف Excel بصيغة xlsx");
+  if (file.size === 0) throw new AppError("VALIDATION", "الملف فارغ");
+  if (file.size > MAX_IMPORT_BYTES) throw new AppError("VALIDATION", "حجم الملف يتجاوز 10 ميجابايت");
+  if (!/\.xlsx$/i.test(file.name)) throw new AppError("VALIDATION", "يجب أن يكون الملف بصيغة Excel ‏(xlsx)");
 
   const kv = importer.sheets.filter((s) => s.kind === "kv").map((s) => s.name);
   let wb;
   try {
     wb = await parseWorkbook(await file.arrayBuffer(), kv);
   } catch (e) {
-    throw new AppError("VALIDATION", "الملف مش Excel سليم أو تالف", { cause: e });
+    throw new AppError("VALIDATION", "الملف ليس ملف Excel صالحاً أو أنه تالف", { cause: e });
   }
   if (wb.templateId && wb.templateId !== templateId) {
-    throw new AppError("VALIDATION", `الملف ده قالب "${wb.templateId}" مش "${importer.title}" — نزّل القالب الصح من الزرار`);
+    throw new AppError("VALIDATION", `هذا الملف من نموذج "${wb.templateId}" وليس "${importer.title}" — يرجى تحميل النموذج الصحيح من زر «تحميل النموذج»`);
   }
   const missing = importer.sheets.filter((s) => s.required !== false && !wb.sheets[s.name]).map((s) => s.name);
-  if (missing.length) throw new AppError("VALIDATION", `الشيتات دي ناقصة في الملف: ${missing.join("، ")} — استخدم القالب الرسمي`);
+  if (missing.length) throw new AppError("VALIDATION", `أوراق العمل التالية غير موجودة في الملف: ${missing.join("، ")} — يرجى استخدام النموذج المعتمد`);
 
   const preview = await importer.validate(wb, ctx);
   // صفوف المثال اللي اتجاهلت لازم تبان — ممكن تكون بيانات حقيقية مطابقة للمثال بالصدفة
   for (const [sheet, rows] of Object.entries(wb.skippedExamples)) {
-    preview.notes.push(`اتجاهل ${rows.length} صف في شيت "${sheet}" لأنهم مطابقين لصفوف المثال في القالب (الصفوف ${rows.join("، ")}). لو دي بيانات حقيقية عدّل فيها أي خانة وارفع تاني.`);
+    preview.notes.push(`تم تجاهل ${rows.length} صف في ورقة العمل "${sheet}" لتطابقها مع صفوف المثال في النموذج (الصفوف ${rows.join("، ")}). إذا كانت بيانات فعلية يرجى تعديل أي خانة فيها وإعادة الرفع.`);
   }
   const batch = await createBatch({
     templateId,
@@ -58,15 +58,15 @@ export async function previewImport(templateId: string, file: File, ctx: ImportC
 /** الخطوة 2: الحفظ — الصفوف السليمة بس، جوه transaction واحدة */
 export async function commitImport(batchId: string, ctx: ImportContext) {
   const batch = await findBatch(batchId);
-  if (!batch || batch.userId !== ctx.user.id) throw new AppError("NOT_FOUND", "المعاينة دي مش موجودة — ارفع الملف تاني");
-  if (batch.status !== "preview") throw new AppError("CONFLICT", "الملف ده اتحفظ قبل كده");
+  if (!batch || batch.userId !== ctx.user.id) throw new AppError("NOT_FOUND", "نتيجة المراجعة غير متاحة — يرجى إعادة رفع الملف");
+  if (batch.status !== "preview") throw new AppError("CONFLICT", "تم استيراد هذا الملف من قبل");
   const importer = getImporter(batch.templateId);
   if (!importer) throw new AppError("NOT_FOUND");
   if (!(await can(ctx.user, importer.permission))) throw new AppError("FORBIDDEN");
 
   const preview = batch.report as unknown as ImportPreview;
   const valid: ImportPreview = { ...preview, rows: preview.rows.filter((r) => r.status !== "error" && r.status !== "skip") };
-  if (!valid.rows.length) throw new AppError("VALIDATION", "مفيش صفوف سليمة تتحفظ");
+  if (!valid.rows.length) throw new AppError("VALIDATION", "لا توجد صفوف صحيحة قابلة للحفظ");
 
   return prisma.$transaction(
     async (tx) => {

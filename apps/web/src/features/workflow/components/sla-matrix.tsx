@@ -37,17 +37,17 @@ export function SlaMatrixEditor({ steps, categories }: Props) {
   return (
     <div className="space-y-4">
       {dirty.length > 0 && (
-        <Alert tone="a" title="فيه تعديلات مش محفوظة">
-          الفئات اللي اتغيرت: <span className="num">{dirty.join("، ")}</span> — المستخلصات مش هتتأثر غير لما تحفظ.
+        <Alert tone="a" title="توجد تعديلات غير محفوظة">
+          الفئات المعدَّلة: <span className="num">{dirty.join("، ")}</span> — لن تتأثر المستخلصات إلا بعد الحفظ.
         </Alert>
       )}
       <Card>
-        <CardHeader title="المحطات × الفئات" sub="علّم المحطة عشان تدخل المسار، واكتب الـ SLA بأيام العمل (فاضي = من غير SLA)" />
+        <CardHeader title="مراحل الاعتماد × فئات التجاوز" sub="يرجى تحديد المرحلة لإدراجها في مسار الاعتماد، وإدخال المدة المستهدفة (SLA) بأيام العمل الرسمية (فارغ = دون مدة مستهدفة)" />
         <TableWrap>
           <Table className="text-sm">
             <THead>
               <Tr>
-                <Th>المحطة</Th>
+                <Th>مرحلة الاعتماد</Th>
                 <Th>المسؤول</Th>
                 {categories.map((c) => (
                   <Th key={c.code} align="center" title={c.name}><CategoryBadge code={c.code} /></Th>
@@ -100,12 +100,12 @@ export function SlaMatrixEditor({ steps, categories }: Props) {
             </TBody>
             <TFoot>
               <Tr>
-                <Td>إجمالي الـ SLA</Td>
+                <Td>إجمالي المدة المستهدفة</Td>
                 <Td />
                 {categories.map((c) => (
                   <Td key={c.code} align="center">
                     <span className="num">{totalSla(m[c.code] ?? {})}</span> يوم
-                    <div className="text-xs font-medium"><span className="num">{Object.keys(m[c.code] ?? {}).length}</span> محطة</div>
+                    <div className="text-xs font-medium"><span className="num">{Object.keys(m[c.code] ?? {}).length}</span> مرحلة</div>
                   </Td>
                 ))}
               </Tr>
@@ -113,14 +113,14 @@ export function SlaMatrixEditor({ steps, categories }: Props) {
           </Table>
         </TableWrap>
         <CardFooter className="flex flex-wrap items-center gap-2">
-          <span className="flex-1">المحطة بتدخل في مكانها حسب ترتيب المحطات. المسار لازم يعدّي على مدير التنفيذ ويخلص بالمالية، ومينفعش تشيل محطة عليها مستخلصات دلوقتي.</span>
+          <span className="flex-1">تُدرج المرحلة في موضعها وفق ترتيب مراحل الاعتماد. يجب أن يمر مسار الاعتماد بمدير التنفيذ وأن ينتهي بالإدارة المالية، ولا يمكن إزالة مرحلة توجد عليها مستخلصات حالياً.</span>
           <Button size="sm" disabled={!dirty.length || pending} onClick={() => setM(saved)}><Undo2 aria-hidden /> تراجع</Button>
-          <Button size="sm" variant="pr" disabled={!dirty.length || pending} onClick={save}><Save aria-hidden /> {pending ? "بيتحفظ…" : "حفظ المسار"}</Button>
+          <Button size="sm" variant="pr" disabled={!dirty.length || pending} onClick={save}><Save aria-hidden /> {pending ? "جارٍ الحفظ…" : "حفظ مسار الاعتماد"}</Button>
         </CardFooter>
       </Card>
 
       <Card>
-        <CardHeader title="شكل المسار لكل فئة" sub="معاينة حية — بتتحدث مع كل تعديل" />
+        <CardHeader title="مسار الاعتماد لكل فئة" sub="معاينة مباشرة — تُحدَّث مع كل تعديل" />
         <CardBody className="space-y-0 overflow-x-auto pt-1">
           {categories.map((c) => {
             const path = orderedPath(m[c.code] ?? {}, steps);

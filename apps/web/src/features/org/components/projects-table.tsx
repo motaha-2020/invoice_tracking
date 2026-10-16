@@ -26,9 +26,9 @@ export function ProjectsTable({ projects, types }: { projects: ProjectRow[]; typ
   if (!projects.length) {
     return (
       <Card>
-        <EmptyState icon={FolderKanban} title="لسه مفيش مشروعات" action={<AddButton kind="project" label="أول مشروع" />}>
+        <EmptyState icon={FolderKanban} title="لا توجد مشروعات بعد" action={<AddButton kind="project" label="إضافة أول مشروع" />}>
           <div className="text-[13px]">
-            {types.length ? "ضيف مشروع واربطه بسنترال، أو ارفع قالب المشروعات." : "ابدأ بإضافة أنواع المشروعات (FTTH مثلاً)، وبعدين المشروعات."}
+            {types.length ? "يمكن إضافة مشروع وربطه بسنترال، أو استيراد نموذج المشروعات." : "يرجى البدء بإضافة أنواع المشروعات (مثل FTTH)، ثم المشروعات."}
           </div>
         </EmptyState>
       </Card>
@@ -39,9 +39,9 @@ export function ProjectsTable({ projects, types }: { projects: ProjectRow[]; typ
     <Card>
       <CardHeader title="المشروعات" sub={<Num>{rows.length === projects.length ? projects.length : `${rows.length} من ${projects.length}`}</Num>} />
       <div className="grid grid-cols-[minmax(0,1fr)_220px] gap-2 border-b border-bd1 px-[18px] py-2.5 max-sm:grid-cols-1 max-sm:px-3">
-        <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="دوّر بالمشروع أو السنترال أو الإدارة…" aria-label="بحث في المشروعات" />
+        <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="البحث بالمشروع أو السنترال أو الإدارة…" aria-label="بحث في المشروعات" />
         <Select value={type} onChange={(e) => setType(e.target.value)} aria-label="نوع المشروع">
-          <option value="">كل الأنواع</option>
+          <option value="">جميع الأنواع</option>
           {types.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
@@ -50,7 +50,7 @@ export function ProjectsTable({ projects, types }: { projects: ProjectRow[]; typ
         </Select>
       </div>
       {rows.length === 0 ? (
-        <EmptyState icon={FolderSearch} title="مفيش مشروعات بالفلتر ده" />
+        <EmptyState icon={FolderSearch} title="لا توجد مشروعات مطابقة لمعايير التصفية" />
       ) : (
         <TableWrap>
           <Table className="text-sm">
@@ -60,7 +60,7 @@ export function ProjectsTable({ projects, types }: { projects: ProjectRow[]; typ
                 <Th>المشروع</Th>
                 <Th>النوع</Th>
                 <Th>السنترال</Th>
-                <Th>المكان في الهيكل</Th>
+                <Th>الموقع في الهيكل التنظيمي</Th>
                 <Th align="end">أوامر تكليف</Th>
                 <Th align="end">مستخلصات</Th>
                 {canEdit && <Th><span className="sr-only">إجراءات</span></Th>}
@@ -74,7 +74,7 @@ export function ProjectsTable({ projects, types }: { projects: ProjectRow[]; typ
                     <b className="font-semibold">{p.name}</b>
                     {(p.startDate || p.notes) && (
                       <div className="text-xs text-tx3">
-                        {p.startDate && <>بدأ <Num>{formatDate(p.startDate)}</Num></>}
+                        {p.startDate && <>تاريخ البدء <Num>{formatDate(p.startDate)}</Num></>}
                         {p.startDate && p.notes && " · "}
                         {p.notes}
                       </div>

@@ -20,7 +20,7 @@ export async function saveOrgEntityAction(_prev: ActionState, form: FormData): P
   const user = await requireUser();
   const values = formValues(form);
   const kind = values.kind;
-  if (!isOrgKind(kind)) return { ok: false, message: "نوع البيانات مش معروف", values };
+  if (!isOrgKind(kind)) return { ok: false, message: "نوع البيانات غير معروف", values };
   const id = values.id?.trim() || null;
 
   const parsed = parseOrgInput(kind, values, id === null);
@@ -35,18 +35,18 @@ export async function saveOrgEntityAction(_prev: ActionState, form: FormData): P
   }
   refresh();
   const { one } = KIND_LABELS[kind];
-  return { ok: true, message: id ? `اتعدّل ${one} «${parsed.data.fields.name}»` : `اتضاف ${one} «${parsed.data.fields.name}»` };
+  return { ok: true, message: id ? `تم تعديل ${one} «${parsed.data.fields.name}»` : `تمت إضافة ${one} «${parsed.data.fields.name}»` };
 }
 
 export async function deleteOrgEntityAction(_prev: ActionState, form: FormData): Promise<ActionState> {
   const user = await requireUser();
   const kind = form.get("kind");
   const id = String(form.get("id") ?? "");
-  if (!isOrgKind(kind) || !id) return { ok: false, message: "طلب المسح ناقص بيانات" };
+  if (!isOrgKind(kind) || !id) return { ok: false, message: "بيانات طلب الحذف غير مكتملة" };
   try {
     const rec = await deleteOrgEntity(user, kind, id);
     refresh();
-    return { ok: true, message: `اتمسح ${KIND_LABELS[kind].one} «${rec.name}»` };
+    return { ok: true, message: `تم حذف ${KIND_LABELS[kind].one} «${rec.name}»` };
   } catch (e) {
     if (!isAppError(e)) console.error("[org.delete]", e);
     return { ok: false, message: toArabicMessage(e) };

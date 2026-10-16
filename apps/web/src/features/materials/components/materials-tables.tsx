@@ -8,8 +8,8 @@ type Material = { id: string; code: string; description: string; unit: string; s
 export function CatalogTable({ rows, total }: { rows: Material[]; total: number }) {
   if (!rows.length) {
     return (
-      <EmptyState icon={Boxes} title="مفيش أصناف">
-        <div className="text-[13px]">ارفع كتالوج المهمات من القالب (07)، أو غيّر كلمة البحث.</div>
+      <EmptyState icon={Boxes} title="لا توجد أصناف">
+        <div className="text-[13px]">يرجى استيراد كتالوج المهمات من النموذج (07)، أو تعديل عبارة البحث.</div>
       </EmptyState>
     );
   }
@@ -33,7 +33,7 @@ export function CatalogTable({ rows, total }: { rows: Material[]; total: number 
           </TBody>
         </Table>
       </TableWrap>
-      {total > rows.length && <CardFooter className="text-xs text-tx3">بيظهر أول {rows.length} من {total} — استخدم البحث.</CardFooter>}
+      {total > rows.length && <CardFooter className="text-xs text-tx3">يُعرض أول {rows.length} من {total} — يرجى استخدام البحث.</CardFooter>}
     </>
   );
 }
@@ -56,8 +56,8 @@ type Issue = {
 export function IssuesTable({ rows, total }: { rows: Issue[]; total: number }) {
   if (!rows.length) {
     return (
-      <EmptyState icon={Receipt} title="مفيش أذون صرف">
-        <div className="text-[13px]">مفيش منصرف بالفلتر ده في نطاقك.</div>
+      <EmptyState icon={Receipt} title="لا توجد أذون صرف">
+        <div className="text-[13px]">لا يوجد منصرف مطابق لمعايير التصفية ضمن نطاق صلاحيتك.</div>
       </EmptyState>
     );
   }
@@ -68,7 +68,7 @@ export function IssuesTable({ rows, total }: { rows: Issue[]; total: number }) {
           <THead>
             <Tr>
               <Th>التاريخ</Th><Th>إذن الصرف</Th><Th>العقد</Th><Th>أمر التكليف</Th><Th>الصنف</Th>
-              <Th align="end">المنصرف</Th><Th align="end">المرتجع</Th><Th align="end">الصافي</Th>
+              <Th align="end">المنصرف</Th><Th align="end">المُعاد للمخازن</Th><Th align="end">صافي المنصرف</Th>
             </Tr>
           </THead>
           <TBody>
@@ -87,7 +87,7 @@ export function IssuesTable({ rows, total }: { rows: Issue[]; total: number }) {
           </TBody>
         </Table>
       </TableWrap>
-      {total > rows.length && <CardFooter className="text-xs text-tx3">بيظهر أحدث {rows.length} من {total} إذن — استخدم الفلاتر.</CardFooter>}
+      {total > rows.length && <CardFooter className="text-xs text-tx3">يُعرض أحدث {rows.length} من {total} إذن — يرجى استخدام معايير التصفية.</CardFooter>}
     </>
   );
 }
@@ -95,8 +95,8 @@ export function IssuesTable({ rows, total }: { rows: Issue[]; total: number }) {
 export function ComparisonTable({ rows, truncated }: { rows: ComparisonRow[]; truncated: boolean }) {
   if (!rows.length) {
     return (
-      <EmptyState icon={PackageSearch} title="مفيش مهمات بالفلتر ده">
-        <div className="text-[13px]">مفيش مهمات مخططة أو منصرفة أو منفذة على أوامر التكليف دي.</div>
+      <EmptyState icon={PackageSearch} title="لا توجد مهمات مطابقة لمعايير التصفية">
+        <div className="text-[13px]">لا توجد مهمات مخططة أو منصرفة أو منفذة على أوامر التكليف المحددة.</div>
       </EmptyState>
     );
   }
@@ -107,7 +107,7 @@ export function ComparisonTable({ rows, truncated }: { rows: ComparisonRow[]; tr
           <THead>
             <Tr>
               <Th>أمر التكليف</Th><Th>الصنف</Th>
-              <Th align="end">المخطط</Th><Th align="end">المنصرف</Th><Th align="end">المنفذ</Th><Th align="end">المفوتر</Th><Th align="end">الرصيد</Th>
+              <Th align="end">الكمية المخططة</Th><Th align="end">المنصرف</Th><Th align="end">الكمية المنفذة</Th><Th align="end">الكمية المفوترة</Th><Th align="end">الرصيد</Th>
               <Th>ملاحظات</Th>
             </Tr>
           </THead>
@@ -131,7 +131,7 @@ export function ComparisonTable({ rows, truncated }: { rows: ComparisonRow[]; tr
                   <Td align="end" className={r.balance < 0 ? "text-cr6" : undefined}><Num className="font-semibold">{formatQty(r.balance)}</Num></Td>
                   <Td>
                     <div className="flex flex-wrap gap-1">
-                      {r.flags.length ? r.flags.map((f) => <Badge key={f.code} tone={f.cls}>{f.text}</Badge>) : <Badge tone="g">مظبوط</Badge>}
+                      {r.flags.length ? r.flags.map((f) => <Badge key={f.code} tone={f.cls}>{f.text}</Badge>) : <Badge tone="g">مطابق</Badge>}
                     </div>
                   </Td>
                 </Tr>
@@ -141,8 +141,8 @@ export function ComparisonTable({ rows, truncated }: { rows: ComparisonRow[]; tr
         </Table>
       </TableWrap>
       <CardFooter className="text-xs text-tx3">
-        المنصرف = المصروف من المخازن ناقص المرتجع. المنفذ = مجموع الكميات المنفذة في مستخلصات أمر التكليف (غير المسودات، آخر نسخة). الرصيد = المنصرف − المنفذ.
-        {truncated && " — بيظهر أول 100 أمر تكليف بس، استخدم الفلاتر."}
+        المنصرف = المنصرف من المخازن مطروحاً منه المُعاد إليها. الكمية المنفذة = مجموع الكميات المنفذة في مستخلصات أمر التكليف (عدا المسودات، وفق آخر إصدار). الرصيد = المنصرف − الكمية المنفذة.
+        {truncated && " — يُعرض أول 100 أمر تكليف فقط، يرجى استخدام معايير التصفية."}
       </CardFooter>
     </>
   );

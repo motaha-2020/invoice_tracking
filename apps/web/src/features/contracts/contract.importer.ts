@@ -63,22 +63,22 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<Row>> {
   if (!contractNo) errors.push("رقم العقد إلزامي");
   const companyCode = code(kv.company_code);
   const company = companyCode ? await findCompanyByCode(companyCode) : null;
-  if (!companyCode) errors.push("كود الشركة إلزامي");
-  else if (!company) errors.push(`الشركة ${companyCode} مش متسجلة — ارفع قالب الشركات الأول`);
+  if (!companyCode) errors.push("كود المقاول إلزامي");
+  else if (!company) errors.push(`الشركة المنفذة ${companyCode} غير مسجلة — يرجى استيراد نموذج الشركات المنفذة أولاً`);
   const title = text(kv.title);
   if (!title) errors.push("موضوع العقد إلزامي");
   const currency = code(kv.currency) || "EGP";
-  if (!CURRENCIES.includes(currency)) errors.push(`العملة "${currency}" مش معروفة (EGP / USD / EUR)`);
+  if (!CURRENCIES.includes(currency)) errors.push(`العملة "${currency}" غير معروفة (EGP / USD / EUR)`);
 
   const p = (key: string, label: string, dflt: number | null) => take(pctCell(kv[key], label), null) ?? dflt;
-  const monthly = take(pctCell(kv.pay_monthly_pct, "نسبة الصرف الشهري"), null);
-  if (monthly == null) errors.push("نسبة الصرف مع المستخلص الشهري إلزامية");
-  const asbuilt = p("pay_asbuilt_pct", "نسبة As-Built", 0)!;
-  const handover = p("pay_handover_pct", "نسبة التسليم الابتدائي", 0)!;
+  const monthly = take(pctCell(kv.pay_monthly_pct, "نسبة السداد الشهري"), null);
+  if (monthly == null) errors.push("نسبة السداد مع المستخلص الشهري إلزامية");
+  const asbuilt = p("pay_asbuilt_pct", "نسبة خرائط ما بعد التنفيذ (As-Built)", 0)!;
+  const handover = p("pay_handover_pct", "نسبة الاستلام الابتدائي", 0)!;
   const terms = checkPaymentTerms(monthly, asbuilt, handover);
   if (monthly != null && !terms.ok) errors.push(terms.message);
   const warranty = take(num(kv.warranty_months, "مدة الضمان", { min: 0, max: 240 }), null);
-  if (warranty != null && !Number.isInteger(warranty)) errors.push("مدة الضمان لازم عدد شهور صحيح");
+  if (warranty != null && !Number.isInteger(warranty)) errors.push("يجب أن تكون مدة الضمان عدداً صحيحاً من الشهور");
   const contractValue = take(num(kv.contract_value, "قيمة العقد", { min: 0 }), null);
 
   const header: Header = {
@@ -93,7 +93,7 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<Row>> {
     payMonthlyPct: monthly ?? 0,
     payAsbuiltPct: asbuilt,
     payHandoverPct: handover,
-    planningPayPct: p("planning_pay_pct", "نسبة صرف التخطيط", 100)!,
+    planningPayPct: p("planning_pay_pct", "نسبة سداد أعمال التخطيط", 100)!,
     finalGuaranteePct: p("final_guarantee_pct", "خطاب الضمان النهائي", 5)!,
     delayFinePctWeek: p("delay_fine_pct_week", "غرامة التأخير", null),
     delayFineCapPct: p("delay_fine_cap_pct", "الحد الأقصى للغرامة", null),
@@ -108,14 +108,14 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<Row>> {
     contractValue,
     computeValue: contractValue == null,
   };
-  if (header.taxPct == null) warnings.push("نسبة الخصم من المنبع فاضية — المالية هتحددها");
+  if (header.taxPct == null) warnings.push("نسبة الخصم من المنبع غير مُدخلة — تحددها الإدارة المالية");
 
   const existing = contractNo ? await findContractForBoq(contractNo) : null;
   if (existing && company && existing.companyId !== company.id) {
-    errors.push(`العقد ده متسجل باسم شركة تانية (${existing.company.name})`);
+    errors.push(`هذا العقد مسجل باسم مقاول آخر (${existing.company.name})`);
   }
   const dbItems = new Map((existing?.items ?? []).map((i) => [i.itemNo, i]));
-  if (existing) notes.push(`العقد ${contractNo} موجود — البيانات والأسعار هتتحدث، والبنود اللي مش في الملف هتفضل زي ما هي.`);
+  if (existing) notes.push(`العقد ${contractNo} مسجل — ستُحدَّث البيانات والأسعار، وتبقى البنود غير الواردة في الملف دون تغيير.`);
 
   // ── المقايسة ──
   const rows: RowResult<Row>[] = [];
@@ -123,7 +123,7 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<Row>> {
   let order = 0;
   for (const r of rawRows) {
     if (isExampleRow(r)) {
-      rows.push({ sheet: BOQ, row: r.__row, status: "skip", label: text(r.description).slice(0, 80), errors: [], warnings: ["صف مثال — اتجاهل"] });
+      rows.push({ sheet: BOQ, row: r.__row, status: "skip", label: text(r.description).slice(0, 80), errors: [], warnings: ["صف مثال — تم تجاهله"] });
       continue;
     }
     const c = collector();
@@ -133,23 +133,23 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<Row>> {
     if (!description) c.errors.push("وصف البند إلزامي");
     const unit = text(r.unit) || null;
     const isGroup = !unit;
-    const qty = c.take(num(r.contract_qty, "كمية العقد", { min: 0 }), null);
+    const qty = c.take(num(r.contract_qty, "الكمية التعاقدية", { min: 0 }), null);
     let price = c.take(num(r.unit_price, "سعر الوحدة", { min: 0 }), null);
     const workType = text(r.work_type) || null;
     if (isGroup) {
-      if (price) w.push("صف من غير وحدة = عنوان مجموعة — السعر اتجاهل");
+      if (price) w.push("صف بدون وحدة = عنوان مجموعة — تم تجاهل السعر");
       price = null;
     } else if (!price) {
       price = null;
-      w.push("مالوش سعر في العقد — أي فوترة عليه = C5");
+      w.push("البند غير مُسعّر في العقد — أي فوترة عليه تُصنَّف ضمن الفئة C5");
     }
-    if (workType && !WORK_TYPES.has(workType)) w.push(`نوع العمل "${workType}" مش من القايمة`);
+    if (workType && !WORK_TYPES.has(workType)) w.push(`نوع العمل "${workType}" غير مدرج في القائمة`);
     const ex = no ? dbItems.get(no) : undefined;
     if (ex) {
       const used = ex._count.aoItems + ex._count.invoiceLines;
-      if (used && isGroup && !ex.isGroup) c.errors.push("البند عليه أوامر تكليف / مستخلصات — ماينفعش يتحول لعنوان");
+      if (used && isGroup && !ex.isGroup) c.errors.push("البند مستخدم في أوامر تكليف أو مستخلصات — لا يمكن تحويله إلى عنوان مجموعة");
       const oldPrice = ex.unitPrice == null ? null : Number(ex.unitPrice);
-      if (ex._count.invoiceLines && oldPrice !== price) w.push(`السعر هيتغير من ${oldPrice ?? "—"} لـ ${price ?? "—"} والبند عليه مستخلصات`);
+      if (ex._count.invoiceLines && oldPrice !== price) w.push(`سيتغير السعر من ${oldPrice ?? "—"} إلى ${price ?? "—"} مع وجود مستخلصات على البند`);
     }
     if (no) refs.push({ row: r.__row, itemNo: no });
     rows.push({
@@ -180,7 +180,7 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<Row>> {
     r.warnings.push(...x.warnings);
     if (x.errors.length) r.status = "error";
   }
-  if (!rows.some((r) => r.status !== "skip") && !existing) errors.push("مفيش ولا بند في شيت المقايسة");
+  if (!rows.some((r) => r.status !== "skip") && !existing) errors.push("لا تتضمن ورقة عمل المقايسة أي بند");
 
   const headRow: RowResult<Row> = {
     sheet: HEAD,
@@ -194,7 +194,7 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<Row>> {
     for (const r of rows) {
       if (r.status === "create" || r.status === "update") {
         r.status = "skip";
-        r.warnings.push("مش هيتحفظ لحد ما بيانات العقد تتصلح");
+        r.warnings.push("لن يُحفظ لحين تصحيح بيانات العقد");
       }
     }
   }
@@ -216,7 +216,7 @@ async function commit(preview: ImportPreview<Row>, tx: Prisma.TransactionClient)
   const updated = await updateContractItems(tx, updates);
   const kept = ids.size - updates.length;
   return {
-    message: `العقد ${h.contractNo}: ${created.count} بند جديد و${updated} بند اتحدث${kept ? ` — ${kept} بند مش في الملف فضلوا زي ما هم` : ""}`,
+    message: `العقد ${h.contractNo}: ${created.count} بند جديد و${updated} بند محدَّث${kept ? ` — ${kept} بند غير وارد في الملف بقي دون تغيير` : ""}`,
     counts: { created: created.count, updated, kept },
   };
 }
@@ -235,7 +235,7 @@ function computedValue(items: Row[]): number | null {
 
 registerImporter({
   templateId: TEMPLATE_ID,
-  title: "العقد والمقايسة",
+  title: "العقد وجدول الكميات والأسعار",
   templateFile: `${TEMPLATE_ID}.xlsx`,
   permission: "master.import",
   sheets: [

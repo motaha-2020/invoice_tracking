@@ -51,6 +51,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 /** const toast = useToast(); toast.show('تم الحفظ', 'ok') */
 export function useToast(): ToastApi {
   const ctx = use(ToastContext);
-  if (!ctx) throw new Error("useToast لازم يتنادى جوه <ToastProvider>");
+  if (!ctx) throw new Error("يجب استدعاء useToast داخل <ToastProvider>");
   return ctx;
 }

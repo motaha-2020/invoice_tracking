@@ -30,26 +30,26 @@ export function SettingsForm({ values, smtp }: Props) {
         <CardHeader title="التنبيهات والتقارير" />
         <CardBody className="flex flex-col gap-3">
           {error && <Alert tone="r">{error}</Alert>}
-          <Field label="التنبيه الأصفر قبل الميعاد بـ (يوم عمل)" htmlFor="s-warn" hint="المستخلص بيتعلّم أصفر لما يفضل على الـ SLA العدد ده أو أقل">
+          <Field label="التنبيه قبل انتهاء المدة بـ (يوم عمل)" htmlFor="s-warn" hint="يُميَّز المستخلص بحالة «قارب على الانتهاء» عندما يتبقى من المدة المستهدفة (SLA) هذا العدد من الأيام أو أقل">
             <Input id="s-warn" type="number" min={0} max={10} className="w-28" value={f.slaWarnAt} onChange={(e) => setF((x) => ({ ...x, slaWarnAt: e.target.value }))} />
           </Field>
-          <Field label="ملخص يومي الساعة" htmlFor="s-digest" hint="ملخص بالمتأخر والقريب من الميعاد لكل مسؤول (بتوقيت القاهرة)">
+          <Field label="موعد الملخص اليومي" htmlFor="s-digest" hint="ملخص بالمستخلصات المتجاوزة للمدة والتي قاربت على الانتهاء لكل مسؤول (بتوقيت القاهرة)">
             <Input id="s-digest" type="time" className="w-36" value={f.dailyDigestAt} onChange={(e) => setF((x) => ({ ...x, dailyDigestAt: e.target.value }))} />
           </Field>
-          <Field label="التقرير الأسبوعي يوم" htmlFor="s-week">
+          <Field label="يوم التقرير الأسبوعي" htmlFor="s-week">
             <Select id="s-week" className="w-40" value={f.weeklyReportDay} onChange={(e) => setF((x) => ({ ...x, weeklyReportDay: e.target.value as EditableSettings["weeklyReportDay"] }))}>
               {WEEK_DAYS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
             </Select>
           </Field>
-          <div><Button variant="pr" disabled={pending} onClick={save}><Save aria-hidden /> {pending ? "بيتحفظ…" : "حفظ"}</Button></div>
+          <div><Button variant="pr" disabled={pending} onClick={save}><Save aria-hidden /> {pending ? "جارٍ الحفظ…" : "حفظ"}</Button></div>
         </CardBody>
       </Card>
       <Card>
-        <CardHeader title="إعدادات الإرسال (SMTP)" sub="عرض بس" />
+        <CardHeader title="إعدادات الإرسال (SMTP)" sub="للاطلاع فقط" />
         <CardBody className="space-y-2 text-sm">
           {[
-            ["السيرفر", smtp.host],
-            ["البورت", smtp.port],
+            ["الخادم", smtp.host],
+            ["المنفذ (Port)", smtp.port],
             ["الإرسال من", smtp.from],
             ["اسم المرسل", smtp.fromName],
           ].map(([l, v]) => (
@@ -59,8 +59,8 @@ export function SettingsForm({ values, smtp }: Props) {
             </div>
           ))}
           <Alert tone="i">
-            اسم المستخدم وكلمة السر بتوع الإيميل متخزنين في ملف <span dir="ltr">.env</span> على السيرفر بس — مش في قاعدة البيانات ولا في الشاشة. لحد ما
-            الإرسال يتربط، الدعوات والإشعارات بتتسجل في صندوق الصادر (سجل الإيميلات).
+            اسم المستخدم وكلمة المرور الخاصان بالبريد الإلكتروني محفوظان في ملف <span dir="ltr">.env</span> على الخادم فقط — وليس في قاعدة البيانات أو على الشاشة. ولحين
+            تفعيل الإرسال، تُسجَّل الدعوات والتنبيهات في قائمة الصادر (سجل البريد الإلكتروني).
           </Alert>
         </CardBody>
       </Card>

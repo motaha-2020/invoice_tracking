@@ -35,42 +35,42 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<AoRow>> {
   const contractNo = code(kv.contract_no);
   const contract = contractNo ? await findContractForAo(contractNo) : null;
   if (!contractNo) errors.push("رقم العقد إلزامي");
-  else if (!contract) errors.push(`العقد ${contractNo} مش متسجل — ارفع قالب العقد والمقايسة الأول`);
+  else if (!contract) errors.push(`العقد ${contractNo} غير مسجل — يرجى استيراد نموذج العقد وجدول الكميات أولاً`);
   const aoNo = normalizeAoNo(kv.ao_no);
   if (!aoNo) errors.push("رقم أمر التكليف إلزامي");
   const rev = take(num(kv.revision, "رقم الملحق", { min: 0 }), null) ?? 0;
-  if (!Number.isInteger(rev)) errors.push("رقم الملحق لازم رقم صحيح (0 = الأصلي)");
+  if (!Number.isInteger(rev)) errors.push("يجب أن يكون رقم الملحق عدداً صحيحاً (0 = أمر التكليف الأصلي)");
   const ex = contract && aoNo ? await findAo(contract.id, aoNo) : null;
 
   // الخطابات الممسوحة ساعات فيها السنة بس — ده مش سبب نوقف أمر التكليف كله
   const yearOnly = /^\d{4}$/.test(text(kv.ao_date));
   const aoDate = yearOnly ? null : take(date(kv.ao_date, "تاريخ أمر التكليف"), null);
-  if (yearOnly) warnings.push(`تاريخ أمر التكليف "${text(kv.ao_date)}" سنة بس — هيتساب فاضي لحد ما يتصحح`);
-  else if (!aoDate && !text(kv.ao_date)) warnings.push("تاريخ أمر التكليف فاضي");
+  if (yearOnly) warnings.push(`تاريخ أمر التكليف "${text(kv.ao_date)}" يتضمن السنة فقط — سيُترك فارغاً لحين تصحيحه`);
+  else if (!aoDate && !text(kv.ao_date)) warnings.push("تاريخ أمر التكليف غير مُدخل");
   const pc = code(kv.project_code);
   let projectId: string | null = null;
   let projectName: string | null = null;
   if (!pc || pc.includes("?")) {
-    warnings.push("أمر التكليف مش مربوط بمشروع (كود المشروع فاضي أو PJ-?) — النطاق والسنترال مش هيتعرفوا لحد ما يتربط");
+    warnings.push("أمر التكليف غير مرتبط بمشروع (كود المشروع فارغ أو PJ-?) — لن يتحدد نطاق الصلاحية والسنترال لحين الربط");
   } else {
     const prj = await findProjectByCode(pc);
-    if (!prj) errors.push(`المشروع ${pc} مش موجود — ارفع قالب المشروعات الأول أو سيب الخانة فاضية`);
+    if (!prj) errors.push(`المشروع ${pc} غير موجود — يرجى استيراد نموذج المشروعات أولاً أو ترك الخانة فارغة`);
     else ({ id: projectId, name: projectName } = prj);
   }
   let name = text(kv.name);
   if (!name && !ex) {
     name = projectName ?? aoNo;
-    warnings.push(`مفيش اسم لأمر التكليف — هيتسمى "${name}"`);
+    warnings.push(`لم يُدخل اسم لأمر التكليف — سيُسمّى "${name}"`);
   }
   const aoValue = take(num(kv.ao_value, "قيمة أمر التكليف", { min: 0 }), null);
   const increase = take(num(kv.increase_value, "قيمة الزيادة", { min: 0 }), null);
-  const fc = take(num(kv.financial_commitment, "الالتزام المالي", { min: 0 }), null);
+  const fc = take(num(kv.financial_commitment, "الارتباط المالي", { min: 0 }), null);
 
   if (rev > 0 && ex?.changes.some((c) => c.kind === "increase" && c.reference === `ملحق ${rev}`)) {
-    errors.push(`الملحق رقم ${rev} اترفع قبل كده على ${aoNo}`);
+    errors.push(`الملحق رقم ${rev} مسجل من قبل على أمر التكليف ${aoNo}`);
   }
-  if (rev > 0 && !ex && contract) warnings.push("أمر التكليف الأصلي مش متسجل — هيتعمل من الملحق ده، والقيمة قبل الزيادة = القيمة − الزيادة");
-  if (rev === 0 && ex) notes.push(`أمر التكليف ${aoNo} موجود — الكميات المخططة في الملف هتستبدل الموجودة.`);
+  if (rev > 0 && !ex && contract) warnings.push("أمر التكليف الأصلي غير مسجل — سيُنشأ من هذا الملحق، وتُحتسب القيمة قبل الزيادة = القيمة − الزيادة");
+  if (rev === 0 && ex) notes.push(`أمر التكليف ${aoNo} مسجل — ستحل الكميات المخططة الواردة في الملف محل الكميات الحالية.`);
 
   // ── البنود ──
   const items = new Map((contract?.items ?? []).map((i) => [i.itemNo, i]));
@@ -86,17 +86,17 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<AoRow>> {
     const no = itemNo(r.item_code);
     if (no.error) e.push(no.error);
     const it = no.value ? items.get(no.value) : undefined;
-    if (no.value && contract && !it) e.push(`البند ${no.value} مش موجود في مقايسة العقد ${contract.contractNo}`);
-    else if (it?.isGroup) e.push(`البند ${no.value} عنوان مجموعة — مش بند يتفوتر`);
-    else if (it && it.unitPrice == null) w.push("البند مالوش سعر في العقد — مش هيدخل في قيمة أمر التكليف");
+    if (no.value && contract && !it) e.push(`البند ${no.value} غير موجود في جدول كميات العقد ${contract.contractNo}`);
+    else if (it?.isGroup) e.push(`البند ${no.value} عنوان مجموعة — لا تجوز الفوترة عليه`);
+    else if (it && it.unitPrice == null) w.push("البند غير مُسعّر في العقد — لن يدخل في قيمة أمر التكليف");
     const q = num(r.planned_qty, "الكمية المخططة", { min: 0 });
     if (q.error) e.push(q.error);
-    else if (!q.value) e.push("الكمية المخططة لازم أكبر من صفر");
+    else if (!q.value) e.push("يجب أن تكون الكمية المخططة أكبر من صفر");
     const site = code(r.site_code) || null;
     const key = `${no.value ?? ""}|${site ?? ""}`;
-    if (seen.has(key)) e.push(`البند متكرر لنفس الموقع (صف ${seen.get(key)})`);
+    if (seen.has(key)) e.push(`البند مكرر للموقع نفسه (الصف ${seen.get(key)})`);
     else seen.set(key, r.__row);
-    if (site && !exSites.has(site)) w.push(`موقع جديد ${site} هيتضاف`);
+    if (site && !exSites.has(site)) w.push(`سيُضاف موقع جديد ${site}`);
     const prev = it ? exQty.get(`${it.id}|${site ?? ""}`) : undefined;
     if (!e.length && it) fileValue += (q.value ?? 0) * Number(it.unitPrice ?? 0);
     rows.push({
@@ -121,14 +121,14 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<AoRow>> {
       const q = num(r.planned_qty, "الكمية المخططة", { min: 0 });
       const base = { sheet: MATS, row: r.__row, label: `${c} ${text(r.description)}`.slice(0, 120) };
       if (!catalog.size) {
-        rows.push({ ...base, status: "skip", errors: [], warnings: ["كتالوج المهمات لسه فاضي — ارفع القالب 07 الأول، الصف ده اتجاهل"] });
+        rows.push({ ...base, status: "skip", errors: [], warnings: ["كتالوج المهمات فارغ — يرجى استيراد النموذج 07 أولاً، وقد تم تجاهل هذا الصف"] });
         continue;
       }
       if (!c) e.push("رقم الشطب إلزامي");
-      else if (!catalog.has(c)) e.push(`الصنف ${c} مش في كتالوج المهمات`);
+      else if (!catalog.has(c)) e.push(`الصنف ${c} غير موجود في كتالوج المهمات`);
       if (q.error) e.push(q.error);
-      else if (!q.value) e.push("الكمية المخططة لازم أكبر من صفر");
-      if (seenMat.has(c)) e.push(`الصنف متكرر (صف ${seenMat.get(c)})`);
+      else if (!q.value) e.push("يجب أن تكون الكمية المخططة أكبر من صفر");
+      if (seenMat.has(c)) e.push(`الصنف مكرر (الصف ${seenMat.get(c)})`);
       else seenMat.set(c, r.__row);
       const id = catalog.get(c);
       const prev = id ? ex?.materials.find((m) => m.materialId === id) : undefined;
@@ -137,8 +137,8 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<AoRow>> {
   }
 
   const okRows = rows.filter((r) => r.status === "create" || r.status === "update").length;
-  if (!okRows && rows.some((r) => r.status === "error")) errors.push("مفيش ولا بند أو صنف سليم في الملف");
-  else if (!rows.length) warnings.push(ex ? "مفيش بنود في الملف — الكميات المخططة الموجودة هتفضل زي ما هي" : "مفيش بنود في الملف — هيتسجل رأس أمر التكليف بس، والكميات تترفع بعدين");
+  if (!okRows && rows.some((r) => r.status === "error")) errors.push("لا يتضمن الملف أي بند أو صنف صحيح");
+  else if (!rows.length) warnings.push(ex ? "لا يتضمن الملف بنوداً — ستبقى الكميات المخططة الحالية دون تغيير" : "لا يتضمن الملف بنوداً — ستُسجَّل بيانات رأس أمر التكليف فقط، وتُستورد الكميات لاحقاً");
 
   // ── القيمة ووضع الملحق ──
   const exValue = ex?.value == null ? null : Number(ex.value);
@@ -147,32 +147,32 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<AoRow>> {
   if (rev === 0) {
     if (ex?.changes.some((c) => c.kind === "increase")) {
       newValue = null; // القيمة الحالية فيها الملاحق — ما نرجعهاش للأصل
-      warnings.push("أمر التكليف عليه ملاحق زيادة — الكميات هتتستبدل بكميات الأصلي، والقيمة الحالية (بعد الملاحق) هتفضل زي ما هي");
+      warnings.push("لأمر التكليف ملاحق زيادة — ستُستبدل الكميات بكميات أمر التكليف الأصلي، وتبقى القيمة الحالية (بعد الملاحق) دون تغيير");
     } else if (aoValue == null && fileValue > 0) {
       newValue = Math.round(fileValue * 100) / 100;
-      warnings.push(`قيمة أمر التكليف فاضية — اتحسبت من الكميات × أسعار العقد = ${money(fileValue)}`);
+      warnings.push(`قيمة أمر التكليف غير مُدخلة — احتُسبت من الكميات × أسعار العقد = ${money(fileValue)}`);
     } else if (aoValue && fileValue > 0 && Math.abs(fileValue - aoValue) / aoValue > 0.01) {
-      warnings.push(`القيمة المكتوبة ${money(aoValue)} مختلفة عن الكميات × أسعار العقد (${money(fileValue)})`);
+      warnings.push(`القيمة المُدخلة ${money(aoValue)} لا تطابق حاصل الكميات × أسعار العقد (${money(fileValue)})`);
     }
   } else {
     mode = addendumMode(fileValue, increase, aoValue);
     const near = (t: number | null) => t != null && t > 0 && Math.abs(fileValue - t) / t <= 0.05;
     const base = aoValue != null && increase != null ? aoValue - increase : null;
     if (fileValue > 0 && near(base) && !near(aoValue)) {
-      warnings.push(`قيمة كميات الملف (${money(fileValue)}) قريبة من القيمة قبل الزيادة (${money(base!)}) — غالباً دي كميات الأصلي مش الملحق، راجعها`);
+      warnings.push(`قيمة كميات الملف (${money(fileValue)}) مقاربة للقيمة قبل الزيادة (${money(base!)}) — يُرجَّح أنها كميات أمر التكليف الأصلي وليست كميات الملحق؛ يرجى المراجعة`);
     } else if (fileValue > 0 && !near(increase) && !near(aoValue)) {
-      warnings.push(`قيمة كميات الملف (${money(fileValue)}) مش قريبة لا من الزيادة ولا من القيمة الجديدة — راجع الكميات`);
+      warnings.push(`قيمة كميات الملف (${money(fileValue)}) لا تقارب قيمة الزيادة ولا القيمة الجديدة — يرجى مراجعة الكميات`);
     }
     if (newValue == null && increase != null && exValue != null) newValue = exValue + increase;
-    if (newValue == null) errors.push("قيمة أمر التكليف بعد الزيادة إلزامية في الملحق (أو قيمة الزيادة على أمر تكليف موجود)");
+    if (newValue == null) errors.push("قيمة أمر التكليف بعد الزيادة إلزامية في الملحق (أو قيمة الزيادة على أمر تكليف مسجل)");
     notes.push(
       mode === "add"
-        ? `ملحق ${rev}: كميات الملف هتتزوّد على المخطط (قيمتها ${money(fileValue)}).`
-        : `ملحق ${rev}: كميات الملف هي الإجمالي بعد الزيادة (قيمتها ${money(fileValue)} قريبة من القيمة الجديدة) — هتستبدل المخطط للبنود اللي في الملف.`,
+        ? `الملحق ${rev}: ستُضاف كميات الملف إلى الكميات المخططة (قيمتها ${money(fileValue)}).`
+        : `الملحق ${rev}: كميات الملف تمثل الإجمالي بعد الزيادة (قيمتها ${money(fileValue)} مقاربة للقيمة الجديدة) — ستحل محل الكميات المخططة للبنود الواردة في الملف.`,
     );
   }
   const exFc = ex?.financialCommitment == null ? null : Number(ex.financialCommitment);
-  if (ex && fc != null && fc !== exFc) notes.push(`الالتزام المالي هيتغير من ${exFc == null ? "—" : money(exFc)} لـ ${money(fc)} (هيتسجل تجديد التزام مالي).`);
+  if (ex && fc != null && fc !== exFc) notes.push(`سيتغير الارتباط المالي من ${exFc == null ? "—" : money(exFc)} إلى ${money(fc)} (سيُسجَّل تعزيز للارتباط المالي).`);
 
   const header: AoHeader = {
     contractId: contract?.id ?? "",
@@ -192,14 +192,14 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<AoRow>> {
     outOfScope: text(kv.out_of_scope) ? yesNo(kv.out_of_scope) : null,
     duration: text(kv.duration) || null,
     finalGuaranteePct: take(pctCell(kv.final_guarantee_pct, "خطاب الضمان النهائي"), null),
-    stampsTotal: take(num(kv.stamps_total, "إجمالي الدمغات", { min: 0 }), null),
+    stampsTotal: take(num(kv.stamps_total, "إجمالي رسوم الدمغة", { min: 0 }), null),
   };
 
   const headRow: RowResult<AoRow> = {
     sheet: HEAD,
     row: 1,
     status: errors.length ? "error" : ex ? "update" : "create",
-    label: `أمر التكليف ${aoNo || "—"}${rev ? ` — ملحق ${rev}` : ""} (${contractNo || "—"})`,
+    label: `أمر التكليف ${aoNo || "—"}${rev ? ` — الملحق ${rev}` : ""} (${contractNo || "—"})`,
     errors,
     warnings,
   };
@@ -207,7 +207,7 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<AoRow>> {
     for (const r of rows) {
       if (r.status === "create" || r.status === "update") {
         r.status = "skip";
-        r.warnings.push("مش هيتحفظ لحد ما بيانات أمر التكليف تتصلح");
+        r.warnings.push("لن يُحفظ لحين تصحيح بيانات أمر التكليف");
       }
     }
   }
@@ -216,7 +216,7 @@ async function validate(wb: ParsedWorkbook): Promise<ImportPreview<AoRow>> {
 
 registerImporter({
   templateId: TEMPLATE_ID,
-  title: "أمر التكليف / ملحق زيادة",
+  title: "أمر التكليف / ملحق أمر التكليف",
   templateFile: `${TEMPLATE_ID}.xlsx`,
   permission: "master.import",
   sheets: [

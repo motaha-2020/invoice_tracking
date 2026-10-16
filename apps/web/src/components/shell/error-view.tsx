@@ -23,17 +23,17 @@ export function ErrorView({ error, retry }: ErrorViewProps) {
       <div className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-cr1 text-cr6">
         <OctagonAlert className="size-6" strokeWidth={1.75} aria-hidden />
       </div>
-      <h2 className="m-0 mb-1 text-lg font-bold">حصل خطأ في الصفحة</h2>
-      <p className="m-0 text-tx2">حاجة غلط حصلت واحنا بنحمّل الصفحة. جرّب تاني، ولو المشكلة فضلت بلّغ فريق المتابعة.</p>
+      <h2 className="m-0 mb-1 text-lg font-bold">حدث خطأ في الصفحة</h2>
+      <p className="m-0 text-tx2">حدث خطأ أثناء تحميل الصفحة. يرجى إعادة المحاولة، وفي حال استمرار المشكلة يرجى إبلاغ مكتب إدارة المشروعات (PMO).</p>
       {error.digest && (
         <p className="m-0 mt-2 text-xs text-tx3">
-          كود الخطأ: <span className="num">{error.digest}</span>
+          رمز الخطأ: <span className="num">{error.digest}</span>
         </p>
       )}
       <div className="mt-4 flex justify-center gap-2">
         <Button variant="pr" onClick={() => retry()}>
           <RotateCcw />
-          حاول تاني
+          إعادة المحاولة
         </Button>
         <ButtonLink href="/">الرئيسية</ButtonLink>
       </div>

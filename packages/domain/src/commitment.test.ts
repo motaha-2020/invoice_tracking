@@ -10,7 +10,7 @@ describe('commitmentState', () => {
   it('a commitment below the AO value is partial and becomes the limit', () => {
     const s = commitmentState({ aoValue: 1_000_000, financialCommitment: 600_000, billedCumulative: 550_000 });
     expect(s).toMatchObject({ limit: 600_000, partial: true, level: 'warn', cls: 'a' });
-    expect(s.warning).toBe('المفوتر وصل 92% من الالتزام المالي لأمر التكليف');
+    expect(s.warning).toBe('بلغت القيمة المفوترة 92% من الارتباط المالي لأمر التكليف');
   });
 
   it('exactly at the limit is a warning, not exceeded', () => {
@@ -21,7 +21,7 @@ describe('commitmentState', () => {
   it('above the limit is exceeded with a renewal warning', () => {
     const s = commitmentState({ aoValue: 1_000_000, financialCommitment: 600_000, billedCumulative: 600_000.01 });
     expect(s).toMatchObject({ exceeded: true, level: 'exceeded', cls: 'r' });
-    expect(s.warning).toBe('المفوتر على أمر التكليف (600,000) عدّى الالتزام المالي المعتمد (600,000) — محتاج تجديد التزام مالي قبل الصرف');
+    expect(s.warning).toBe('القيمة المفوترة على أمر التكليف (600,000) تجاوزت الارتباط المالي المعتمد (600,000) — يلزم تعزيز الارتباط المالي قبل السداد');
   });
 
   it('zero commitment falls back to AO value; custom warn threshold', () => {

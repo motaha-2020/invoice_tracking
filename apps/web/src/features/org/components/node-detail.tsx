@@ -33,8 +33,8 @@ export function NodeDetail({ node, index, projects, onSelect }: Props) {
   if (!node) {
     return (
       <Card>
-        <EmptyState icon={MousePointerClick} title="اختار أي مستوى من الشجرة">
-          <div className="text-[13px]">هتشوف تفاصيله واللي تحته، وتقدر تعدّل أو تضيف.</div>
+        <EmptyState icon={MousePointerClick} title="يرجى اختيار مستوى من الشجرة">
+          <div className="text-[13px]">تُعرض تفاصيل المستوى والمستويات التابعة له، مع إمكانية التعديل أو الإضافة.</div>
         </EmptyState>
       </Card>
     );
@@ -58,7 +58,7 @@ export function NodeDetail({ node, index, projects, onSelect }: Props) {
         </Badge>
       </CardHeader>
       <CardBody className="space-y-4">
-        <nav aria-label="المكان في الهيكل" className="flex flex-wrap items-center gap-1 text-xs text-tx3">
+        <nav aria-label="الموقع في الهيكل التنظيمي" className="flex flex-wrap items-center gap-1 text-xs text-tx3">
           {path.map((p, i) => (
             <Fragment key={p.id}>
               {i > 0 && <ChevronLeft className="size-3" aria-hidden />}
@@ -75,14 +75,14 @@ export function NodeDetail({ node, index, projects, onSelect }: Props) {
 
         <dl className="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Kv label="الكود"><Num>{node.code}</Num></Kv>
-          <Kv label="تابع لـ">{parent ? parent.name : "—"}</Kv>
+          <Kv label="يتبع">{parent ? parent.name : "—"}</Kv>
           <Kv label="مشروعات"><Num>{node.projects}</Num></Kv>
           <Kv label="مستخلصات"><Num>{node.invoices}</Num></Kv>
         </dl>
 
         {node.kind === "techUnit" && (
           <Alert tone="i">
-            الشئون الفنية بتراجع مستخلصات القطاع كله ({parent?.name ?? "—"}).
+            تراجع الشئون الفنية مستخلصات القطاع بالكامل ({parent?.name ?? "—"}).
           </Alert>
         )}
 
@@ -117,7 +117,7 @@ export function NodeDetail({ node, index, projects, onSelect }: Props) {
                 ))}
               </ul>
             ) : (
-              <p className="m-0 text-xs text-tx3">لسه مفيش مشروعات على السنترال ده</p>
+              <p className="m-0 text-xs text-tx3">لا توجد مشروعات على هذا السنترال بعد</p>
             )}
           </section>
         )}
@@ -162,7 +162,7 @@ function ChildList({ level, list, onSelect }: { level: OrgLevel; list: OrgNodeRo
           ))}
         </ul>
       ) : (
-        <p className="m-0 text-xs text-tx3">لسه مفيش {KIND_LABELS[level].many} تحته</p>
+        <p className="m-0 text-xs text-tx3">لم تُسجَّل {KIND_LABELS[level].many} التابعة بعد</p>
       )}
     </section>
   );

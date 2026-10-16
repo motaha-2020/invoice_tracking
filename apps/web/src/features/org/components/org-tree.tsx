@@ -49,8 +49,8 @@ export function OrgTree({ nodes, projects }: Props) {
   if (!nodes.length) {
     return (
       <Card>
-        <EmptyState icon={Network} title="لسه مفيش هيكل" action={<AddButton kind="presidency" label="أول رئاسة قطاعات" />}>
-          <div className="text-[13px]">ابدأ بإضافة رئاسة قطاعات، أو ارفع قالب الهيكل التنظيمي من تبويب &quot;استيراد&quot;.</div>
+        <EmptyState icon={Network} title="لم يُسجَّل الهيكل التنظيمي بعد" action={<AddButton kind="presidency" label="إضافة أول رئاسة قطاعات" />}>
+          <div className="text-[13px]">يرجى البدء بإضافة رئاسة قطاعات، أو استيراد نموذج الهيكل التنظيمي من تبويب &quot;استيراد&quot;.</div>
         </EmptyState>
       </Card>
     );
@@ -60,25 +60,25 @@ export function OrgTree({ nodes, projects }: Props) {
     <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] items-start gap-4 max-xl:grid-cols-1">
       <Card>
         <CardHeader
-          title="شجرة الهيكل"
+          title="شجرة الهيكل التنظيمي"
           actions={
             <>
               <Button variant="gh" size="sm" onClick={() => setOpen(new Set(nodes.map((n) => nodeKey(n.kind, n.id))))}>
-                <ChevronsDown aria-hidden /> فتح الكل
+                <ChevronsDown aria-hidden /> توسيع الكل
               </Button>
               <Button variant="gh" size="sm" onClick={() => setOpen(new Set())}>
-                <ChevronsUp aria-hidden /> قفل الكل
+                <ChevronsUp aria-hidden /> طي الكل
               </Button>
             </>
           }
         />
         <div className="border-b border-bd1 px-[18px] py-2.5 max-sm:px-3">
-          <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="دوّر باسم أو كود…" aria-label="بحث في الهيكل" />
+          <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="البحث بالاسم أو الكود…" aria-label="بحث في الهيكل" />
         </div>
         <div role="tree" aria-label="الهيكل التنظيمي" className="max-h-[640px] overflow-y-auto p-2">
           {visible && visible.size === 0 ? (
-            <EmptyState icon={SearchX} title="مفيش نتايج">
-              <div className="text-[13px]">جرّب كلمة تانية</div>
+            <EmptyState icon={SearchX} title="لا توجد نتائج">
+              <div className="text-[13px]">يرجى تجربة عبارة بحث أخرى</div>
             </EmptyState>
           ) : (
             index.roots.map((r) => (
@@ -155,7 +155,7 @@ function TreeNode({ node, depth, ctx }: { node: OrgNodeRow; depth: number; ctx: 
               e.stopPropagation();
               ctx.toggle(key);
             }}
-            aria-label={`${isOpen ? "قفل" : "فتح"} ${node.name}`}
+            aria-label={`${isOpen ? "طي" : "توسيع"} ${node.name}`}
           >
             {isOpen ? <ChevronDown /> : <ChevronLeft />}
           </Button>

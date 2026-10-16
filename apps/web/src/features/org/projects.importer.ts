@@ -21,7 +21,7 @@ export const projectsImporter: Importer<ProjectsImportRow> = {
 
   async validate(wb: ParsedWorkbook) {
     const rows = validateProjectSheets(tableRows(wb), await loadExistingProjects());
-    return { templateId: this.templateId, rows, notes: rows.length ? [] : ["الملف مفيهوش أي صفوف بيانات"] };
+    return { templateId: this.templateId, rows, notes: rows.length ? [] : ["لا يتضمن الملف أي صفوف بيانات"] };
   },
 
   // الأنواع جاية قبل المشروعات في المعاينة، فالمشروع بيلاقي نوعه الجديد

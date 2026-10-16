@@ -74,7 +74,7 @@ export function workingDaysBetween(a: DateInput, b: DateInput, holidays: Holiday
 
 /** يزوّد (أو ينقص لو n سالب) n يوم عمل على التاريخ. n = 0 → نفس التاريخ. */
 export function addWorkingDays(date: DateInput, n: number, holidays: Holidays = []): string {
-  if (!Number.isInteger(n)) throw new DomainError('INVALID_NUMBER', 'عدد الأيام لازم يكون رقم صحيح');
+  if (!Number.isInteger(n)) throw new DomainError('INVALID_NUMBER', 'يجب أن يكون عدد الأيام عدداً صحيحاً');
   const set = holidaySet(holidays);
   const step = n < 0 ? -1 : 1;
   let day = toDayNumber(date);

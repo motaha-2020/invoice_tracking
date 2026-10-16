@@ -34,15 +34,15 @@ export const materialsImporter: Importer<Row> = {
       if (desc.error) errors.push(desc.error);
       if (unit.error) errors.push(unit.error);
       const suppliedBy = text(r.supplied_by) || null;
-      if (suppliedBy && !SUPPLIERS.includes(suppliedBy)) warnings.push(`التوريد "${suppliedBy}" مش من القائمة`);
+      if (suppliedBy && !SUPPLIERS.includes(suppliedBy)) warnings.push(`جهة التوريد "${suppliedBy}" غير مدرجة في القائمة`);
       if (code) {
         const first = seen.get(code);
-        if (first) errors.push(`رقم الشطب ${code} متكرر في الملف (صف ${first})`);
+        if (first) errors.push(`رقم الشطب ${code} مكرر في الملف (الصف ${first})`);
         else seen.set(code, r.__row);
       }
       const ex = existing.get(code);
       if (ex && unit.value && ex.unit !== unit.value && ex._count.issues > 0) {
-        warnings.push(`الوحدة هتتغير من ${ex.unit} لـ ${unit.value} وفيه منصرف متسجل على الصنف ده`);
+        warnings.push(`ستتغير الوحدة من ${ex.unit} إلى ${unit.value} مع وجود منصرف مسجل على هذا الصنف`);
       }
       const label = `${code || "—"} ${desc.value ?? ""}`.trim();
       if (errors.length) return { sheet: SHEET, row: r.__row, status: "error", label, errors, warnings };
@@ -57,7 +57,7 @@ export const materialsImporter: Importer<Row> = {
       };
     });
 
-    const notes = rows.length ? [] : ["مفيش صفوف في شيت المهمات"];
+    const notes = rows.length ? [] : ["لا توجد صفوف في ورقة عمل المهمات"];
     return { templateId: materialsImporter.templateId, rows, notes };
   },
 
@@ -70,7 +70,7 @@ export const materialsImporter: Importer<Row> = {
       if (r.status === "create") created++;
       else updated++;
     }
-    return { message: `اتحفظ ${created} صنف جديد و${updated} صنف اتحدّث في كتالوج المهمات`, counts: { created, updated } };
+    return { message: `تم حفظ ${created} صنف جديد وتحديث ${updated} صنف في كتالوج المهمات`, counts: { created, updated } };
   },
 };
 

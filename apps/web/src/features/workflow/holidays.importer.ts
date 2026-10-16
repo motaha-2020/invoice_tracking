@@ -15,7 +15,7 @@ const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 const importer: Importer<HolidayRow> = {
   templateId: "12_الأجازات_الرسمية",
-  title: "الأجازات الرسمية",
+  title: "العطلات الرسمية",
   templateFile: "12_الأجازات_الرسمية.xlsx",
   permission: "workflow.config",
   sheets: [{ name: SHEET, kind: "table" }],
@@ -37,13 +37,13 @@ const importer: Importer<HolidayRow> = {
       const day = d.value ? iso(d.value) : "";
       const label = `${day || "—"} · ${n.value ?? "—"}`;
       if (errors.length || !n.value) return { sheet: SHEET, row: r.__row, status: "error" as const, label, errors, warnings };
-      if (seen.has(day)) return { sheet: SHEET, row: r.__row, status: "skip" as const, label, errors, warnings: ["اليوم ده متكرر في الملف"] };
+      if (seen.has(day)) return { sheet: SHEET, row: r.__row, status: "skip" as const, label, errors, warnings: ["هذا اليوم مكرر في الملف"] };
       seen.add(day);
       const wd = d.value!.getUTCDay();
-      if (wd === 5 || wd === 6) warnings.push("اليوم ده جمعة أو سبت — أصلاً مش بيتحسب في الـ SLA");
+      if (wd === 5 || wd === 6) warnings.push("هذا اليوم يوافق الجمعة أو السبت — وهو غير محتسب أصلاً ضمن المدة المستهدفة (SLA)");
       const old = existing.get(day);
-      if (old === n.value) return { sheet: SHEET, row: r.__row, status: "skip" as const, label, errors, warnings: [...warnings, "موجودة بنفس الاسم"] };
-      if (old) warnings.push(`الاسم القديم "${old}" هيتغير`);
+      if (old === n.value) return { sheet: SHEET, row: r.__row, status: "skip" as const, label, errors, warnings: [...warnings, "مسجلة بالاسم نفسه"] };
+      if (old) warnings.push(`سيتغير الاسم الحالي "${old}"`);
       return { sheet: SHEET, row: r.__row, status: old ? ("update" as const) : ("create" as const), label, errors, warnings, data: { date: day, name: n.value } };
     });
     return { templateId: importer.templateId, rows, notes: [] };
@@ -54,7 +54,7 @@ const importer: Importer<HolidayRow> = {
     await upsertHolidaysTx(tx, rows);
     const created = preview.rows.filter((r) => r.status === "create").length;
     const updated = preview.rows.filter((r) => r.status === "update").length;
-    return { message: `اتحفظت ${created} أجازة جديدة و${updated} اتحدّثت`, counts: { created, updated } };
+    return { message: `تم حفظ ${created} عطلة جديدة وتحديث ${updated} عطلة`, counts: { created, updated } };
   },
 };
 

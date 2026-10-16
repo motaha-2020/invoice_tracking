@@ -44,8 +44,8 @@ describe("validateProjectSheets", () => {
       },
       existing(),
     );
-    expect(rows[1]!.errors.join()).toContain("مفيش نوع مشروع");
-    expect(rows[2]!.errors.join()).toContain("فيه أخطاء");
+    expect(rows[1]!.errors.join()).toContain("لا يوجد نوع مشروع");
+    expect(rows[2]!.errors.join()).toContain("يتضمن أخطاء");
   });
 
   it("تاريخ غلط ← خطأ، وكود مكرر ← التاني خطأ", () => {
@@ -76,7 +76,7 @@ describe("validateProjectSheets", () => {
       existing(projects),
     );
     expect(moved!.status).toBe("update");
-    expect(moved!.warnings.join()).toContain("هيتنقل");
+    expect(moved!.warnings.join()).toContain("سيُنقل");
   });
 
   it("أنواع الأعمال: جديد بعلامة التخطيط، والخلية الفاضية في التحديث مش تغيير", () => {
@@ -93,7 +93,7 @@ describe("validateProjectSheets", () => {
     );
     expect(rows.map((r) => r.status)).toEqual(["create", "skip", "error", "error"]);
     expect(rows[0]!.data).toEqual({ kind: "workType", code: "PLANNING", name: "تخطيط ورسومات", isPlanning: true });
-    expect(rows[2]!.errors.join()).toContain("متكرر");
+    expect(rows[2]!.errors.join()).toContain("مكرر");
   });
 
   it("أنواع الأعمال: تغيير الاسم أو علامة التخطيط ← update", () => {

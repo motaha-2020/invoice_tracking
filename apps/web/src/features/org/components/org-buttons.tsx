@@ -43,8 +43,8 @@ export function RowActions({ kind, record, size = "sm" }: { kind: OrgKind; recor
         size={size}
         icon
         onClick={() => openDelete(kind, { id: record.id, code: record.code, name: record.name })}
-        aria-label={`مسح ${one} ${record.name}`}
-        title="مسح"
+        aria-label={`حذف ${one} ${record.name}`}
+        title="حذف"
         className="text-cr6"
       >
         <Trash2 />

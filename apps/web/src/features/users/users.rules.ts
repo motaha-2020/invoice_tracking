@@ -69,18 +69,18 @@ export function normalizeRoleScopes(
   list: readonly RoleScopeInput[],
   knownIds?: Partial<Record<EntityScopeType, ReadonlySet<string>>>,
 ): Result<RoleScopeInput[]> {
-  if (list.length === 0) return { error: "لازم دور واحد على الأقل" };
+  if (list.length === 0) return { error: "يجب تحديد دور وظيفي واحد على الأقل" };
   const out: RoleScopeInput[] = [];
   const seen = new Set<string>();
   for (const rs of list) {
-    if (!parseRole(rs.role)) return { error: `دور مش معروف: ${rs.role}` };
-    if (!(SCOPE_TYPES as readonly string[]).includes(rs.scopeType)) return { error: `نوع نطاق مش معروف: ${rs.scopeType}` };
+    if (!parseRole(rs.role)) return { error: `دور وظيفي غير معروف: ${rs.role}` };
+    if (!(SCOPE_TYPES as readonly string[]).includes(rs.scopeType)) return { error: `نوع نطاق صلاحية غير معروف: ${rs.scopeType}` };
     const clean: RoleScopeInput =
       rs.scopeType === "all" ? { role: rs.role, scopeType: "all", scopeId: null } : { role: rs.role, scopeType: rs.scopeType, scopeId: rs.scopeId || null };
     if (clean.scopeType !== "all") {
-      if (!clean.scopeId) return { error: "اختار الجهة لكل دور نطاقه مش \"كل الجهات\"" };
+      if (!clean.scopeId) return { error: "يرجى اختيار الجهة لكل دور نطاق صلاحيته ليس \"جميع الجهات\"" };
       const known = knownIds?.[clean.scopeType];
-      if (known && !known.has(clean.scopeId)) return { error: "الجهة المختارة مش موجودة — حدّث الصفحة" };
+      if (known && !known.has(clean.scopeId)) return { error: "الجهة المختارة غير موجودة — يرجى تحديث الصفحة" };
     }
     const k = roleScopeKey(clean);
     if (seen.has(k)) continue;
@@ -108,13 +108,13 @@ export function buildScopeLookup(lists: Record<EntityScopeType, readonly ScopeEn
 export function resolveScopeCode(lookup: ScopeLookup, scopeType: ScopeType, code: string): Result<ScopeEntity | null> {
   const c = code.replace(/\s+/g, "").toUpperCase();
   if (scopeType === "all") return { value: null };
-  if (!c) return { error: "كود النطاق إلزامي لما النطاق مش \"كل الجهات\"" };
+  if (!c) return { error: "كود النطاق إلزامي عندما يكون نطاق الصلاحية غير \"جميع الجهات\"" };
   const hit = lookup[scopeType].get(c);
-  return hit ? { value: hit } : { error: `الكود "${code}" مش موجود في ${SCOPE_TYPE_NAMES[scopeType]} — ارفع الهيكل/الشركات الأول` };
+  return hit ? { value: hit } : { error: `الكود "${code}" غير موجود في ${SCOPE_TYPE_NAMES[scopeType]} — يرجى استيراد الهيكل التنظيمي/الشركات المنفذة أولاً` };
 }
 
 const SCOPE_TYPE_NAMES: Record<EntityScopeType, string> = {
-  company: "الشركات",
+  company: "الشركات المنفذة",
   presidency: "رئاسات القطاعات",
   sector: "القطاعات",
   general_dept: "الإدارات العامة",
@@ -174,7 +174,7 @@ export type PermissionPlan = {
 /** بيخطط تعديل خانة في المصفوفة. القاعدة: مدير النظام دايماً معاه users.manage (ما يقفلش على نفسه). */
 export function planPermissionToggle(rows: readonly PermissionRow[], perm: Permission, role: Role, on: boolean): Result<PermissionPlan> {
   if (!on && perm === "users.manage" && role === "admin") {
-    return { error: "مينفعش تشيل إدارة المستخدمين من مدير النظام — هيتقفل على الكل" };
+    return { error: "لا يمكن إزالة صلاحية إدارة المستخدمين من مدير النظام — سيتعذر على الجميع إدارة المستخدمين" };
   }
   const seed: PermissionRow[] =
     rows.length > 0 ? [] : PERMISSION_KEYS.flatMap((p) => DEFAULT_PERMISSIONS[p].map((r) => ({ role: r as Role, permission: p })));

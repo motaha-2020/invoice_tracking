@@ -13,7 +13,7 @@ export function BoqTable({ rows }: { rows: BoqRow[] }) {
             <Th>رقم البند</Th>
             <Th>البيان</Th>
             <Th>الوحدة</Th>
-            <Th align="end">كمية العقد</Th>
+            <Th align="end">الكمية التعاقدية</Th>
             <Th align="end">سعر الوحدة</Th>
             <Th>نوع العمل</Th>
           </tr>
@@ -33,7 +33,7 @@ export function BoqTable({ rows }: { rows: BoqRow[] }) {
               <Td align="end"><Num>{r.isGroup ? "" : formatQty(r.contractQty)}</Num></Td>
               <Td align="end">
                 {r.isGroup ? null : r.unitPrice == null ? (
-                  <Badge tone="a" title="أي فوترة على البند ده = فئة C5">مالوش سعر</Badge>
+                  <Badge tone="a" title="أي فوترة على هذا البند تُصنَّف ضمن الفئة C5">غير مُسعّر</Badge>
                 ) : (
                   <Num>{formatMoney(r.unitPrice)}</Num>
                 )}

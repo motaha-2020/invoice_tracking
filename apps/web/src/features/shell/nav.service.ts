@@ -28,7 +28,7 @@ export const getAllowedNav = cache(async (user: SessionUser): Promise<AllowedNav
  */
 export async function requireNavAccess(...keys: string[]): Promise<SessionUser> {
   const user = await requireUser();
-  if (!keys.every((k) => findNavItem(k))) throw new Error(`nav key مش معروف: ${keys.join(",")}`);
+  if (!keys.every((k) => findNavItem(k))) throw new Error(`مفتاح تنقل غير معروف: ${keys.join(",")}`);
   const nav = await getAllowedNav(user);
   if (!nav.some((s) => s.items.some((i) => keys.includes(i.key)))) forbidden();
   return user;

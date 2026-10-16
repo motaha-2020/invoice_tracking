@@ -64,7 +64,7 @@ describe("validateCells", () => {
     expect(validateCells("C1", { sup: null, exec: 2, finance: 3 }, steps)).toBeNull();
   });
   it("فاضي / من غير exec / مش بيخلص بالمالية / محطة غلط", () => {
-    expect(validateCells("C1", {}, steps)).toMatch(/فاضي/);
+    expect(validateCells("C1", {}, steps)).toMatch(/فارغ/);
     expect(validateCells("C1", { sup: 1, finance: 3 }, steps)).toMatch(/exec/);
     expect(validateCells("C1", { exec: 1, stores: 2 }, steps)).toMatch(/المالية/);
     expect(validateCells("C1", { exec: 1, company: 1, finance: 1 }, steps)).toMatch(/company/);

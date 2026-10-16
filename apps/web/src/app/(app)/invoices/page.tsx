@@ -11,7 +11,7 @@ import { getStepNames, listVisibleInvoices, parseStatus } from "@/features/invoi
 import { cn } from "@/lib/cn";
 import { INVOICE_STATUS } from "@/lib/labels";
 
-export const metadata: Metadata = { title: "كل المستخلصات" };
+export const metadata: Metadata = { title: "جميع المستخلصات" };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -34,9 +34,9 @@ async function InvoicesContent({ searchParams }: { searchParams: SearchParams })
   return (
     <>
       <PageHeader
-        title="كل المستخلصات"
-        sub="كل المستخلصات اللي في نطاقك"
-        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "كل المستخلصات" }]}
+        title="جميع المستخلصات"
+        sub="جميع المستخلصات ضمن نطاق صلاحيتك"
+        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "جميع المستخلصات" }]}
       />
       <Card>
         <div className="flex flex-wrap gap-1.5 border-b border-bd1 px-[18px] py-2.5">
@@ -59,8 +59,8 @@ async function InvoicesContent({ searchParams }: { searchParams: SearchParams })
         </div>
         <CardHeader title="المستخلصات" sub={<span className="num">{rows.length}</span>} />
         {rows.length === 0 ? (
-          <EmptyState icon={Files} title="مفيش مستخلصات">
-            <div className="text-[13px]">مفيش مستخلصات بالفلتر ده في نطاقك.</div>
+          <EmptyState icon={Files} title="لا توجد مستخلصات">
+            <div className="text-[13px]">لا توجد مستخلصات مطابقة لمعايير التصفية ضمن نطاق صلاحيتك.</div>
           </EmptyState>
         ) : (
           <InvoiceTable rows={rows} steps={steps} showCompany={!isCompany} />

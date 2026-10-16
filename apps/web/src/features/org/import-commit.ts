@@ -19,9 +19,9 @@ export async function commitRows<T>(
       await write(tx, r.data);
     } catch (e) {
       if (isAppError(e)) throw e;
-      throw new AppError("CONFLICT", `مقدرناش نحفظ صف ${r.row} في شيت "${r.sheet}" (${r.label}) — البيانات اتغيرت من ساعة المعاينة. ارفع الملف تاني.`, { cause: e });
+      throw new AppError("CONFLICT", `تعذّر حفظ الصف ${r.row} في ورقة العمل "${r.sheet}" (${r.label}) — تغيرت البيانات منذ المراجعة. يرجى إعادة رفع الملف.`, { cause: e });
     }
     counts[r.status]++;
   }
-  return { message: `اتحفظ ${counts.create} جديد و${counts.update} تحديث`, counts };
+  return { message: `تم حفظ ${counts.create} سجل جديد وتحديث ${counts.update} سجل`, counts };
 }

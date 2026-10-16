@@ -62,24 +62,24 @@ export const issuesImporter: Importer<Row> = {
 
       const contract = contracts.get(contractNo);
       if (!contractNo) errors.push("رقم العقد إلزامي");
-      else if (!contract) errors.push(`العقد ${contractNo} مش متسجل`);
+      else if (!contract) errors.push(`العقد ${contractNo} غير مسجل`);
       const ao = contract ? aoByKey.get(`${contract.id}|${aoNo}`) : undefined;
       if (contract && !aoNo) errors.push("رقم أمر التكليف إلزامي");
-      else if (contract && !ao) errors.push(`أمر التكليف ${aoNo} مش على العقد ${contractNo}`);
-      if (ao && inScope && !inScope.has(ao.id)) errors.push("أمر التكليف ده خارج نطاقك");
+      else if (contract && !ao) errors.push(`أمر التكليف ${aoNo} غير مسجل على العقد ${contractNo}`);
+      if (ao && inScope && !inScope.has(ao.id)) errors.push("أمر التكليف خارج نطاق صلاحيتك");
 
       const material = materials.get(code);
       if (!code) errors.push("رقم الشطب إلزامي");
-      else if (!material) errors.push(`الصنف ${code} مش في كتالوج المهمات — ارفعه في قالب 07 الأول`);
+      else if (!material) errors.push(`الصنف ${code} غير موجود في كتالوج المهمات — يرجى استيراده من خلال النموذج 07 أولاً`);
 
       const qty = num(r.qty, "الكمية المنصرفة");
-      const ret = num(r.returned_qty, "الكمية المرتجعة", { min: 0 });
+      const ret = num(r.returned_qty, "الكمية المُعادة للمخازن", { min: 0 });
       if (qty.error) errors.push(qty.error);
-      else if (qty.value == null || qty.value <= 0) errors.push("الكمية المنصرفة لازم تكون أكبر من صفر");
+      else if (qty.value == null || qty.value <= 0) errors.push("يجب أن تكون الكمية المنصرفة أكبر من صفر");
       if (ret.error) errors.push(ret.error);
       const q = qty.value ?? 0;
       const rq = ret.value ?? 0;
-      if (!qty.error && !ret.error && rq > q) errors.push("الكمية المرتجعة أكبر من المنصرفة");
+      if (!qty.error && !ret.error && rq > q) errors.push("الكمية المُعادة للمخازن أكبر من الكمية المنصرفة");
 
       const d = date(r.issue_date, "تاريخ الصرف");
       if (d.error) errors.push(d.error);
@@ -91,7 +91,7 @@ export const issuesImporter: Importer<Row> = {
       if (ao && material && issueRef) {
         const k = `${ao.id}|${material.id}|${issueRef}`;
         const first = seen.get(k);
-        if (first) errors.push(`نفس إذن الصرف لنفس الصنف متكرر في الملف (صف ${first})`);
+        if (first) errors.push(`إذن الصرف نفسه للصنف نفسه مكرر في الملف (الصف ${first})`);
         else seen.set(k, r.__row);
       }
 
@@ -102,8 +102,8 @@ export const issuesImporter: Importer<Row> = {
       const net = (netBy.get(pk) ?? 0) - (prev ? Number(prev.qty) - Number(prev.returnedQty) : 0) + q - rq;
       netBy.set(pk, net);
       const plan = plannedBy.get(pk);
-      if (!plan) warnings.push("الصنف ده مش مخطط في أمر التكليف");
-      else if (net > plan * 1.1) warnings.push(`المنصرف التراكمي ${round4(net)} أكبر من المخطط ${round4(plan)} ${material!.unit}`);
+      if (!plan) warnings.push("الصنف غير مخطط في أمر التكليف");
+      else if (net > plan * 1.1) warnings.push(`المنصرف التراكمي ${round4(net)} يتجاوز الكمية المخططة ${round4(plan)} ${material!.unit}`);
 
       return {
         sheet: SHEET,
@@ -116,7 +116,7 @@ export const issuesImporter: Importer<Row> = {
       };
     });
 
-    return { templateId: issuesImporter.templateId, rows, notes: rows.length ? [] : ["مفيش صفوف في شيت المنصرف"] };
+    return { templateId: issuesImporter.templateId, rows, notes: rows.length ? [] : ["لا توجد صفوف في ورقة عمل المنصرف"] };
   },
 
   async commit(preview, tx) {
@@ -127,7 +127,7 @@ export const issuesImporter: Importer<Row> = {
       if (res === "create") counts.created++;
       else counts.updated++;
     }
-    return { message: `اتسجل ${counts.created} إذن صرف جديد و${counts.updated} إذن اتحدّث`, counts };
+    return { message: `تم تسجيل ${counts.created} إذن صرف جديد وتحديث ${counts.updated} إذن`, counts };
   },
 };
 

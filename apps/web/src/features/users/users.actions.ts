@@ -20,12 +20,12 @@ export type SaveUserState = ActionState & { userId?: string; created?: boolean }
 
 export async function saveUserAction(input: unknown): Promise<SaveUserState> {
   const parsed = userSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, fieldErrors: z.flattenError(parsed.error).fieldErrors, message: "راجع البيانات" };
+  if (!parsed.success) return { ok: false, fieldErrors: z.flattenError(parsed.error).fieldErrors, message: "يرجى مراجعة البيانات" };
   try {
     const actor = await requireUser();
     const res = await svc.saveUser(actor, parsed.data);
     refresh();
-    return { ok: true, message: res.created ? "اتضاف المستخدم" : "اتحفظ التعديل", userId: res.id, created: res.created };
+    return { ok: true, message: res.created ? "تمت إضافة المستخدم" : "تم حفظ التعديل", userId: res.id, created: res.created };
   } catch (e) {
     return fail(e, "save");
   }
@@ -36,7 +36,7 @@ export async function setActiveAction(userId: string, active: boolean): Promise<
     const actor = await requireUser();
     await svc.setActive(actor, idSchema.parse(userId), active === true);
     refresh();
-    return { ok: true, message: active ? "اتفعّل الحساب" : "اتوقف الحساب وخرج من كل الأجهزة" };
+    return { ok: true, message: active ? "تم تفعيل الحساب" : "تم إيقاف الحساب وتسجيل خروجه من جميع الأجهزة" };
   } catch (e) {
     return fail(e, "active");
   }
@@ -49,7 +49,7 @@ export async function inviteUserAction(userId: string): Promise<InviteState> {
     const actor = await requireUser();
     const { link } = await svc.inviteUser(actor, idSchema.parse(userId));
     refresh();
-    return { ok: true, message: "الدعوة اتسجلت في صندوق الإيميلات الصادرة", link };
+    return { ok: true, message: "تم تسجيل الدعوة في قائمة البريد الإلكتروني الصادر", link };
   } catch (e) {
     return fail(e, "invite");
   }
@@ -62,7 +62,7 @@ export async function inviteNewUsersAction(): Promise<BulkInviteState> {
     const actor = await requireUser();
     const links = await svc.inviteNewUsers(actor);
     refresh();
-    return { ok: true, message: links.length ? `اتعملت ${links.length} دعوة` : "مفيش مستخدمين جداد محتاجين دعوة", links };
+    return { ok: true, message: links.length ? `تم إنشاء ${links.length} دعوة` : "لا يوجد مستخدمون جدد بحاجة إلى دعوة", links };
   } catch (e) {
     return fail(e, "bulk-invite");
   }
@@ -70,12 +70,12 @@ export async function inviteNewUsersAction(): Promise<BulkInviteState> {
 
 export async function addDelegationAction(input: unknown): Promise<ActionState> {
   const parsed = delegationSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, fieldErrors: z.flattenError(parsed.error).fieldErrors, message: "راجع بيانات التفويض" };
+  if (!parsed.success) return { ok: false, fieldErrors: z.flattenError(parsed.error).fieldErrors, message: "يرجى مراجعة بيانات التفويض" };
   try {
     const actor = await requireUser();
     await svc.addDelegation(actor, parsed.data);
     refresh();
-    return { ok: true, message: "اتسجل التفويض" };
+    return { ok: true, message: "تم تسجيل التفويض" };
   } catch (e) {
     return fail(e, "delegation");
   }
@@ -86,7 +86,7 @@ export async function deleteDelegationAction(id: string): Promise<ActionState> {
     const actor = await requireUser();
     await svc.deleteDelegation(actor, idSchema.parse(id));
     refresh();
-    return { ok: true, message: "اتشال التفويض" };
+    return { ok: true, message: "تم إلغاء التفويض" };
   } catch (e) {
     return fail(e, "delegation-del");
   }
@@ -94,12 +94,12 @@ export async function deleteDelegationAction(id: string): Promise<ActionState> {
 
 export async function togglePermissionAction(permission: string, role: string, on: boolean): Promise<ActionState> {
   const r = parseRole(role);
-  if (!isPermission(permission) || !r) return { ok: false, message: "صلاحية أو دور مش معروف" };
+  if (!isPermission(permission) || !r) return { ok: false, message: "الصلاحية أو الدور الوظيفي غير معروف" };
   try {
     const actor = await requireUser();
     await svc.togglePermission(actor, permission, r, on === true);
     refresh();
-    return { ok: true, message: on ? "اتضافت الصلاحية" : "اتشالت الصلاحية" };
+    return { ok: true, message: on ? "تمت إضافة الصلاحية" : "تمت إزالة الصلاحية" };
   } catch (e) {
     return fail(e, "perm");
   }

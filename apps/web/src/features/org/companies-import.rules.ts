@@ -48,7 +48,7 @@ export function validateCompanyRows(
 function validateRow(row: RawRow, existing: ReadonlyMap<string, ExistingCompany>, seen: SeenCodes): RowResult<CompanyImportRow> {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const code = take(codeCell(row.code, "كود الشركة"), errors);
+  const code = take(codeCell(row.code, "كود الشركة المنفذة"), errors);
   const name = take(requiredText(row.name, "الاسم المختصر", 100), errors);
   const label = rowLabel(code ?? (text(row.code) || undefined), name);
   if (code) {
@@ -56,13 +56,13 @@ function validateRow(row: RawRow, existing: ReadonlyMap<string, ExistingCompany>
     if (prev !== null) errors.push(duplicateError(code, prev));
   }
   const fullName = take(requiredText(row.full_name, "الاسم الكامل", 300), errors);
-  const email = take(optionalEmail(row.email, "إيميل المستخلصات"), errors);
-  if (email === null) errors.push("إيميل المستخلصات إلزامي — عليه بيوصل إشعار الصرف");
+  const email = take(optionalEmail(row.email, "البريد الإلكتروني للمستخلصات"), errors);
+  if (email === null) errors.push("البريد الإلكتروني للمستخلصات إلزامي — يُرسل إليه تنبيه السداد");
   const commercialReg = take(optionalText(row.commercial_reg, "السجل التجاري", 60), errors);
   const taxNo = take(optionalText(row.tax_no, "البطاقة الضريبية", 60), errors);
-  const phone = take(optionalText(row.phone, "التليفون", 60), errors);
+  const phone = take(optionalText(row.phone, "رقم الهاتف", 60), errors);
   const address = take(optionalText(row.address, "العنوان", 400), errors);
-  if (typeof row.phone === "number") warnings.push("التليفون متسجل كرقم في Excel — اتأكد إن الصفر اللي في الأول ما ضاعش");
+  if (typeof row.phone === "number") warnings.push("رقم الهاتف مسجل كقيمة رقمية في Excel — يرجى التأكد من عدم حذف الصفر في بدايته");
   const ex = exampleWarning(row, EXAMPLES);
   if (ex) warnings.push(ex);
 
@@ -87,7 +87,7 @@ function validateRow(row: RawRow, existing: ReadonlyMap<string, ExistingCompany>
     current.fullName !== fullName ||
     current.email !== email ||
     OPTIONAL.some((k) => data[k] !== null && data[k] !== current[k]);
-  if (!changed) warnings.push("موجودة بنفس البيانات — مفيش تغيير");
+  if (!changed) warnings.push("مسجلة بالبيانات نفسها — لا يوجد تغيير");
   return result(COMPANIES_SHEET, row.__row, label, errors, warnings, changed ? "update" : "skip", data);
 }
 

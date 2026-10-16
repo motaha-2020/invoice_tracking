@@ -22,10 +22,10 @@ export function SetPasswordForm({ token, email }: { token: string; email: string
       {/* عشان مدير كلمات السر يربط كلمة السر بالحساب */}
       <input type="email" name="username" value={email} autoComplete="username" readOnly hidden />
       <Field
-        label="كلمة السر الجديدة"
+        label="كلمة المرور الجديدة"
         htmlFor="password"
         required
-        hint={`${PASSWORD_MIN} حروف على الأقل — يُفضل جملة طويلة سهل تفتكرها`}
+        hint={`${PASSWORD_MIN} حروف على الأقل — يُفضَّل استخدام عبارة طويلة يسهل تذكرها`}
         error={fe.password}
       >
         <Input
@@ -40,7 +40,7 @@ export function SetPasswordForm({ token, email }: { token: string; email: string
           aria-invalid={fe.password ? true : undefined}
         />
       </Field>
-      <Field label="تأكيد كلمة السر" htmlFor="confirm" required error={fe.confirm}>
+      <Field label="تأكيد كلمة المرور" htmlFor="confirm" required error={fe.confirm}>
         <Input
           id="confirm"
           name="confirm"
@@ -51,10 +51,10 @@ export function SetPasswordForm({ token, email }: { token: string; email: string
           aria-invalid={fe.confirm ? true : undefined}
         />
       </Field>
-      {fe.token && <Alert tone="r">رابط الدعوة ده مش صالح</Alert>}
+      {fe.token && <Alert tone="r">رابط الدعوة غير صالح</Alert>}
       <Button type="submit" variant="pr" disabled={pending} className="mt-1 w-full">
         <KeyRound />
-        {pending ? "جاري الحفظ…" : "حفظ كلمة السر والدخول"}
+        {pending ? "جارٍ الحفظ…" : "حفظ كلمة المرور وتسجيل الدخول"}
       </Button>
     </form>
   );

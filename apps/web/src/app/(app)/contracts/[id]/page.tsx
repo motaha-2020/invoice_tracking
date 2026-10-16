@@ -37,10 +37,10 @@ async function ContractContent({ params }: { params: Params }) {
         crumbs={[{ label: "الرئيسية", href: "/" }, { label: "العقود وأوامر التكليف", href: "/contracts" }, { label: c.contractNo }]}
       />
       <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">
-        <Kpi icon={ListTree} label="بنود المقايسة" value={formatCount(stats.items)} sub={stats.unpriced ? `${stats.unpriced} بند مالوش سعر · ${stats.groups} عنوان` : `${stats.groups} عنوان`} />
+        <Kpi icon={ListTree} label="بنود جدول الكميات" value={formatCount(stats.items)} sub={stats.unpriced ? `${stats.unpriced} بند غير مُسعّر · ${stats.groups} عنوان` : `${stats.groups} عنوان`} />
         <Kpi icon={ClipboardList} label="أوامر التكليف" value={formatCount(view.aos.length)} />
         <Kpi icon={FileStack} label="قيمة أوامر التكليف" value={formatMoney(stats.aoTotal, { decimals: 0 })} sub={c.contractValue != null ? `من قيمة العقد ${formatMoney(c.contractValue, { decimals: 0 })}` : undefined} />
-        <Kpi icon={Wallet} label="المفوتر" value={formatMoney(stats.billed, { decimals: 0 })} sub="المستخلصات غير المسودة" />
+        <Kpi icon={Wallet} label="القيمة المفوترة" value={formatMoney(stats.billed, { decimals: 0 })} sub="المستخلصات عدا المسودات" />
       </div>
 
       <TermsCard view={view} />
@@ -48,15 +48,15 @@ async function ContractContent({ params }: { params: Params }) {
       <Card className="mt-5">
         <CardHeader title="أوامر التكليف" sub={<span className="num">{view.aos.length}</span>} />
         {view.aos.length === 0 ? (
-          <EmptyState icon={ClipboardList} title="مفيش أوامر تكليف على العقد ده لسه" />
+          <EmptyState icon={ClipboardList} title="لا توجد أوامر تكليف على هذا العقد بعد" />
         ) : (
           <AoTable contractId={c.id} rows={view.aos} />
         )}
       </Card>
 
       <Card className="mt-5">
-        <CardHeader title="المقايسة" sub={<span className="num">{view.boq.length}</span>} />
-        {view.boq.length === 0 ? <EmptyState icon={ListTree} title="المقايسة فاضية" /> : <BoqTable rows={view.boq} />}
+        <CardHeader title="جدول الكميات والأسعار (المقايسة)" sub={<span className="num">{view.boq.length}</span>} />
+        {view.boq.length === 0 ? <EmptyState icon={ListTree} title="جدول الكميات لا يتضمن أي بنود" /> : <BoqTable rows={view.boq} />}
       </Card>
     </>
   );

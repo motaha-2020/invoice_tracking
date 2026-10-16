@@ -89,7 +89,7 @@ const SCOPE_OF: Partial<Record<OrgKind, ScopeType>> = {
 export async function countDependents(kind: OrgKind, id: string): Promise<{ label: string; n: number }[]> {
   const scope = SCOPE_OF[kind];
   const users = scope
-    ? [{ label: "صلاحية مستخدم على النطاق", n: await prisma.userRole.count({ where: { scopeType: scope, scopeId: id } }) }]
+    ? [{ label: "صلاحية مستخدم على نطاق الصلاحية", n: await prisma.userRole.count({ where: { scopeType: scope, scopeId: id } }) }]
     : [];
   const c = async (label: string, n: Promise<number>) => ({ label, n: await n });
   switch (kind) {
@@ -112,7 +112,7 @@ export async function countDependents(kind: OrgKind, id: string): Promise<{ labe
     case "projectType":
       return [
         await c("مشروع", prisma.project.count({ where: { typeId: id } })),
-        await c("مستند إلزامي متظبط على النوع", prisma.requiredDoc.count({ where: { projectTypeId: id } })),
+        await c("مستند إلزامي مرتبط بالنوع", prisma.requiredDoc.count({ where: { projectTypeId: id } })),
       ];
     case "workType":
       // كل المستخلصات (مش النطاق بس) — المسح بيأثر على المنظومة كلها

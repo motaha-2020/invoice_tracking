@@ -14,7 +14,7 @@ export async function previewImportAction(_prev: PreviewState, form: FormData): 
     const user = await requireUser();
     const templateId = String(form.get("templateId") ?? "");
     const file = form.get("file");
-    if (!(file instanceof File)) return { ok: false, message: "اختار ملف الأول" };
+    if (!(file instanceof File)) return { ok: false, message: "يرجى اختيار ملف أولاً" };
     const preview = await previewImport(templateId, file, { user });
     return { ok: true, preview };
   } catch (e) {

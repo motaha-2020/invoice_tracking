@@ -98,7 +98,7 @@ export async function commitAo(preview: ImportPreview<AoRow>, tx: Tx, headSheet:
       baseValue: before.fc,
       increase: before.fc == null ? null : h.financialCommitment - before.fc,
       newTotal: h.financialCommitment,
-      reference: h.rev > 0 ? `مع ملحق ${h.rev}` : "تجديد التزام مالي",
+      reference: h.rev > 0 ? `مع ملحق ${h.rev}` : "تعزيز الارتباط المالي",
     });
     changes++;
   }
@@ -150,9 +150,9 @@ export async function commitAo(preview: ImportPreview<AoRow>, tx: Tx, headSheet:
     }
   }
 
-  const what = h.rev ? `ملحق ${h.rev} على ${h.aoNo}` : `أمر التكليف ${h.aoNo}`;
+  const what = h.rev ? `ملحق رقم ${h.rev} على أمر التكليف ${h.aoNo}` : `أمر التكليف ${h.aoNo}`;
   return {
-    message: `${what}: ${itemsWritten} بند في ${siteIds.size} موقع، ${matsWritten} صنف مهمات${changes ? `، ${changes} تغيير اتسجل` : ""}`,
+    message: `${what}: ${itemsWritten} بند في ${siteIds.size} موقع، و${matsWritten} صنف مهمات${changes ? `، وتم تسجيل ${changes} تعديل` : ""}`,
     counts: { items: itemsWritten, sites: siteIds.size, materials: matsWritten, changes },
   };
 }

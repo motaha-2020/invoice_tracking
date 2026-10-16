@@ -20,12 +20,12 @@ export function CommitmentMeter({ state, compact }: { state: CommitmentState; co
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(w)}
-        aria-label="المفوتر من الالتزام المالي"
+        aria-label="القيمة المفوترة من الارتباط المالي"
       >
         <div className={cn("h-full rounded-full", bar[state.cls])} style={{ width: `${w}%` }} />
       </div>
       {!compact && state.warning && <div className={cn("text-xs", txt[state.cls])}>{state.warning}</div>}
-      {compact && state.warning && <div className={cn("mt-0.5 text-[11px] leading-tight", txt[state.cls])}>{state.level === "exceeded" ? "عدّى الالتزام" : "قرّب من الحد"}</div>}
+      {compact && state.warning && <div className={cn("mt-0.5 text-[11px] leading-tight", txt[state.cls])}>{state.level === "exceeded" ? "تجاوز الارتباط المالي" : "قارب على الحد"}</div>}
     </div>
   );
 }

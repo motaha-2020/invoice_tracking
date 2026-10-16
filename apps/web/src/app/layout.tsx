@@ -12,7 +12,7 @@ const cairo = Cairo({
 
 export const metadata: Metadata = {
   title: { default: "منظومة تتبع المستخلصات", template: "%s · تتبع المستخلصات" },
-  description: "متابعة مستخلصات المقاولين من التقديم لحد الصرف — المصرية للاتصالات",
+  description: "متابعة مستخلصات المقاولين من التقديم حتى السداد — المصرية للاتصالات",
   icons: { icon: "/we-mark.png" },
   robots: { index: false, follow: false },
 };

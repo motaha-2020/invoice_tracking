@@ -22,8 +22,8 @@ async function Guarded({ navKey, sub }: { navKey: string; sub?: string }) {
     <>
       <PageHeader title={title} sub={sub} crumbs={[{ label: "الرئيسية", href: "/" }, { label: title }]} />
       <Card>
-        <EmptyState icon={Construction} title="قيد البناء" action={<ButtonLink href="/">رجوع للرئيسية</ButtonLink>}>
-          <div className="text-[13px]">الصفحة دي لسه بتتبني وهتبقى جاهزة قريب.</div>
+        <EmptyState icon={Construction} title="قيد التطوير" action={<ButtonLink href="/">العودة إلى الرئيسية</ButtonLink>}>
+          <div className="text-[13px]">هذه الصفحة قيد التطوير وستكون متاحة قريباً.</div>
         </EmptyState>
       </Card>
     </>

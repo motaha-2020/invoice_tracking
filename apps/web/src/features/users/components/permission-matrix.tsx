@@ -26,15 +26,15 @@ export function PermissionMatrix({ matrix, editable }: { matrix: Matrix; editabl
     start(async () => {
       apply(c);
       const res = await togglePermissionAction(c.perm, c.role, c.on);
-      if (!res.ok) toast.show(res.message ?? "حصل خطأ", "err");
-      else toast.show(`${c.on ? "اتضافت" : "اتشالت"} "${PERMISSION_LABELS[c.perm]}" ${c.on ? "لـ" : "من"} ${ROLE_LABELS[c.role]}`, "ok");
+      if (!res.ok) toast.show(res.message ?? "حدث خطأ", "err");
+      else toast.show(`${c.on ? "تمت إضافة" : "تمت إزالة"} صلاحية "${PERMISSION_LABELS[c.perm]}" ${c.on ? "إلى" : "من"} ${ROLE_LABELS[c.role]}`, "ok");
     });
 
   return (
     <>
       <Alert tone="i" className="mb-3">
-        الاعتماد في كل محطة بيتحدد من المسار (الدور المسؤول عن المحطة). هنا الصلاحيات الإضافية — والتعديل بيتطبق فوراً على كل المستخدمين بالدور ده.
-        {!editable && " (عرض بس — التعديل لمدير النظام)"}
+        تتحدد صلاحية الاعتماد في كل مرحلة من مسار الاعتماد (الدور الوظيفي المسؤول عن المرحلة). تعرض هذه الشاشة الصلاحيات الإضافية، ويُطبَّق أي تعديل فوراً على جميع المستخدمين بالدور الوظيفي نفسه.
+        {!editable && " (للاطلاع فقط — التعديل لمدير النظام)"}
       </Alert>
       <Card>
         <TableWrap>
@@ -62,7 +62,7 @@ export function PermissionMatrix({ matrix, editable }: { matrix: Matrix; editabl
                           className="size-4 accent-[var(--brand)]"
                           checked={on}
                           disabled={!editable || locked}
-                          title={locked ? "مدير النظام دايماً معاه إدارة المستخدمين" : undefined}
+                          title={locked ? "تظل صلاحية إدارة المستخدمين ممنوحة لمدير النظام دائماً" : undefined}
                           aria-label={`${PERMISSION_LABELS[p]} — ${ROLE_LABELS[r]}`}
                           onChange={(e) => toggle({ perm: p, role: r, on: e.target.checked })}
                         />

@@ -10,9 +10,9 @@ function holderLabel(inv: InvoiceListRow, steps: Record<string, StepInfo>): stri
     case "paid":
       return "—";
     case "draft":
-      return "الشركة (مسودة)";
+      return "المقاول (مسودة)";
     case "on_hold":
-      return `معلّق — ${inv.holdReason ?? "بانتظار أمر التكليف"}`;
+      return `موقوف مؤقتاً — ${inv.holdReason ?? "بانتظار أمر التكليف"}`;
     case "returned":
       return inv.returnTo === "company" ? inv.contract.company.name : short(inv.returnTo);
     default:
@@ -38,12 +38,12 @@ export function InvoiceTable({ rows, steps, showCompany = true }: InvoiceTablePr
         <THead>
           <tr>
             <Th>المستخلص</Th>
-            {showCompany && <Th>الشركة</Th>}
-            <Th>المسار / المشروع</Th>
-            <Th>الفئة</Th>
-            <Th>عند مين</Th>
+            {showCompany && <Th>المقاول</Th>}
+            <Th>اسم المسار / المشروع</Th>
+            <Th>فئة التجاوز</Th>
+            <Th>الجهة الحالية</Th>
             <Th>الحالة</Th>
-            <Th>من تاريخ</Th>
+            <Th>منذ تاريخ</Th>
           </tr>
         </THead>
         <TBody>

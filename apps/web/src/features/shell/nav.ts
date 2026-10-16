@@ -39,20 +39,20 @@ const REVIEWERS: readonly Role[] = [
 
 export const NAV: readonly NavSection[] = [
   {
-    title: "العمل اليومي",
+    title: "المهام اليومية",
     items: [
       { key: "home", href: "/", label: "الرئيسية", icon: "home" },
-      { key: "inbox", href: "/inbox", label: "صندوق الوارد", icon: "inbox", roles: REVIEWERS, showInboxCount: true },
-      { key: "co-returned", href: "/inbox", label: "مطلوب الرد", icon: "reply", roles: ["company"], showInboxCount: true },
+      { key: "inbox", href: "/inbox", label: "المهام الواردة", icon: "inbox", roles: REVIEWERS, showInboxCount: true },
+      { key: "co-returned", href: "/inbox", label: "بانتظار استيفاء الملاحظات", icon: "reply", roles: ["company"], showInboxCount: true },
       { key: "inv-new", href: "/invoices/new", label: "مستخلص جديد", icon: "file-plus", perm: "invoice.create" },
-      { key: "invoices", href: "/invoices", label: "كل المستخلصات", icon: "files" },
+      { key: "invoices", href: "/invoices", label: "جميع المستخلصات", icon: "files" },
     ],
   },
   {
     title: "المتابعة والتقارير",
     items: [
       { key: "reports", href: "/reports", label: "التقارير والتصدير", icon: "reports", perm: "reports.view" },
-      { key: "emails", href: "/emails", label: "سجل الإيميلات", icon: "mail", roles: ["pmo", "admin"] },
+      { key: "emails", href: "/emails", label: "سجل البريد الإلكتروني", icon: "mail", roles: ["pmo", "admin"] },
     ],
   },
   {
@@ -65,15 +65,15 @@ export const NAV: readonly NavSection[] = [
         icon: "contracts",
         roles: ["tech_affairs", "tech_office", "pmo", "admin", "planning", "company"],
       },
-      { key: "org", href: "/org", label: "الهيكل والمشاريع", icon: "org", roles: ["admin", "pmo", "tech_affairs", "tech_office"] },
+      { key: "org", href: "/org", label: "الهيكل التنظيمي والمشروعات", icon: "org", roles: ["admin", "pmo", "tech_affairs", "tech_office"] },
       { key: "materials", href: "/materials", label: "المهمات المنصرفة", icon: "package", roles: ["stores", "pmo", "admin", "tech_affairs"] },
     ],
   },
   {
     title: "الإعدادات",
     items: [
-      { key: "users", href: "/users", label: "المستخدمين والصلاحيات", icon: "users", perm: "users.manage" },
-      { key: "workflow", href: "/workflow", label: "المسار والـ SLA", icon: "workflow", perm: "workflow.config" },
+      { key: "users", href: "/users", label: "المستخدمون والصلاحيات", icon: "users", perm: "users.manage" },
+      { key: "workflow", href: "/workflow", label: "مسار الاعتماد والمدد المستهدفة", icon: "workflow", perm: "workflow.config" },
     ],
   },
 ];

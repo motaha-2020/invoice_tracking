@@ -16,7 +16,7 @@ describe('compareMaterial', () => {
   it('flags cumulative executed above issued (red)', () => {
     const r = compareMaterial(m({ executed: 301 }));
     expect(r.balance).toBe(-1);
-    expect(r.flags).toEqual([{ code: 'exceeds_issued', cls: 'r', text: 'المنفذ التراكمي أكبر من المنصرف' }]);
+    expect(r.flags).toEqual([{ code: 'exceeds_issued', cls: 'r', text: 'الكمية المنفذة التراكمية تتجاوز المنصرف من المخازن' }]);
   });
 
   it('flags large unused issued balance (amber) using max(5, 15%)', () => {

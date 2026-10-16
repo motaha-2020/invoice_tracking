@@ -64,24 +64,24 @@ const clean = (s: string | undefined): string | null => (s && s.trim() ? s.trim(
 
 function requireStatus(state: InvoiceFlowState, allowed: InvoiceStatus, actionAr: string): void {
   if (state.status !== allowed) {
-    throw new DomainError('INVALID_STATE', `مينفعش ${actionAr} والمستخلص حالته ${STATUS_AR[state.status]}`);
+    throw new DomainError('INVALID_STATE', `لا يمكن ${actionAr} لأن حالة المستخلص: ${STATUS_AR[state.status]}`);
   }
 }
 
 function requireStep(state: InvoiceFlowState): StepKey {
-  if (!state.currentStep) throw new DomainError('INVALID_STATE', 'المستخلص مش واقف على أي محطة');
+  if (!state.currentStep) throw new DomainError('INVALID_STATE', 'المستخلص غير مُسنَد إلى أي مرحلة اعتماد');
   return state.currentStep;
 }
 
 const STATUS_AR: Record<InvoiceStatus, string> = {
-  draft: 'مسودة', active: 'جاري', returned: 'مرتجع', on_hold: 'معلّق', paid: 'مصروف',
+  draft: 'مسودة', active: 'قيد المراجعة', returned: 'معاد للاستيفاء', on_hold: 'موقوف مؤقتاً', paid: 'تم السداد',
 };
 
 function submit(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 'submit' }>, config: WorkflowConfig): TransitionResult {
   requireStatus(state, 'draft', 'تقديم المستخلص');
   const suggestedCategory = cmd.suggestedCategory ?? state.suggestedCategory;
   const first = pathFor(config, effectiveCategory({ category: state.category, suggestedCategory }))[0];
-  if (!first) throw new DomainError('UNKNOWN_STEP', 'مسار الفئة فاضي');
+  if (!first) throw new DomainError('UNKNOWN_STEP', 'مسار اعتماد الفئة لا يتضمن أي مرحلة');
   return {
     state: { ...state, status: 'active', currentStep: first.step, suggestedCategory },
     logEntry: { action: 'submit', fromStep: 'company', toStep: first.step, note: clean(cmd.note) ?? 'تم تقديم المستخلص' },
@@ -93,7 +93,7 @@ function setCategory(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 
   requireStatus(state, 'active', 'تغيير الفئة');
   const step = requireStep(state);
   if (stepIndex(config, cmd.category, step) < 0) {
-    throw new DomainError('STEP_NOT_IN_PATH', `المحطة الحالية (${stepDef(config, step).short}) مش في مسار الفئة ${cmd.category}`);
+    throw new DomainError('STEP_NOT_IN_PATH', `مرحلة الاعتماد الحالية (${stepDef(config, step).short}) غير مدرجة في مسار الفئة ${cmd.category}`);
   }
   const old = state.category;
   const note = clean(cmd.note) ?? (old ? `تغيير الفئة من ${old} إلى ${cmd.category}` : `تحديد الفئة ${cmd.category} — ${config.categories[cmd.category].name}`);
@@ -108,10 +108,10 @@ function approve(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 'app
   requireStatus(state, 'active', 'الاعتماد');
   const step = requireStep(state);
   if (step === CATEGORY_STEP && !state.category) {
-    throw new DomainError('CATEGORY_REQUIRED', 'لازم تحدد الفئة قبل الاعتماد');
+    throw new DomainError('CATEGORY_REQUIRED', 'يرجى تحديد فئة التجاوز قبل الاعتماد');
   }
   const next = nextStep(config, effectiveCategory(state), step);
-  if (!next) throw new DomainError('PAY_REQUIRED', 'دي آخر محطة — سجّل الصرف برقم الشيك/التحويل');
+  if (!next) throw new DomainError('PAY_REQUIRED', 'هذه هي المرحلة الأخيرة — يرجى تسجيل السداد برقم الشيك أو التحويل البنكي');
   return {
     state: { ...state, currentStep: next },
     logEntry: { action: 'approve', fromStep: step, toStep: next, note: clean(cmd.note) },
@@ -120,16 +120,16 @@ function approve(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 'app
 }
 
 function validateReturn(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 'return' }>, config: WorkflowConfig, step: StepKey): void {
-  if (!cmd.reasonIds.length) throw new DomainError('REASON_REQUIRED', 'لازم تختار سبب واحد على الأقل للإرجاع');
-  if (!clean(cmd.note)) throw new DomainError('NOTE_REQUIRED', 'لازم تكتب ملاحظة توضّح المطلوب');
+  if (!cmd.reasonIds.length) throw new DomainError('REASON_REQUIRED', 'يرجى اختيار سبب واحد على الأقل للإعادة للاستيفاء');
+  if (!clean(cmd.note)) throw new DomainError('NOTE_REQUIRED', 'يرجى إدخال ملاحظة توضح المطلوب استيفاؤه');
   if (cmd.target === 'company') return;
   if (!previousSteps(config, effectiveCategory(state), step).includes(cmd.target)) {
-    throw new DomainError('INVALID_RETURN_TARGET', 'الإرجاع بيكون للشركة أو لمحطة قبل المحطة الحالية في المسار');
+    throw new DomainError('INVALID_RETURN_TARGET', 'تكون الإعادة للاستيفاء إلى المقاول أو إلى مرحلة سابقة للمرحلة الحالية في مسار الاعتماد');
   }
 }
 
 function returnInvoice(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 'return' }>, config: WorkflowConfig): TransitionResult {
-  requireStatus(state, 'active', 'الإرجاع');
+  requireStatus(state, 'active', 'الإعادة للاستيفاء');
   const step = requireStep(state);
   validateReturn(state, cmd, config, step);
   return {
@@ -141,9 +141,9 @@ function returnInvoice(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type
 
 /** إعادة الإرسال بترجع للمحطة اللي رجّعت (مش من أول المسار). */
 function resubmit(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 'resubmit' }>): TransitionResult {
-  requireStatus(state, 'returned', 'إعادة الإرسال');
+  requireStatus(state, 'returned', 'إعادة التقديم بعد الاستيفاء');
   const back = state.returnedFrom;
-  if (!back) throw new DomainError('INVALID_STATE', 'مش معروف المستخلص اترجع من أنهي محطة');
+  if (!back) throw new DomainError('INVALID_STATE', 'تعذّر تحديد مرحلة الاعتماد التي أُعيد منها المستخلص');
   return {
     state: {
       ...state, status: 'active', currentStep: back, returnTo: null, returnedFrom: null,
@@ -155,10 +155,10 @@ function resubmit(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 're
 }
 
 function hold(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 'hold' }>): TransitionResult {
-  requireStatus(state, 'active', 'التعليق');
+  requireStatus(state, 'active', 'الإيقاف المؤقت');
   const step = requireStep(state);
   const reason = clean(cmd.reason);
-  if (!reason) throw new DomainError('NOTE_REQUIRED', 'لازم تكتب سبب التعليق');
+  if (!reason) throw new DomainError('NOTE_REQUIRED', 'يرجى إدخال سبب الإيقاف المؤقت');
   return {
     state: { ...state, status: 'on_hold', heldAt: step, holdReason: reason },
     logEntry: { action: 'hold', fromStep: step, toStep: step, note: reason },
@@ -167,26 +167,26 @@ function hold(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 'hold' 
 }
 
 function release(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 'release' }>): TransitionResult {
-  requireStatus(state, 'on_hold', 'رفع التعليق');
+  requireStatus(state, 'on_hold', 'الاستئناف');
   const step = state.heldAt ?? requireStep(state);
   return {
     state: { ...state, status: 'active', currentStep: step, heldAt: null, holdReason: null },
-    logEntry: { action: 'release', fromStep: step, toStep: step, note: clean(cmd.note) ?? 'تم رفع التعليق' },
+    logEntry: { action: 'release', fromStep: step, toStep: step, note: clean(cmd.note) ?? 'تم الاستئناف' },
     resetsClock: true,
   };
 }
 
 function pay(state: InvoiceFlowState, cmd: Extract<FlowCommand, { type: 'pay' }>, config: WorkflowConfig): TransitionResult {
-  requireStatus(state, 'active', 'الصرف');
+  requireStatus(state, 'active', 'تسجيل السداد');
   const step = requireStep(state);
   const ref = clean(cmd.ref);
-  if (!ref) throw new DomainError('REF_REQUIRED', 'لازم تكتب رقم الشيك أو التحويل');
+  if (!ref) throw new DomainError('REF_REQUIRED', 'يرجى إدخال رقم الشيك أو التحويل البنكي');
   if (nextStep(config, effectiveCategory(state), step) !== null) {
-    throw new DomainError('NOT_LAST_STEP', 'الصرف بيكون في آخر محطة في المسار بس');
+    throw new DomainError('NOT_LAST_STEP', 'يُسجَّل السداد في المرحلة الأخيرة من مسار الاعتماد فقط');
   }
   return {
     state: { ...state, status: 'paid', currentStep: null },
-    logEntry: { action: 'pay', fromStep: step, toStep: 'done', note: clean(cmd.note) ?? `تم الصرف — رقم ${ref}`, ref },
+    logEntry: { action: 'pay', fromStep: step, toStep: 'done', note: clean(cmd.note) ?? `تم السداد — رقم ${ref}`, ref },
     resetsClock: true,
   };
 }

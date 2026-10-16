@@ -4,5 +4,5 @@ import { UnderConstruction } from "@/features/shell/components/under-constructio
 export const metadata: Metadata = { title: "التقارير والتصدير" };
 
 export default function Page() {
-  return <UnderConstruction navKey="reports" sub="تقارير المستخلصات والـ SLA والتصدير لـ Excel" />;
+  return <UnderConstruction navKey="reports" sub="تقارير المستخلصات والمدد المستهدفة (SLA) والتصدير إلى Excel" />;
 }

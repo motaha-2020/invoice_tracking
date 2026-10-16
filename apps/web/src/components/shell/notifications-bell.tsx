@@ -14,7 +14,7 @@ export function NotificationsBell({ unread, items }: { unread: number; items: It
       <button
         type="button"
         popoverTarget="notif-pop"
-        aria-label={unread ? `الإشعارات (${unread} جديد)` : "الإشعارات"}
+        aria-label={unread ? `التنبيهات (${unread} جديد)` : "التنبيهات"}
         className="relative grid h-[34px] w-9 cursor-pointer place-items-center rounded-base border-0 bg-white/12 text-white hover:bg-white/20 max-sm:w-8"
       >
         <Bell className="size-4" strokeWidth={1.75} aria-hidden />
@@ -27,11 +27,11 @@ export function NotificationsBell({ unread, items }: { unread: number; items: It
       <div id="notif-pop" popover="auto" className={popoverPanel("w-[380px]")}>
         <div className="flex items-center gap-2 border-b border-bd1 px-3.5 py-3 font-semibold">
           <Bell className="size-4" strokeWidth={1.75} aria-hidden />
-          الإشعارات
+          التنبيهات
           {unread > 0 && (
             <form action={markAllReadAction} className="ms-auto">
               <button type="submit" className="h-7 cursor-pointer rounded-base border-0 bg-transparent px-2.5 text-[13px] font-semibold text-tx hover:bg-hover">
-                تعليم الكل كمقروء
+                تمييز الكل كمقروء
               </button>
             </form>
           )}
@@ -39,7 +39,7 @@ export function NotificationsBell({ unread, items }: { unread: number; items: It
         {items.length === 0 ? (
           <div className="px-5 py-8 text-center text-tx3">
             <BellOff className="mx-auto mb-2 size-6" aria-hidden />
-            مفيش إشعارات
+            لا توجد تنبيهات
           </div>
         ) : (
           items.map((n) => (

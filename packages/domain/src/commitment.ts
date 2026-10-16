@@ -42,11 +42,11 @@ export function commitmentState(input: CommitmentInput, warnPct: number = COMMIT
   const exceeded = billed > limit;
   const base = { limit, billed, pct, remaining: round2(limit - billed), exceeded, partial: fc != null && fc < input.aoValue };
   if (exceeded) {
-    const warning = `المفوتر على أمر التكليف (${fmt(billed)}) عدّى الالتزام المالي المعتمد (${fmt(limit)}) — محتاج تجديد التزام مالي قبل الصرف`;
+    const warning = `القيمة المفوترة على أمر التكليف (${fmt(billed)}) تجاوزت الارتباط المالي المعتمد (${fmt(limit)}) — يلزم تعزيز الارتباط المالي قبل السداد`;
     return { ...base, level: 'exceeded', cls: 'r', warning };
   }
   if (pct >= warnPct) {
-    return { ...base, level: 'warn', cls: 'a', warning: `المفوتر وصل ${pct.toFixed(0)}% من الالتزام المالي لأمر التكليف` };
+    return { ...base, level: 'warn', cls: 'a', warning: `بلغت القيمة المفوترة ${pct.toFixed(0)}% من الارتباط المالي لأمر التكليف` };
   }
   return { ...base, level: 'ok', cls: 'g', warning: null };
 }

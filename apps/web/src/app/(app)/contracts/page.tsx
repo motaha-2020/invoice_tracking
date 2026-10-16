@@ -28,14 +28,14 @@ async function ContractsContent() {
     <>
       <PageHeader
         title="العقود وأوامر التكليف"
-        sub="العقود والمقايسات وأوامر التكليف وملاحقها"
+        sub="العقود وجداول الكميات والأسعار وأوامر التكليف وملاحقها"
         crumbs={[{ label: "الرئيسية", href: "/" }, { label: "العقود وأوامر التكليف" }]}
       />
       <Card>
         <CardHeader title="العقود" sub={<span className="num">{rows.length}</span>} />
         {rows.length === 0 ? (
-          <EmptyState icon={FileSignature} title="مفيش عقود لسه">
-            <div className="text-[13px]">{canImport ? "ارفع قالب العقد والمقايسة من تحت." : "لسه مفيش عقود متسجلة في نطاقك."}</div>
+          <EmptyState icon={FileSignature} title="لا توجد عقود بعد">
+            <div className="text-[13px]">{canImport ? "يرجى رفع نموذج العقد وجدول الكميات من القسم أدناه." : "لا توجد عقود مسجلة ضمن نطاق صلاحيتك."}</div>
           </EmptyState>
         ) : (
           <ContractsTable rows={rows} showCompany={!onlyCompany} />
@@ -43,18 +43,18 @@ async function ContractsContent() {
       </Card>
 
       {canImport && (
-        <section aria-label="رفع العقود وأوامر التكليف" className="mt-5 grid gap-4 xl:grid-cols-2">
+        <section aria-label="استيراد العقود وأوامر التكليف" className="mt-5 grid gap-4 xl:grid-cols-2">
           <ImportPanel
             templateId="05_العقد_والمقايسة"
-            title="رفع عقد ومقايسة"
+            title="استيراد عقد وجدول كميات"
             templateFile="05_العقد_والمقايسة.xlsx"
-            hint="بيانات العقد وشروط الصرف + المقايسة بالأسعار. البنود الموجودة بتتحدث ومفيش بند بيتمسح."
+            hint="بيانات العقد وشروط السداد وجدول الكميات والأسعار. تُحدَّث البنود الموجودة ولا يُحذف أي بند."
           />
           <ImportPanel
             templateId="06_أمر_التكليف"
-            title="رفع أمر تكليف / ملحق زيادة"
+            title="استيراد أمر تكليف / ملحق أمر تكليف"
             templateFile="06_أمر_التكليف.xlsx"
-            hint="رقم الملحق 0 = الأصلي (الكميات بتتستبدل). 1 وأكتر = ملحق زيادة بيتسجل في تاريخ أمر التكليف."
+            hint="رقم الملحق 0 = أمر التكليف الأصلي (تُستبدل الكميات). 1 فأكثر = ملحق زيادة يُسجَّل في سجل أمر التكليف."
           />
         </section>
       )}

@@ -16,16 +16,16 @@ import * as users from "@/features/users/users.service";
 import type { UserFilter } from "@/features/users/users.types";
 import { getStepsByRole, todayCairo } from "@/features/workflow/workflow.service";
 
-export const metadata: Metadata = { title: "المستخدمين والصلاحيات" };
+export const metadata: Metadata = { title: "المستخدمون والصلاحيات" };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const TABS = [
-  { key: "list", label: "المستخدمين" },
-  { key: "delegations", label: "التفويضات" },
+  { key: "list", label: "المستخدمون" },
+  { key: "delegations", label: "تفويض الصلاحيات" },
   { key: "perms", label: "مصفوفة الصلاحيات" },
-  { key: "scope", label: "مين يشوف إيه" },
-  { key: "import", label: "رفع من Excel" },
+  { key: "scope", label: "نطاق الاطلاع حسب الدور" },
+  { key: "import", label: "الاستيراد من Excel" },
 ];
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
@@ -52,9 +52,9 @@ async function UsersContent({ searchParams }: { searchParams: SearchParams }) {
   return (
     <>
       <PageHeader
-        title="المستخدمين والصلاحيات"
-        sub="كل مستخدم ليه دور (بيحدد يعمل إيه) ونطاق (بيحدد يشوف إيه)"
-        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "المستخدمين والصلاحيات" }]}
+        title="المستخدمون والصلاحيات"
+        sub="لكل مستخدم دور وظيفي يحدد الإجراءات المتاحة له، ونطاق صلاحية يحدد البيانات التي يطّلع عليها"
+        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "المستخدمون والصلاحيات" }]}
       />
       <TabLinks base="/users" tabs={TABS} current={tab} />
       <TabBody tab={tab} actor={actor} filter={filter} />
@@ -82,9 +82,9 @@ async function TabBody({ tab, actor, filter }: { tab: string; actor: SessionUser
         <div className="space-y-4">
           <ImportPanel
             templateId="04_المستخدمين"
-            title="رفع المستخدمين من Excel"
+            title="استيراد المستخدمين من Excel"
             templateFile="04_المستخدمين.xlsx"
-            hint="نفس الإيميل في أكتر من صف = أكتر من نطاق. الدعوات مش بتتبعت أوتوماتيك."
+            hint="تكرار البريد الإلكتروني نفسه في أكثر من صف يعني أكثر من نطاق صلاحية. لا تُرسل الدعوات تلقائياً."
           />
           <BulkInvite pendingCount={pending} />
         </div>

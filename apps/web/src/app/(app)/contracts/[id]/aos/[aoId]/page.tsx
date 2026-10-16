@@ -60,22 +60,22 @@ async function AoContent({ params }: { params: Params }) {
           <CardHeader title="بيانات أمر التكليف" sub={ao.contract.company.name} />
           <dl className="m-0 grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-x-5 gap-y-3.5 px-[18px] py-4 max-sm:px-3">
             <Field label="التاريخ"><Num>{formatDate(ao.aoDate)}</Num></Field>
-            <Field label="المشروع">{ao.project ? `${ao.project.name}` : <span className="text-wa7">مش مربوط بمشروع</span>}</Field>
+            <Field label="المشروع">{ao.project ? `${ao.project.name}` : <span className="text-wa7">غير مرتبط بمشروع</span>}</Field>
             <Field label="السنترال">{ao.project?.central.name ?? ao.centralText ?? "—"}</Field>
-            <Field label="النطاق">{ao.area ?? "—"}{ao.outOfScope && <Badge tone="a" className="ms-1.5">خارج النطاق</Badge>}</Field>
+            <Field label="النطاق الجغرافي">{ao.area ?? "—"}{ao.outOfScope && <Badge tone="a" className="ms-1.5">خارج النطاق الجغرافي</Badge>}</Field>
             <Field label="القيمة الحالية"><Num>{formatMoney(ao.value, { decimals: 0 })}</Num></Field>
-            <Field label="الالتزام المالي"><Num>{formatMoney(ao.financialCommitment, { decimals: 0 })}</Num></Field>
+            <Field label="الارتباط المالي"><Num>{formatMoney(ao.financialCommitment, { decimals: 0 })}</Num></Field>
             <Field label="ملحق التخطيط"><Num>{formatMoney(ao.planningAnnexValue, { decimals: 0 })}</Num></Field>
             <Field label="قيمة الكميات المخططة"><Num>{formatMoney(view.plannedValue, { decimals: 0 })}</Num></Field>
             <Field label="خطاب الضمان النهائي"><Num>{ao.finalGuaranteePct == null ? "—" : `${Number(ao.finalGuaranteePct)}%`}</Num></Field>
-            <Field label="الدمغات المسددة"><Num>{formatMoney(ao.stampsTotal, { decimals: 0 })}</Num></Field>
+            <Field label="رسوم الدمغة المسددة"><Num>{formatMoney(ao.stampsTotal, { decimals: 0 })}</Num></Field>
             <Field label="المستخلصات"><Num>{formatCount(ao._count.invoices)}</Num></Field>
             {ao.duration && <div className="col-span-full"><Field label="مدة التنفيذ"><span className="text-[13px] font-normal">{ao.duration}</span></Field></div>}
           </dl>
           {commitment && (
             <div className="border-t border-bd1 px-[18px] py-3.5 max-sm:px-3">
               <div className="mb-1.5 text-xs text-tx3">
-                المفوتر من {commitment.partial ? "الالتزام المالي" : "قيمة أمر التكليف"} (<Num>{formatMoney(commitment.limit, { decimals: 0 })}</Num>) — المتبقي <Num>{formatMoney(commitment.remaining, { decimals: 0 })}</Num>
+                القيمة المفوترة من {commitment.partial ? "الارتباط المالي" : "قيمة أمر التكليف"} (<Num>{formatMoney(commitment.limit, { decimals: 0 })}</Num>) — المتبقي <Num>{formatMoney(commitment.remaining, { decimals: 0 })}</Num>
               </div>
               <CommitmentMeter state={commitment} />
             </div>
@@ -90,9 +90,9 @@ async function AoContent({ params }: { params: Params }) {
         <CardHeader
           title="البنود المخططة"
           sub={<span className="num">{view.items.length}</span>}
-          actions={over > 0 ? <Badge tone="r">{over} بند عدّى المخطط</Badge> : undefined}
+          actions={over > 0 ? <Badge tone="r">{over} بند تجاوز الكمية المخططة</Badge> : undefined}
         />
-        {view.items.length === 0 ? <EmptyState icon={ListChecks} title="مفيش كميات مخططة لسه" /> : <AoItemsTable items={view.items} />}
+        {view.items.length === 0 ? <EmptyState icon={ListChecks} title="لا توجد كميات مخططة بعد" /> : <AoItemsTable items={view.items} />}
       </Card>
 
       <div className="mt-5"><AoMaterialsCard materials={ao.materials} /></div>

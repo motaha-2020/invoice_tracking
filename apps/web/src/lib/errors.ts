@@ -14,15 +14,15 @@ export type AppErrorCode =
   | "INTERNAL";
 
 const DEFAULT_MESSAGES: Record<AppErrorCode, string> = {
-  UNAUTHENTICATED: "لازم تسجّل دخول الأول",
-  FORBIDDEN: "مش مسموح لك تعمل الحركة دي",
-  NOT_FOUND: "اللي بتدوّر عليه مش موجود",
-  VALIDATION: "راجع البيانات اللي دخلتها",
-  RATE_LIMITED: "محاولات كتير ورا بعض — استنى شوية وجرّب تاني",
-  INVALID_CREDENTIALS: "البريد الإلكتروني أو كلمة السر مش صح",
-  INVITE_INVALID: "رابط الدعوة ده مش صالح أو انتهت صلاحيته",
-  CONFLICT: "البيانات اتغيرت من حد تاني — حدّث الصفحة وجرّب تاني",
-  INTERNAL: "حصل خطأ غير متوقع — جرّب تاني بعد شوية",
+  UNAUTHENTICATED: "يرجى تسجيل الدخول أولاً",
+  FORBIDDEN: "لا تملك صلاحية تنفيذ هذا الإجراء",
+  NOT_FOUND: "البيانات المطلوبة غير موجودة",
+  VALIDATION: "يرجى مراجعة البيانات المُدخلة",
+  RATE_LIMITED: "تم تجاوز عدد المحاولات المسموح — يرجى الانتظار قليلاً ثم إعادة المحاولة",
+  INVALID_CREDENTIALS: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+  INVITE_INVALID: "رابط الدعوة غير صالح أو انتهت صلاحيته",
+  CONFLICT: "عُدِّلت البيانات من قِبل مستخدم آخر — يرجى تحديث الصفحة وإعادة المحاولة",
+  INTERNAL: "حدث خطأ غير متوقع — يرجى إعادة المحاولة لاحقاً",
 };
 
 export class AppError extends Error {

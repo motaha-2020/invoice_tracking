@@ -10,11 +10,11 @@ export function parseOrgTab(v: unknown): OrgTab {
 }
 
 const TAB_INFO: Record<OrgTab, { label: string; icon: LucideIcon }> = {
-  tree: { label: "الهيكل", icon: Network },
+  tree: { label: "الهيكل التنظيمي", icon: Network },
   projects: { label: "المشروعات", icon: FolderKanban },
   types: { label: "أنواع المشروعات", icon: Layers },
   "work-types": { label: "أنواع الأعمال", icon: Hammer },
-  companies: { label: "الشركات", icon: Briefcase },
+  companies: { label: "الشركات المنفذة", icon: Briefcase },
   import: { label: "استيراد", icon: FileSpreadsheet },
 };
 

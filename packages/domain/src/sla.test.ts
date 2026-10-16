@@ -16,9 +16,9 @@ describe('slaState', () => {
 
   it('ok → due (warning) → last day → late for tech in C1 (SLA 2)', () => {
     expect(slaState(at({}), '2026-10-11', W)).toMatchObject({ k: 'ok', cls: 'g', elapsed: 0, sla: 2 });
-    expect(slaState(at({}), '2026-10-12', W)).toMatchObject({ k: 'due', cls: 'a', label: 'قرب الميعاد', elapsed: 1 });
-    expect(slaState(at({}), '2026-10-13', W)).toMatchObject({ k: 'due', label: 'آخر يوم', elapsed: 2 });
-    expect(slaState(at({}), '2026-10-14', W)).toMatchObject({ k: 'late', cls: 'r', label: 'متأخر', elapsed: 3 });
+    expect(slaState(at({}), '2026-10-12', W)).toMatchObject({ k: 'due', cls: 'a', label: 'قارب على الانتهاء', elapsed: 1 });
+    expect(slaState(at({}), '2026-10-13', W)).toMatchObject({ k: 'due', label: 'قارب على الانتهاء', elapsed: 2 });
+    expect(slaState(at({}), '2026-10-14', W)).toMatchObject({ k: 'late', cls: 'r', label: 'متجاوز للمدة', elapsed: 3 });
   });
 
   it('uses the SLA of the effective category path', () => {
@@ -42,12 +42,12 @@ describe('slaState', () => {
   });
 
   it('returned shows who it was returned to', () => {
-    expect(slaState(at({ status: 'returned', returnTo: 'company' }), '2026-10-15', W)).toMatchObject({ k: 'returned', cls: 'b', label: 'مرتجع للشركة', elapsed: 4 });
-    expect(slaState(at({ status: 'returned', returnTo: 'exec' }), '2026-10-15', W).label).toBe('مرتجع لـ إدارة التنفيذ');
+    expect(slaState(at({ status: 'returned', returnTo: 'company' }), '2026-10-15', W)).toMatchObject({ k: 'returned', cls: 'b', label: 'معاد للاستيفاء — المقاول', elapsed: 4 });
+    expect(slaState(at({ status: 'returned', returnTo: 'exec' }), '2026-10-15', W).label).toBe('معاد للاستيفاء — إدارة التنفيذ');
   });
 
   it('on hold shows the reason', () => {
     const s = slaState(at({ status: 'on_hold', holdReason: 'بانتظار ملحق الزيادة' }), '2026-10-15', W);
-    expect(s).toMatchObject({ k: 'hold', cls: 'a', label: 'معلّق: بانتظار ملحق الزيادة', sla: null });
+    expect(s).toMatchObject({ k: 'hold', cls: 'a', label: 'موقوف مؤقتاً: بانتظار ملحق الزيادة', sla: null });
   });
 });

@@ -21,7 +21,7 @@ export const orgImporter: Importer<OrgImportRow> = {
       .filter((e): e is string => !!e);
     const [existing, users] = await Promise.all([loadExistingOrg(), loadUsersByEmail([...new Set(emails)])]);
     const rows = validateOrgSheets(sheets, existing, users);
-    const notes = rows.length ? [] : ["الملف مفيهوش أي صفوف بيانات"];
+    const notes = rows.length ? [] : ["لا يتضمن الملف أي صفوف بيانات"];
     return { templateId: this.templateId, rows, notes };
   },
 

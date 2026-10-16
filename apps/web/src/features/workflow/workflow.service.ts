@@ -69,7 +69,7 @@ export async function savePaths(actor: SessionUser, matrix: SlaMatrix): Promise<
 
   for (const [code, cells] of Object.entries(matrix)) {
     const current = cats.find((c) => c.code === code);
-    if (!current) throw new AppError("VALIDATION", `فئة مش معروفة: ${code}`);
+    if (!current) throw new AppError("VALIDATION", `فئة غير معروفة: ${code}`);
     const before = cellsFromRows(current.steps);
     if (sameCells(before, cells)) continue;
     const err = validateCells(code, cells, steps);
@@ -78,7 +78,7 @@ export async function savePaths(actor: SessionUser, matrix: SlaMatrix): Promise<
     const stuck = await repo.countStuckInvoices(code, gone);
     if (stuck > 0) {
       const names = gone.map((k) => steps.find((s) => s.key === k)?.short ?? k).join("، ");
-      throw new AppError("CONFLICT", `مينفعش تشيل (${names}) من ${code} — فيه ${stuck} مستخلص واقف عليها دلوقتي`);
+      throw new AppError("CONFLICT", `لا يمكن إزالة (${names}) من مسار الفئة ${code} — توجد ${stuck} مستخلصات قيد المراجعة عليها حالياً`);
     }
     const rows = matrixToCategorySteps(code, cells, steps);
     changes.push({ category: code, rows });
@@ -110,7 +110,7 @@ export async function updateReturnReason(actor: SessionUser, id: string, data: {
 export async function deleteReturnReason(actor: SessionUser, id: string) {
   await assertConfig(actor);
   const used = await repo.countReasonUsage(id);
-  if (used > 0) throw new AppError("CONFLICT", `السبب ده مستخدم في ${used} حركة — وقّفه بدل ما تمسحه`);
+  if (used > 0) throw new AppError("CONFLICT", `هذا السبب مستخدم في ${used} إجراء — يرجى تعطيله بدلاً من حذفه`);
   await repo.deleteReturnReason(id, audit(actor, "returnReason.delete", "return_reason", { entityId: id }));
 }
 
@@ -134,7 +134,7 @@ export async function getDocsMatrix(actor: SessionUser) {
 export async function saveDocType(actor: SessionUser, input: { id?: string; code: string; name: string }) {
   await assertConfig(actor);
   const same = await repo.findDocTypeByCode(input.code);
-  if (same && same.id !== input.id) throw new AppError("CONFLICT", "الكود ده مستخدم لمستند تاني");
+  if (same && same.id !== input.id) throw new AppError("CONFLICT", "هذا الكود مستخدم لمستند آخر");
   await repo.upsertDocType(input, audit(actor, input.id ? "docType.update" : "docType.create", "doc_type", { details: input }));
 }
 
@@ -161,9 +161,9 @@ export async function getHolidays(actor: SessionUser) {
 export async function addHoliday(actor: SessionUser, date: string, name: string) {
   await assertConfig(actor);
   const d = toDate(date);
-  if (Number.isNaN(d.getTime()) || iso(d) !== date) throw new AppError("VALIDATION", "التاريخ مش صحيح");
+  if (Number.isNaN(d.getTime()) || iso(d) !== date) throw new AppError("VALIDATION", "التاريخ غير صحيح");
   const existing = await repo.findHolidays([d]);
-  if (existing.length) throw new AppError("CONFLICT", `اليوم ده متسجل أجازة قبل كده (${existing[0]!.name})`);
+  if (existing.length) throw new AppError("CONFLICT", `هذا اليوم مسجل عطلةً رسمية من قبل (${existing[0]!.name})`);
   await repo.upsertHoliday(d, name, audit(actor, "holiday.create", "holiday", { entityId: date, details: { name } }));
 }
 

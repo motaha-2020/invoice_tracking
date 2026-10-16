@@ -7,9 +7,9 @@ import type { AoItemView, AoView } from "../contracts.service";
 export function AoChangesTimeline({ changes }: { changes: AoView["ao"]["changes"] }) {
   return (
     <Card>
-      <CardHeader title="الملاحق والتجديدات" sub={<span className="num">{changes.length}</span>} />
+      <CardHeader title="ملاحق أمر التكليف وتعزيزات الارتباط المالي" sub={<span className="num">{changes.length}</span>} />
       {changes.length === 0 ? (
-        <EmptyState title="مفيش ملاحق ولا تجديدات">
+        <EmptyState title="لا توجد ملاحق أو تعزيزات">
           <div className="text-[13px]">أمر التكليف بقيمته الأصلية.</div>
         </EmptyState>
       ) : (
@@ -43,7 +43,7 @@ export function AoChangesTimeline({ changes }: { changes: AoView["ao"]["changes"
   );
 }
 
-/** البنود المخططة مقابل المفوتر التراكمي — الزيادة عن المخطط بالأحمر */
+/** البنود المخططة مقابل المفوتر التراكمي — التجاوز للكمية المخططة بالأحمر */
 export function AoItemsTable({ items }: { items: AoItemView[] }) {
   const showSite = items.some((i) => i.site);
   return (
@@ -55,8 +55,8 @@ export function AoItemsTable({ items }: { items: AoItemView[] }) {
             <Th>البند</Th>
             <Th>الوحدة</Th>
             <Th align="end">سعر الوحدة</Th>
-            <Th align="end">المخطط</Th>
-            <Th align="end">المفوتر تراكمي</Th>
+            <Th align="end">الكمية المخططة</Th>
+            <Th align="end">الكمية المفوترة التراكمية</Th>
             <Th align="end">المتبقي</Th>
           </tr>
         </THead>
@@ -69,11 +69,11 @@ export function AoItemsTable({ items }: { items: AoItemView[] }) {
                 <div className="line-clamp-1 max-w-[460px] text-xs text-tx3" title={i.description}>{i.description}</div>
               </Td>
               <Td className="text-[13px]">{i.unit ?? ""}</Td>
-              <Td align="end">{i.unitPrice == null ? <Badge tone="a">مالوش سعر</Badge> : <Num>{formatMoney(i.unitPrice)}</Num>}</Td>
+              <Td align="end">{i.unitPrice == null ? <Badge tone="a">غير مُسعّر</Badge> : <Num>{formatMoney(i.unitPrice)}</Num>}</Td>
               <Td align="end"><Num>{formatQty(i.planned)}</Num></Td>
               <Td align="end">
                 <Num className={i.over ? "font-bold text-cr7" : undefined}>{formatQty(i.billed)}</Num>
-                {i.over && <div className="text-[11px] text-cr7">زيادة عن المخطط</div>}
+                {i.over && <div className="text-[11px] text-cr7">تجاوز للكمية المخططة</div>}
               </Td>
               <Td align="end"><Num className={i.over ? "text-cr7" : "text-tx2"}>{formatQty(i.planned - i.billed)}</Num></Td>
             </Tr>
@@ -106,7 +106,7 @@ export function AoMaterialsCard({ materials }: { materials: AoView["ao"]["materi
     <Card>
       <CardHeader title="المهمات المخططة" sub={<span className="num">{materials.length}</span>} />
       {materials.length === 0 ? (
-        <EmptyState title="مفيش مهمات مخططة على أمر التكليف ده" />
+        <EmptyState title="لا توجد مهمات مخططة على أمر التكليف" />
       ) : (
         <TableWrap>
           <Table>

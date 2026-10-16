@@ -39,7 +39,7 @@ export function parseSla(v: string): Result<number | null> {
   const t = v.trim();
   if (!t) return { value: null };
   const n = Number(t.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)));
-  if (!Number.isInteger(n) || n < 0 || n > MAX_SLA_DAYS) return { error: `الـ SLA لازم عدد أيام صحيح من 0 لـ ${MAX_SLA_DAYS}` };
+  if (!Number.isInteger(n) || n < 0 || n > MAX_SLA_DAYS) return { error: `يجب أن تكون المدة المستهدفة (SLA) عدداً صحيحاً من الأيام بين 0 و${MAX_SLA_DAYS}` };
   return { value: n };
 }
 
@@ -61,19 +61,19 @@ export function orderedPath(cells: CategoryCells, steps: readonly StepMeta[]): {
 export function validateCells(category: string, cells: CategoryCells, steps: readonly StepMeta[]): string | null {
   const known = new Set(pathSteps(steps).map((s) => s.key));
   const keys = Object.keys(cells);
-  if (keys.length === 0) return `مسار ${category} فاضي — لازم محطة واحدة على الأقل`;
+  if (keys.length === 0) return `مسار اعتماد الفئة ${category} فارغ — يجب أن يتضمن مرحلة واحدة على الأقل`;
   const unknown = keys.find((k) => !known.has(k));
-  if (unknown) return `المحطة "${unknown}" مش معروفة أو مينفعش تبقى في المسار`;
+  if (unknown) return `مرحلة الاعتماد "${unknown}" غير معروفة أو لا يجوز إدراجها في المسار`;
   for (const k of keys) {
     const v = cells[k];
-    if (v != null && (!Number.isInteger(v) || v < 0 || v > MAX_SLA_DAYS)) return `SLA غلط في ${category}`;
+    if (v != null && (!Number.isInteger(v) || v < 0 || v > MAX_SLA_DAYS)) return `قيمة غير صحيحة للمدة المستهدفة (SLA) في الفئة ${category}`;
   }
   if (known.has(CATEGORY_STEP) && !(CATEGORY_STEP in cells)) {
     const name = steps.find((s) => s.key === CATEGORY_STEP)?.short ?? CATEGORY_STEP;
-    return `مسار ${category} لازم يعدّي على "${name}" (هي اللي بتحدد الفئة)`;
+    return `يجب أن يمر مسار اعتماد الفئة ${category} بمرحلة "${name}" (وهي المرحلة التي تُحدَّد فيها الفئة)`;
   }
   const path = orderedPath(cells, steps);
-  if (known.has("finance") && path[path.length - 1]?.stepKey !== "finance") return `مسار ${category} لازم يخلص بالمالية`;
+  if (known.has("finance") && path[path.length - 1]?.stepKey !== "finance") return `يجب أن ينتهي مسار اعتماد الفئة ${category} بالإدارة المالية`;
   return null;
 }
 
@@ -96,9 +96,9 @@ export function sameCells(a: CategoryCells, b: CategoryCells): boolean {
 
 export const WEEK_DAYS = [
   ["sun", "الأحد"],
-  ["mon", "الاتنين"],
-  ["tue", "التلات"],
-  ["wed", "الأربع"],
+  ["mon", "الاثنين"],
+  ["tue", "الثلاثاء"],
+  ["wed", "الأربعاء"],
   ["thu", "الخميس"],
   ["fri", "الجمعة"],
   ["sat", "السبت"],

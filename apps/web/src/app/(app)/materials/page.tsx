@@ -39,7 +39,7 @@ async function MaterialsContent({ searchParams }: { searchParams: SearchParams }
     <>
       <PageHeader
         title="المهمات المنصرفة"
-        sub="المخطط في أمر التكليف ↔ المنصرف من المخازن ↔ المنفذ والمفوتر في المستخلصات"
+        sub="الكمية المخططة في أمر التكليف ↔ المنصرف من المخازن ↔ الكمية المنفذة والمفوترة في المستخلصات"
         crumbs={[{ label: "الرئيسية", href: "/" }, { label: "المهمات المنصرفة" }]}
       />
       <Card className="mb-5">
@@ -49,27 +49,27 @@ async function MaterialsContent({ searchParams }: { searchParams: SearchParams }
 
       {canIssues && (
         <div className="mb-5 grid gap-5 lg:grid-cols-2">
-          <ImportPanel templateId="07_كتالوج_المهمات" title="رفع كتالوج المهمات" templateFile="07_كتالوج_المهمات.xlsx" hint="أصناف المهمات (رقم الشطب) — الموجود بيتحدث" />
+          <ImportPanel templateId="07_كتالوج_المهمات" title="استيراد كتالوج المهمات" templateFile="07_كتالوج_المهمات.xlsx" hint="أصناف المهمات (رقم الشطب) — تُحدَّث الأصناف الموجودة" />
           <ImportPanel
             templateId="08_المنصرف_من_المخازن"
-            title="رفع المنصرف من المخازن"
+            title="استيراد المنصرف من المخازن"
             templateFile="08_المنصرف_من_المخازن.xlsx"
-            hint="كل إذن صرف في صف — نفس الإذن لنفس الصنف بيتحدث"
+            hint="كل إذن صرف في صف مستقل — يُحدَّث الإذن نفسه للصنف نفسه"
           />
         </div>
       )}
 
       {canHistory && (
         <section aria-labelledby="hist-title" className="mb-5">
-          <h2 id="hist-title" className="mb-1 text-lg font-bold">ترحيل المستخلصات الحالية</h2>
+          <h2 id="hist-title" className="mb-1 text-lg font-bold">ترحيل بيانات المستخلصات الحالية</h2>
           <p className="mt-0 mb-3 text-sm text-tx2">
-            مرة واحدة عند التشغيل: المستخلصات اللي في ملفات الموقف بتتسجل &quot;مرحّلة&quot; من غير بنود، بمحطتها الحالية وتاريخها. الرفع تاني بيحدّث الحالة بس.
+            يُنفَّذ مرة واحدة عند بدء التشغيل: تُسجَّل المستخلصات الواردة في ملفات الموقف بصفة &quot;مُرحَّلة&quot; دون بنود تفصيلية، مع مرحلة الاعتماد الحالية وتاريخها. إعادة الرفع تُحدِّث الحالة فقط.
           </p>
           <ImportPanel
             templateId="11_المستخلصات_السابقة"
-            title="رفع المستخلصات السابقة"
+            title="استيراد المستخلصات السابقة"
             templateFile="11_المستخلصات_السابقة.xlsx"
-            hint="لو أمر التكليف مش متسجل والمستخلص معلّق، هيتعمل أمر تكليف بانتظار الاعتماد"
+            hint="إذا لم يكن أمر التكليف مسجلاً وكان المستخلص موقوفاً مؤقتاً، يُنشأ أمر تكليف بحالة «بانتظار الاعتماد»"
           />
         </section>
       )}
@@ -83,7 +83,7 @@ async function CatalogSection({ search }: { search?: string }) {
     <>
       <form method="get" action="/materials" role="search" className="flex flex-wrap items-center gap-2 border-b border-bd1 px-[18px] py-2.5 max-sm:px-3">
         <input type="hidden" name="tab" value="catalog" />
-        <Input name="q" type="search" defaultValue={search ?? ""} placeholder="ابحث برقم الشطب أو الوصف أو المجموعة" aria-label="بحث في الكتالوج" className="min-w-0 flex-1" />
+        <Input name="q" type="search" defaultValue={search ?? ""} placeholder="البحث برقم الشطب أو الوصف أو المجموعة" aria-label="بحث في الكتالوج" className="min-w-0 flex-1" />
         <Button type="submit" size="sm">
           <Search aria-hidden /> بحث
         </Button>
@@ -127,7 +127,7 @@ async function ComparisonBody({ user, filter }: { user: User; filter: Filter }) 
         title="مقارنة أمر التكليف"
         sub={
           <span>
-            <span className="num">{rows.length}</span> صنف · <span className="num text-cr6">{red}</span> مشكلة · <span className="num text-wa6">{amber}</span> تحذير
+            <span className="num">{rows.length}</span> صنف · <span className="num text-cr6">{red}</span> ملاحظة جوهرية · <span className="num text-wa6">{amber}</span> تحذير
           </span>
         }
       />

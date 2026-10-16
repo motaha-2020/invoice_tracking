@@ -16,7 +16,7 @@ export const companiesImporter: Importer<CompanyImportRow> = {
   async validate(wb: ParsedWorkbook) {
     const sheet = wb.sheets[COMPANIES_SHEET];
     const rows = validateCompanyRows(sheet?.kind === "table" ? sheet.rows : [], await loadExistingCompanies());
-    return { templateId: this.templateId, rows, notes: rows.length ? [] : ["الملف مفيهوش أي صفوف بيانات"] };
+    return { templateId: this.templateId, rows, notes: rows.length ? [] : ["لا يتضمن الملف أي صفوف بيانات"] };
   },
 
   commit(preview, tx) {

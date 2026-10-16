@@ -4,7 +4,7 @@
 //    المستندات الإلزامية، الإعدادات) بتتزرع بس لو مش موجودة، وعمرها ما بتتكتب فوقها.
 import type { PrismaClient } from '../../src/index';
 import {
-  CATEGORIES, DOC_TYPES, HOLIDAYS_2026, LEGACY_PROJECT_TYPES, PERMISSIONS, PROJECT_TYPES,
+  CATEGORIES, DOC_TYPES, HOLIDAYS_2026, LEGACY_PROJECT_TYPES, LEGACY_TEXT, PERMISSIONS, PROJECT_TYPES,
   REQUIRED_FINANCE_DOCS, REQUIRED_SUBMIT_DOCS, RETURN_REASONS, SETTINGS, WORK_TYPES, WORKFLOW_STEPS,
 } from './reference-data';
 
@@ -18,6 +18,7 @@ export async function seedReference(db: PrismaClient): Promise<void> {
   await seedHolidays(db);
   await seedPermissions(db);
   await seedSettings(db);
+  await renameLegacyText(db);
 }
 
 async function seedSteps(db: PrismaClient) {
@@ -129,6 +130,54 @@ async function seedSettings(db: PrismaClient) {
     await db.setting.upsert({ where: { key }, create: { key, value }, update: {} });
   }
   log('settings', Object.keys(SETTINGS).length);
+}
+
+/**
+ * توحيد المصطلحات: تحديث أسماء البيانات المرجعية المعرّفة من النظام إلى الصياغة المعتمدة،
+ * بشرط أن تكون القيمة المخزنة ما زالت مطابقة للنص القديم المزروع (لا تُستبدل تعديلات مدير النظام).
+ * idempotent: بعد التحديث الأول لا يتطابق أي صف مع النص القديم.
+ */
+async function renameLegacyText(db: PrismaClient) {
+  const renamed: string[] = [];
+  const note = (what: string, from: string, to: string, n: number) => {
+    if (n > 0) renamed.push(`${what}: "${from}" → "${to}"`);
+  };
+  for (const old of LEGACY_TEXT.steps) {
+    const cur = WORKFLOW_STEPS.find((s) => s.key === old.key);
+    if (!cur) continue;
+    if (old.name && old.name !== cur.name) {
+      const r = await db.workflowStep.updateMany({ where: { key: old.key, name: old.name }, data: { name: cur.name } });
+      note(`workflow_steps.${old.key}.name`, old.name, cur.name, r.count);
+    }
+    if (old.short && old.short !== cur.short) {
+      const r = await db.workflowStep.updateMany({ where: { key: old.key, short: old.short }, data: { short: cur.short } });
+      note(`workflow_steps.${old.key}.short`, old.short, cur.short, r.count);
+    }
+  }
+  for (const old of LEGACY_TEXT.categories) {
+    const cur = CATEGORIES.find((c) => c.code === old.code);
+    if (!cur || cur.name === old.name) continue;
+    const r = await db.category.updateMany({ where: { code: old.code, name: old.name }, data: { name: cur.name } });
+    note(`categories.${old.code}`, old.name, cur.name, r.count);
+  }
+  for (const old of LEGACY_TEXT.docTypes) {
+    const cur = DOC_TYPES.find((d) => d.code === old.code);
+    if (!cur || cur.name === old.name) continue;
+    const r = await db.docType.updateMany({ where: { code: old.code, name: old.name }, data: { name: cur.name } });
+    note(`doc_types.${old.code}`, old.name, cur.name, r.count);
+  }
+  for (const old of LEGACY_TEXT.returnReasons) {
+    const cur = RETURN_REASONS.find((x) => x.id === old.id);
+    if (!cur || cur.name === old.name) continue;
+    const r = await db.returnReason.updateMany({ where: { id: old.id, name: old.name }, data: { name: cur.name } });
+    note(`return_reasons.${old.id}`, old.name, cur.name, r.count);
+  }
+  if (renamed.length) {
+    console.log(`  ✓ legacy text renamed (${renamed.length}):`);
+    for (const line of renamed) console.log(`      ${line}`);
+  } else {
+    console.log('  ✓ legacy text         0  (nothing to rename)');
+  }
 }
 
 function mustGet(map: Map<string, string>, key: string): string {

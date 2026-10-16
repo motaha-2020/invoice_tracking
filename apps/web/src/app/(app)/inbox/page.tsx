@@ -7,7 +7,7 @@ import { InvoiceTable } from "@/features/invoices/components/invoice-table";
 import { getStepNames, listInbox } from "@/features/invoices/invoices.service";
 import { requireNavAccess } from "@/features/shell/nav.service";
 
-export const metadata: Metadata = { title: "صندوق الوارد" };
+export const metadata: Metadata = { title: "المهام الواردة" };
 
 export default function InboxPage() {
   return (
@@ -25,15 +25,15 @@ async function InboxContent() {
   return (
     <>
       <PageHeader
-        title={isCompany ? "مطلوب الرد" : "صندوق الوارد"}
-        sub={isCompany ? "المستخلصات المرتجعة لكم والمسودات" : "المستخلصات اللي الدور عليك فيها دلوقتي"}
-        crumbs={[{ label: "الرئيسية", href: "/" }, { label: isCompany ? "مطلوب الرد" : "صندوق الوارد" }]}
+        title={isCompany ? "بانتظار استيفاء الملاحظات" : "المهام الواردة"}
+        sub={isCompany ? "المستخلصات المعادة للاستيفاء والمسودات" : "المستخلصات المعروضة حالياً لاتخاذ إجرائك"}
+        crumbs={[{ label: "الرئيسية", href: "/" }, { label: isCompany ? "بانتظار استيفاء الملاحظات" : "المهام الواردة" }]}
       />
       <Card>
         <CardHeader title="المستخلصات" sub={<span className="num">{rows.length}</span>} />
         {rows.length === 0 ? (
-          <EmptyState icon={Inbox} title="مفيش حاجة مستنياك">
-            <div className="text-[13px]">أول ما مستخلص يوصل لمحطتك هيظهر هنا.</div>
+          <EmptyState icon={Inbox} title="لا توجد مستخلصات بانتظار إجرائك">
+            <div className="text-[13px]">ستظهر هنا المستخلصات فور وصولها إلى مرحلة الاعتماد الخاصة بك.</div>
           </EmptyState>
         ) : (
           <InvoiceTable rows={rows} steps={steps} showCompany={!isCompany} />

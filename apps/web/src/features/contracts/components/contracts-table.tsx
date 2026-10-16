@@ -10,12 +10,12 @@ export function ContractsTable({ rows, showCompany = true }: { rows: ContractSum
         <THead>
           <tr>
             <Th>العقد</Th>
-            {showCompany && <Th>الشركة</Th>}
+            {showCompany && <Th>المقاول</Th>}
             <Th align="end">البنود</Th>
             <Th align="end">أوامر التكليف</Th>
             <Th align="end">قيمة أوامر التكليف</Th>
-            <Th align="end">المفوتر</Th>
-            <Th>شروط الصرف</Th>
+            <Th align="end">القيمة المفوترة</Th>
+            <Th>شروط السداد</Th>
           </tr>
         </THead>
         <TBody>

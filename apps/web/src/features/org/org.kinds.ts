@@ -22,7 +22,7 @@ export const KIND_LABELS: Record<OrgKind, KindInfo> = {
   projectType: { one: "نوع مشروع", many: "أنواع المشروعات", fem: false },
   workType: { one: "نوع أعمال", many: "أنواع الأعمال", fem: false },
   project: { one: "مشروع", many: "المشروعات", fem: false },
-  company: { one: "شركة", many: "الشركات", fem: true },
+  company: { one: "شركة منفذة", many: "الشركات المنفذة", fem: true },
 };
 
 /** المستوى الأب لكل مستوى في الهيكل (والـ رئاسة مالهاش أب) */
@@ -69,5 +69,5 @@ export function dependentsMessage(kind: OrgKind, name: string, deps: { label: st
   if (!present.length) return null;
   const list = present.map((d) => `${d.n} ${d.label}`).join("، ");
   const { one, fem } = KIND_LABELS[kind];
-  return `مينفعش تمسح ${one} «${name}» لأن ${fem ? "تحتها" : "تحته"} بيانات: ${list}. انقلها أو امسحها الأول.`;
+  return `لا يمكن حذف ${one} «${name}» لوجود بيانات ${fem ? "تابعة لها" : "تابعة له"}: ${list}. يرجى نقلها أو حذفها أولاً.`;
 }

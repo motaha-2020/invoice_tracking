@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { PageSkeleton } from "@/components/ui";
 import { OrgScreen } from "@/features/org/components/org-screen";
 
-export const metadata: Metadata = { title: "الهيكل والمشاريع" };
+export const metadata: Metadata = { title: "الهيكل التنظيمي والمشروعات" };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 

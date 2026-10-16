@@ -32,7 +32,7 @@ export function LoginForm({ next }: { next?: string }) {
           className="text-start"
         />
       </Field>
-      <Field label="كلمة السر" htmlFor="password" error={fe.password}>
+      <Field label="كلمة المرور" htmlFor="password" error={fe.password}>
         <Input
           id="password"
           name="password"
@@ -45,10 +45,10 @@ export function LoginForm({ next }: { next?: string }) {
       </Field>
       <Button type="submit" variant="pr" disabled={pending} className="mt-1 w-full">
         <LogIn />
-        {pending ? "جاري الدخول…" : "دخول"}
+        {pending ? "جارٍ تسجيل الدخول…" : "تسجيل الدخول"}
       </Button>
       <p className="m-0 text-xs text-tx3">
-        نسيت كلمة السر أو لسه ما عندكش حساب؟ كلّم مدير النظام يبعتلك رابط دعوة.
+        في حال نسيان كلمة المرور أو عدم وجود حساب، يرجى التواصل مع مدير النظام لإرسال رابط دعوة.
       </p>
     </form>
   );

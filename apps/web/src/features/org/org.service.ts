@@ -138,9 +138,9 @@ function prismaCode(e: unknown): string | undefined {
 
 function mapWriteError(e: unknown, kind: OrgKind, code?: string | null): never {
   const pc = prismaCode(e);
-  if (pc === "P2002") throw new AppError("CONFLICT", `الكود ${code ?? ""} مستخدم قبل كده في ${KIND_LABELS[kind].many}`, { cause: e });
-  if (pc === "P2003") throw new AppError("VALIDATION", "الجهة اللي اخترتها مش موجودة (يمكن اتمسحت) — حدّث الصفحة وجرّب تاني", { cause: e });
-  if (pc === "P2025") throw new AppError("NOT_FOUND", `${KIND_LABELS[kind].one} مش موجود — يمكن اتمسح`, { cause: e });
+  if (pc === "P2002") throw new AppError("CONFLICT", `الكود ${code ?? ""} مستخدم من قبل في ${KIND_LABELS[kind].many}`, { cause: e });
+  if (pc === "P2003") throw new AppError("VALIDATION", "الجهة المختارة غير موجودة (ربما حُذفت) — يرجى تحديث الصفحة وإعادة المحاولة", { cause: e });
+  if (pc === "P2025") throw new AppError("NOT_FOUND", `${KIND_LABELS[kind].one} غير موجود — ربما حُذف`, { cause: e });
   throw e;
 }
 
@@ -166,13 +166,13 @@ export async function updateOrgEntity(user: SessionUser, id: string, data: OrgDa
 export async function deleteOrgEntity(user: SessionUser, kind: OrgKind, id: string) {
   await assertCanEdit(user);
   const rec = await findEntity(kind, id);
-  if (!rec) throw new AppError("NOT_FOUND", `${KIND_LABELS[kind].one} مش موجود — يمكن اتمسح`);
+  if (!rec) throw new AppError("NOT_FOUND", `${KIND_LABELS[kind].one} غير موجود — ربما حُذف`);
   const blocked = dependentsMessage(kind, rec.name, await countDependents(kind, id));
   if (blocked) throw new AppError("CONFLICT", blocked);
   try {
     await deleteEntity(kind, id, rec, user.id);
   } catch (e) {
-    if (prismaCode(e) === "P2003") throw new AppError("CONFLICT", "اتضاف تحته بيانات دلوقتي — حدّث الصفحة", { cause: e });
+    if (prismaCode(e) === "P2003") throw new AppError("CONFLICT", "أُضيفت بيانات تابعة للتو — يرجى تحديث الصفحة", { cause: e });
     mapWriteError(e, kind);
   }
   return rec;

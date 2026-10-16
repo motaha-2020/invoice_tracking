@@ -27,8 +27,8 @@ async function InviteContent({ params }: { params: Params }) {
     return (
       <>
         <h2 className="m-0 mb-4 text-[22px] font-bold">تفعيل الحساب</h2>
-        <Alert tone="r" title="رابط الدعوة مش صالح">
-          يمكن يكون اتستخدم قبل كده أو عدّى عليه 72 ساعة. اطلب من مدير النظام يبعتلك رابط جديد.
+        <Alert tone="r" title="رابط الدعوة غير صالح">
+          ربما استُخدم الرابط من قبل أو انقضت مدة صلاحيته (72 ساعة). يرجى طلب رابط جديد من مدير النظام.
         </Alert>
         <ButtonLink href="/login" className="mt-4">
           صفحة الدخول
@@ -39,11 +39,11 @@ async function InviteContent({ params }: { params: Params }) {
 
   return (
     <>
-      <h2 className="m-0 mb-1 text-[22px] font-bold">{invite.purpose === "reset" ? "كلمة سر جديدة" : "أهلاً بيك في المنظومة"}</h2>
+      <h2 className="m-0 mb-1 text-[22px] font-bold">{invite.purpose === "reset" ? "تعيين كلمة مرور جديدة" : "مرحباً بكم في المنظومة"}</h2>
       <p className="m-0 mb-5 text-tx3">
         {invite.userName} — <span dir="ltr">{invite.email}</span>
         <br />
-        اختار كلمة السر اللي هتدخل بيها.
+        يرجى اختيار كلمة المرور التي ستستخدمها لتسجيل الدخول.
       </p>
       <SetPasswordForm token={token} email={invite.email} />
     </>
@@ -52,7 +52,7 @@ async function InviteContent({ params }: { params: Params }) {
 
 function InviteFallback() {
   return (
-    <div role="status" aria-label="جاري التحميل" className="flex flex-col gap-3">
+    <div role="status" aria-label="جارٍ التحميل" className="flex flex-col gap-3">
       <Skeleton className="h-7 w-48" />
       <Skeleton className="h-4 w-64" />
       <Skeleton className="mt-3 h-[34px]" />

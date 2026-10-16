@@ -33,7 +33,7 @@ export function RoleScopeRows({ value, onChange, options }: Props) {
           <div key={i} className="rounded-base border border-bd1 bg-hover p-2.5">
             <div className="grid grid-cols-[1fr_1fr_1.4fr_auto] items-center gap-2 max-sm:grid-cols-1">
               <Select
-                aria-label="الدور"
+                aria-label="الدور الوظيفي"
                 value={rs.role}
                 onChange={(e) => {
                   const role = e.target.value as Role;
@@ -46,7 +46,7 @@ export function RoleScopeRows({ value, onChange, options }: Props) {
                 ))}
               </Select>
               <Select
-                aria-label="نوع النطاق"
+                aria-label="نوع نطاق الصلاحية"
                 value={rs.scopeType}
                 onChange={(e) => {
                   const scopeType = e.target.value as ScopeType;
@@ -58,9 +58,9 @@ export function RoleScopeRows({ value, onChange, options }: Props) {
                 ))}
               </Select>
               {rs.scopeType === "all" ? (
-                <div className="px-2 text-sm text-tx3">كل الجهات</div>
+                <div className="px-2 text-sm text-tx3">جميع الجهات</div>
               ) : list.length === 0 ? (
-                <div className="px-2 text-xs text-cr6">مفيش {SCOPE_TYPE_LABELS[rs.scopeType]} متسجل — ارفع الهيكل الأول</div>
+                <div className="px-2 text-xs text-cr6">لا يوجد {SCOPE_TYPE_LABELS[rs.scopeType]} مسجل — يرجى استيراد الهيكل التنظيمي أولاً</div>
               ) : (
                 <Select aria-label={SCOPE_TYPE_LABELS[rs.scopeType]} value={rs.scopeId ?? ""} onChange={(e) => set(i, { scopeId: e.target.value || null })}>
                   {list.map((o) => (
@@ -72,7 +72,7 @@ export function RoleScopeRows({ value, onChange, options }: Props) {
                 variant="gh"
                 size="sm"
                 icon
-                aria-label="شيل الدور"
+                aria-label="إزالة الدور الوظيفي"
                 disabled={value.length <= 1}
                 onClick={() => onChange(value.filter((_, j) => j !== i))}
               >
@@ -81,13 +81,13 @@ export function RoleScopeRows({ value, onChange, options }: Props) {
             </div>
             <div className="mt-1.5 text-xs text-tx3">
               {SCOPE_EXPLAIN[rs.scopeType]}
-              {def !== rs.scopeType && <span className="text-wa7"> — النطاق المعتاد للدور ده &quot;{SCOPE_TYPE_LABELS[def]}&quot;</span>}
+              {def !== rs.scopeType && <span className="text-wa7"> — نطاق الصلاحية المعتاد لهذا الدور &quot;{SCOPE_TYPE_LABELS[def]}&quot;</span>}
             </div>
           </div>
         );
       })}
       <Button size="sm" onClick={() => onChange([...value, newRoleScope(options)])}>
-        <Plus aria-hidden /> دور / نطاق كمان
+        <Plus aria-hidden /> إضافة دور / نطاق صلاحية
       </Button>
     </div>
   );

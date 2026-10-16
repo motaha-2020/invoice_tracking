@@ -14,10 +14,10 @@ export const loginSchema = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .min(1, "اكتب البريد الإلكتروني")
+    .min(1, "يرجى إدخال البريد الإلكتروني")
     .max(200)
-    .pipe(z.email("البريد الإلكتروني مش مكتوب صح")),
-  password: z.string().min(1, "اكتب كلمة السر").max(200),
+    .pipe(z.email("صيغة البريد الإلكتروني غير صحيحة")),
+  password: z.string().min(1, "يرجى إدخال كلمة المرور").max(200),
   next: z.string().optional(),
 });
 
@@ -26,8 +26,8 @@ export const setPasswordSchema = z
     token: z.string().min(20).max(200),
     password: z
       .string()
-      .min(PASSWORD_MIN, `كلمة السر لازم تبقى ${PASSWORD_MIN} حروف على الأقل`)
-      .max(128, "كلمة السر طويلة زيادة"),
+      .min(PASSWORD_MIN, `يجب ألا تقل كلمة المرور عن ${PASSWORD_MIN} حروف`)
+      .max(128, "كلمة المرور أطول من الحد المسموح"),
     confirm: z.string(),
   })
-  .refine((d) => d.password === d.confirm, { path: ["confirm"], message: "كلمتين السر مش زي بعض" });
+  .refine((d) => d.password === d.confirm, { path: ["confirm"], message: "كلمتا المرور غير متطابقتين" });

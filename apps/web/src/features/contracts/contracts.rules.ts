@@ -35,7 +35,7 @@ export function checkPaymentTerms(monthly: number | null, asbuilt: number | null
   return {
     ok: false,
     sum,
-    message: `مجموع نسب الصرف (الشهري ${monthly ?? 0}% + As-Built ${asbuilt ?? 0}% + التسليم ${handover ?? 0}%) = ${sum}% — لازم يبقى 100%`,
+    message: `مجموع نسب السداد (الشهري ${monthly ?? 0}% + As-Built ${asbuilt ?? 0}% + الاستلام الابتدائي ${handover ?? 0}%) = ${sum}% — يجب أن يساوي 100%`,
   };
 }
 
@@ -45,7 +45,7 @@ const pct = (n: number) => `${Number(n.toFixed(2))}%`;
 export function termsSummary(t: { payMonthlyPct: number; payAsbuiltPct: number; payHandoverPct: number }): string {
   const parts = [pct(t.payMonthlyPct)];
   if (t.payAsbuiltPct > 0) parts.push(`${pct(t.payAsbuiltPct)} As-Built`);
-  if (t.payHandoverPct > 0) parts.push(`${pct(t.payHandoverPct)} تسليم`);
+  if (t.payHandoverPct > 0) parts.push(`${pct(t.payHandoverPct)} استلام ابتدائي`);
   return parts.join(" / ");
 }
 
@@ -80,13 +80,13 @@ export function checkBoqHierarchy(rows: readonly BoqRowRef[], existing: Readonly
   const firstRow = new Map<string, number>();
   for (const r of rows) {
     const seen = firstRow.get(r.itemNo);
-    if (seen != null) issue(r.row).errors.push(`البند ${r.itemNo} متكرر (أول مرة في صف ${seen})`);
+    if (seen != null) issue(r.row).errors.push(`البند ${r.itemNo} مكرر (ورد أول مرة في الصف ${seen})`);
     else firstRow.set(r.itemNo, r.row);
   }
   for (const r of rows) {
     const p = parentOf(r.itemNo);
     if (p && p.toUpperCase() !== "N" && !firstRow.has(p) && !existing.has(p)) {
-      issue(r.row).warnings.push(`البند الأب ${p} مش موجود في المقايسة`);
+      issue(r.row).warnings.push(`البند الرئيسي ${p} غير موجود في جدول الكميات`);
     }
   }
   return out;

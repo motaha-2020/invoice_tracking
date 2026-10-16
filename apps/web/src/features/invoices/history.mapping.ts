@@ -29,19 +29,19 @@ const active = (step: string): MigratedState => ({ status: "active", currentStep
 /** القائمة اللي في القالب + أسماء بديلة شائعة في ملفات الموقف */
 const STEP_NAMES: [string[], MigratedState][] = [
   [["الشركة", "الشركة المنفذة", "المقاول"], { status: "draft", currentStep: null, heldAt: null, holdReason: null }],
-  [["مشرف التنفيذ", "المشرف", "مشرف"], active("sup")],
+  [["مشرف التنفيذ", "المشرف", "مشرف", "مراجعة مشرف التنفيذ"], active("sup")],
   [["مدير التنفيذ", "إدارة التنفيذ", "ادارة التنفيذ", "التنفيذ"], active("exec")],
   [["المدير العام", "مدير عام", "الإدارة العامة"], active("gm")],
   [["الشئون الفنية", "الشؤون الفنية", "الفنية"], active("tech")],
-  [["التخطيط"], active("plan")],
+  [["التخطيط", "مراجعة التخطيط"], active("plan")],
   [["رئاسة القطاعات", "رئيس رئاسة القطاعات"], active("pres")],
   [["اللجنة العليا", "اللجنة"], active("committee")],
   [["التسعير"], active("pricing")],
   [["رئيس القطاع", "القطاع"], active("sector")],
   [["المخازن والمشتريات", "المخازن", "المشتريات"], active("stores")],
-  [["المالية", "الحسابات"], active("finance")],
-  [["تم الصرف", "مصروف", "اتصرف", "صرف"], { status: "paid", currentStep: null, heldAt: null, holdReason: null }],
-  [[HOLD_REASON_AO, "معلق", "معلّق"], { status: "on_hold", currentStep: "sup", heldAt: "sup", holdReason: HOLD_REASON_AO }],
+  [["المالية", "الإدارة المالية", "الحسابات"], active("finance")],
+  [["تم السداد", "مسدد", "تم الصرف", "مصروف", "اتصرف", "صرف"], { status: "paid", currentStep: null, heldAt: null, holdReason: null }],
+  [[HOLD_REASON_AO, "موقوف مؤقتاً", "معلق", "معلّق"], { status: "on_hold", currentStep: "sup", heldAt: "sup", holdReason: HOLD_REASON_AO }],
 ];
 
 const LOOKUP = new Map<string, MigratedState>(

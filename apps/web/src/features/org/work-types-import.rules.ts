@@ -38,6 +38,6 @@ export function validateWorkType(
   const current = existing.get(code);
   if (!current) return result(WORK_TYPES_SHEET, row.__row, label, errors, warnings, "create", data);
   const changed = current.name !== name || (isPlanning !== null && isPlanning !== current.isPlanning);
-  if (!changed) warnings.push("موجود بنفس البيانات — مفيش تغيير");
+  if (!changed) warnings.push("مسجل بالبيانات نفسها — لا يوجد تغيير");
   return result(WORK_TYPES_SHEET, row.__row, label, errors, warnings, changed ? "update" : "skip", data);
 }

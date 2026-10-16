@@ -42,15 +42,15 @@ export function DelegationsPanel({ rows, users, today }: Props) {
     });
 
   const state = (d: DelegationRow) =>
-    d.endsOn < today ? <Badge tone="n">خلص</Badge> : d.startsOn > today ? <Badge tone="b">جاي</Badge> : <Badge tone="a">شغال دلوقتي</Badge>;
+    d.endsOn < today ? <Badge tone="n">منتهٍ</Badge> : d.startsOn > today ? <Badge tone="b">مجدول</Badge> : <Badge tone="a">سارٍ حالياً</Badge>;
 
   return (
     <div className="grid grid-cols-[2fr_1fr] items-start gap-4 max-xl:grid-cols-1">
       <Card>
-        <CardHeader title="التفويضات" sub="مين بيستلم بدل مين وإمتى" />
+        <CardHeader title="تفويض الصلاحيات" sub="المستخدم البديل وفترة التفويض لكل مستخدم" />
         {rows.length === 0 ? (
-          <EmptyState icon={UserRoundCog} title="مفيش تفويضات">
-            <div className="text-[13px]">لما حد ياخد أجازة سجّل البديل هنا.</div>
+          <EmptyState icon={UserRoundCog} title="لا توجد تفويضات">
+            <div className="text-[13px]">يُسجَّل هنا المستخدم البديل عند حصول أي مستخدم على إجازة.</div>
           </EmptyState>
         ) : (
           <TableWrap>
@@ -69,7 +69,7 @@ export function DelegationsPanel({ rows, users, today }: Props) {
                     <Td>{state(d)}</Td>
                     <Td className="max-w-[220px] truncate text-xs text-tx2" title={d.note ?? undefined}>{d.note ?? "—"}</Td>
                     <Td align="end">
-                      <Button size="sm" variant="gh" icon aria-label="شيل التفويض" disabled={pending} onClick={() => remove(d.id)}><Trash2 /></Button>
+                      <Button size="sm" variant="gh" icon aria-label="إلغاء التفويض" disabled={pending} onClick={() => remove(d.id)}><Trash2 /></Button>
                     </Td>
                   </Tr>
                 ))}
@@ -83,15 +83,15 @@ export function DelegationsPanel({ rows, users, today }: Props) {
         <CardHeader title="تفويض جديد" />
         <CardBody className="flex flex-col gap-3">
           {message && <Alert tone="r">{message}</Alert>}
-          <Field label="المستخدم (اللي في أجازة)" htmlFor="d-from" required error={errors.fromUserId}>
+          <Field label="المستخدم (صاحب الإجازة)" htmlFor="d-from" required error={errors.fromUserId}>
             <Select id="d-from" value={f.fromUserId} onChange={set("fromUserId")}>
-              <option value="">— اختار —</option>
+              <option value="">— اختر —</option>
               {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </Select>
           </Field>
           <Field label="البديل" htmlFor="d-to" required error={errors.toUserId}>
             <Select id="d-to" value={f.toUserId} onChange={set("toUserId")}>
-              <option value="">— اختار —</option>
+              <option value="">— اختر —</option>
               {users.filter((u) => u.id !== f.fromUserId).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </Select>
           </Field>
@@ -99,12 +99,12 @@ export function DelegationsPanel({ rows, users, today }: Props) {
             <Field label="من" htmlFor="d-start" required error={errors.startsOn}>
               <Input id="d-start" type="date" value={f.startsOn} onChange={set("startsOn")} />
             </Field>
-            <Field label="لحد" htmlFor="d-end" required error={errors.endsOn}>
+            <Field label="إلى" htmlFor="d-end" required error={errors.endsOn}>
               <Input id="d-end" type="date" value={f.endsOn} min={f.startsOn || undefined} onChange={set("endsOn")} />
             </Field>
           </div>
           <Field label="ملاحظة" htmlFor="d-note">
-            <Input id="d-note" value={f.note} onChange={set("note")} maxLength={300} placeholder="مثلاً: أجازة سنوية" />
+            <Input id="d-note" value={f.note} onChange={set("note")} maxLength={300} placeholder="مثال: إجازة سنوية" />
           </Field>
           <Button variant="pr" disabled={pending} onClick={add}>
             <Plus aria-hidden /> إضافة التفويض

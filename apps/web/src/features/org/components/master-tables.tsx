@@ -7,9 +7,9 @@ import { AddButton, RowActions } from "./org-buttons";
 export function TypesTable({ types, canEdit }: { types: ProjectTypeRow[]; canEdit: boolean }) {
   return (
     <Card>
-      <CardHeader title="أنواع المشروعات" sub="النوع بيحدد المستندات الإلزامية في المستخلص (بتتظبط من شاشة المسار)" />
+      <CardHeader title="أنواع المشروعات" sub="يحدد نوع المشروع المستندات الإلزامية في المستخلص (تُضبط من شاشة مسار الاعتماد)" />
       {types.length === 0 ? (
-        <EmptyState icon={Layers} title="مفيش أنواع مشروعات" action={<AddButton kind="projectType" label="أول نوع مشروع" />} />
+        <EmptyState icon={Layers} title="لا توجد أنواع مشروعات" action={<AddButton kind="projectType" label="إضافة أول نوع مشروع" />} />
       ) : (
         <TableWrap>
           <Table className="text-sm">
@@ -49,8 +49,8 @@ export function CompaniesTable({ companies, canEdit }: { companies: CompanyRow[]
     <Card>
       <CardHeader title="الشركات المنفذة" sub={<Num>{companies.length}</Num>} />
       {companies.length === 0 ? (
-        <EmptyState icon={Briefcase} title="مفيش شركات لسه" action={<AddButton kind="company" label="أول شركة" />}>
-          <div className="text-[13px]">ضيف الشركة يدوي أو ارفع قالب الشركات.</div>
+        <EmptyState icon={Briefcase} title="لا توجد شركات منفذة بعد" action={<AddButton kind="company" label="إضافة أول شركة منفذة" />}>
+          <div className="text-[13px]">يمكن إضافة الشركة المنفذة يدوياً أو استيراد نموذج الشركات المنفذة.</div>
         </EmptyState>
       ) : (
         <TableWrap>
@@ -58,9 +58,9 @@ export function CompaniesTable({ companies, canEdit }: { companies: CompanyRow[]
             <THead>
               <Tr>
                 <Th>الكود</Th>
-                <Th>الشركة</Th>
-                <Th>إيميل المستخلصات</Th>
-                <Th>التليفون</Th>
+                <Th>الشركة المنفذة</Th>
+                <Th>البريد الإلكتروني للمستخلصات</Th>
+                <Th>رقم الهاتف</Th>
                 <Th align="end">عقود</Th>
                 <Th align="end">مستخلصات</Th>
                 {canEdit && <Th><span className="sr-only">إجراءات</span></Th>}

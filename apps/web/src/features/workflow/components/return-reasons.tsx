@@ -24,21 +24,21 @@ export function ReturnReasons({ reasons }: { reasons: Reason[] }) {
 
   return (
     <Card>
-      <CardHeader title="أسباب الإرجاع" sub="اللي بيختار منها المراجع لما يرجّع مستخلص" />
+      <CardHeader title="أسباب الإعادة للاستيفاء" sub="الأسباب التي يختار منها المراجع عند إعادة المستخلص للاستيفاء" />
       {reasons.length === 0 ? (
-        <EmptyState title="مفيش أسباب لسه" />
+        <EmptyState title="لا توجد أسباب بعد" />
       ) : (
         <TableWrap>
           <Table className="text-sm">
             <THead>
-              <Tr><Th>الترتيب</Th><Th>السبب</Th><Th align="end">استُخدم</Th><Th>الحالة</Th><Th /></Tr>
+              <Tr><Th>الترتيب</Th><Th>السبب</Th><Th align="end">مرات الاستخدام</Th><Th>الحالة</Th><Th /></Tr>
             </THead>
             <TBody>
               {reasons.map((r, i) => (
                 <Tr key={r.id} className={r.active ? undefined : "opacity-60"}>
                   <Td className="whitespace-nowrap">
-                    <Button size="sm" variant="gh" icon aria-label="لفوق" disabled={pending || i === 0} onClick={() => run(() => moveReasonAction(r.id, -1))}><ArrowUp /></Button>
-                    <Button size="sm" variant="gh" icon aria-label="لتحت" disabled={pending || i === reasons.length - 1} onClick={() => run(() => moveReasonAction(r.id, 1))}><ArrowDown /></Button>
+                    <Button size="sm" variant="gh" icon aria-label="نقل لأعلى" disabled={pending || i === 0} onClick={() => run(() => moveReasonAction(r.id, -1))}><ArrowUp /></Button>
+                    <Button size="sm" variant="gh" icon aria-label="نقل لأسفل" disabled={pending || i === reasons.length - 1} onClick={() => run(() => moveReasonAction(r.id, 1))}><ArrowDown /></Button>
                   </Td>
                   <Td className="min-w-[260px]">
                     <Input
@@ -55,7 +55,7 @@ export function ReturnReasons({ reasons }: { reasons: Reason[] }) {
                   <Td>
                     <label className="flex items-center gap-1.5 text-xs">
                       <input type="checkbox" checked={r.active} disabled={pending} onChange={(e) => run(() => toggleReasonAction(r.id, e.target.checked))} />
-                      {r.active ? <Badge tone="g">شغال</Badge> : <Badge tone="n">متوقف</Badge>}
+                      {r.active ? <Badge tone="g">نشط</Badge> : <Badge tone="n">غير نشط</Badge>}
                     </label>
                   </Td>
                   <Td align="end">
@@ -63,8 +63,8 @@ export function ReturnReasons({ reasons }: { reasons: Reason[] }) {
                       size="sm"
                       variant="gh"
                       icon
-                      aria-label="مسح السبب"
-                      title={r.used ? "مستخدم — وقّفه بدل المسح" : "مسح"}
+                      aria-label="حذف السبب"
+                      title={r.used ? "مستخدم — يرجى تعطيله بدلاً من حذفه" : "حذف"}
                       disabled={pending || r.used > 0}
                       onClick={() => run(() => deleteReasonAction(r.id))}
                     >
@@ -81,8 +81,8 @@ export function ReturnReasons({ reasons }: { reasons: Reason[] }) {
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="سبب جديد… مثلاً: شهادة الضمان منتهية"
-          aria-label="سبب إرجاع جديد"
+          placeholder="سبب جديد… مثال: شهادة الضمان منتهية الصلاحية"
+          aria-label="سبب جديد للإعادة للاستيفاء"
           maxLength={200}
           onKeyDown={(e) => {
             if (e.key === "Enter" && draft.trim()) run(() => addReasonAction(draft), () => setDraft(""));

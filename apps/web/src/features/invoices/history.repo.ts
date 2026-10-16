@@ -38,7 +38,7 @@ export async function ensurePendingAo(tx: Tx, contractId: string, aoNo: string, 
   const ex = await tx.assignmentOrder.findUnique({ where: { contractId_aoNo: { contractId, aoNo } }, select: { id: true } });
   if (ex) return { id: ex.id, created: false };
   const ao = await tx.assignmentOrder.create({
-    data: { contractId, aoNo, name, status: "pending_approval", sourceNote: "اتعمل تلقائي من ترحيل المستخلصات (قالب 11) — مستني بيانات أمر التكليف" },
+    data: { contractId, aoNo, name, status: "pending_approval", sourceNote: "أُنشئ تلقائياً من ترحيل المستخلصات (النموذج 11) — بانتظار استكمال بيانات أمر التكليف" },
     select: { id: true },
   });
   return { id: ao.id, created: true };

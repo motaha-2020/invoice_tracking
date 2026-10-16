@@ -13,7 +13,7 @@ export default function LoginPage({ searchParams }: { searchParams: SearchParams
   return (
     <AuthLayout>
       <h2 className="m-0 mb-1 text-[22px] font-bold">تسجيل الدخول</h2>
-      <p className="m-0 mb-5 text-tx3">ادخل ببريدك الإلكتروني وكلمة السر.</p>
+      <p className="m-0 mb-5 text-tx3">يرجى تسجيل الدخول باستخدام البريد الإلكتروني وكلمة المرور.</p>
       {/* الفورم نفسه شغال من غير ما يستنى الجلسة؛ الـ next و التحويل لو داخل بيجوا من الـ request */}
       <Suspense fallback={<LoginForm />}>
         <LoginWithParams searchParams={searchParams} />

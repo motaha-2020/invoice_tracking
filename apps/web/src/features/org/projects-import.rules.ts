@@ -99,7 +99,7 @@ function validateType(row: RawRow, existing: ExistingProjectsData, seen: SeenCod
   const data = { kind: "type" as const, code, name };
   const current = existing.types.get(code);
   if (!current) return result(TYPES_SHEET, row.__row, label, errors, warnings, "create", data);
-  if (current.name === name) warnings.push("موجود بنفس البيانات — مفيش تغيير");
+  if (current.name === name) warnings.push("مسجل بالبيانات نفسها — لا يوجد تغيير");
   return result(TYPES_SHEET, row.__row, label, errors, warnings, current.name === name ? "skip" : "update", data);
 }
 
@@ -122,13 +122,13 @@ function validateProject(
   const typeCode = take(codeCell(row.type_code, "كود النوع"), errors);
   if (typeCode) {
     const st = fileTypes.get(typeCode);
-    if (st === false && !existing.types.has(typeCode)) errors.push(`نوع المشروع ${typeCode} فيه أخطاء في الملف ومش هيتحفظ — صلّحه الأول`);
-    else if (st === undefined && !existing.types.has(typeCode)) errors.push(`مفيش نوع مشروع بالكود ${typeCode} — ضيفه في شيت "${TYPES_SHEET}"`);
+    if (st === false && !existing.types.has(typeCode)) errors.push(`نوع المشروع ${typeCode} يتضمن أخطاء في الملف ولن يُحفظ — يرجى تصحيحه أولاً`);
+    else if (st === undefined && !existing.types.has(typeCode)) errors.push(`لا يوجد نوع مشروع بالكود ${typeCode} — يرجى إضافته في ورقة العمل "${TYPES_SHEET}"`);
   }
 
   const centralCode = take(codeCell(row.central_code, "كود السنترال"), errors);
   if (centralCode && !existing.centrals.has(centralCode)) {
-    errors.push(`مفيش سنترال بالكود ${centralCode} في المنظومة — ارفعه في قالب الهيكل التنظيمي الأول`);
+    errors.push(`لا يوجد سنترال بالكود ${centralCode} في المنظومة — يرجى استيراده من خلال نموذج الهيكل التنظيمي أولاً`);
   }
 
   const start = take(date(row.start_date, "تاريخ البدء"), errors);
@@ -155,7 +155,7 @@ function validateProject(
   if (current.centralCode !== centralCode) {
     const from = existing.centrals.get(current.centralCode)?.name ?? current.centralCode;
     const to = existing.centrals.get(centralCode)?.name ?? centralCode;
-    warnings.push(`المشروع هيتنقل من ${from} لـ ${to} — مستخلصاته هتتبع المكان الجديد`);
+    warnings.push(`سيُنقل المشروع من ${from} إلى ${to} — وتتبع مستخلصاته الموقع الجديد`);
   }
   const changed =
     current.name !== name ||
@@ -163,6 +163,6 @@ function validateProject(
     current.centralCode !== centralCode ||
     (data.startDate !== null && data.startDate !== current.startDate) ||
     (data.notes !== null && data.notes !== current.notes);
-  if (!changed) warnings.push("موجود بنفس البيانات — مفيش تغيير");
+  if (!changed) warnings.push("مسجل بالبيانات نفسها — لا يوجد تغيير");
   return result(PROJECTS_SHEET, row.__row, label, errors, warnings, changed ? "update" : "skip", data);
 }

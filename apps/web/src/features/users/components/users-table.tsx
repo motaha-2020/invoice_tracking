@@ -16,8 +16,8 @@ type Props = { users: UserRow[]; options: ScopeOptions; currentUserId: string };
 
 function Status({ u }: { u: UserRow }) {
   if (!u.active) return <Badge tone="r">موقوف</Badge>;
-  if (u.hasPassword) return <Badge tone="g">شغال</Badge>;
-  return u.invitePending ? <Badge tone="a">مستني يقبل الدعوة</Badge> : <Badge tone="n">مفيش دعوة صالحة</Badge>;
+  if (u.hasPassword) return <Badge tone="g">نشط</Badge>;
+  return u.invitePending ? <Badge tone="a">بانتظار قبول الدعوة</Badge> : <Badge tone="n">لا توجد دعوة سارية</Badge>;
 }
 
 export function UsersTable({ users, options, currentUserId }: Props) {
@@ -38,7 +38,7 @@ export function UsersTable({ users, options, currentUserId }: Props) {
     start(async () => {
       const res = await inviteUserAction(u.id);
       if (res.ok && res.link) setInvite({ name: u.name, link: res.link });
-      else toast.show(res.message ?? "حصل خطأ", "err");
+      else toast.show(res.message ?? "حدث خطأ", "err");
     });
 
   const toggleActive = (u: UserRow, active: boolean) =>
@@ -56,19 +56,19 @@ export function UsersTable({ users, options, currentUserId }: Props) {
         </Button>
       </div>
       {users.length === 0 ? (
-        <EmptyState icon={Users} title="مفيش مستخدمين بالبحث ده" />
+        <EmptyState icon={Users} title="لا يوجد مستخدمون مطابقون لمعايير البحث" />
       ) : (
         <TableWrap>
           <Table className="text-sm">
             <THead>
-              <Tr><Th>الاسم</Th><Th>الأدوار والنطاقات</Th><Th>آخر دخول</Th><Th>الحالة</Th><Th /></Tr>
+              <Tr><Th>الاسم</Th><Th>الأدوار الوظيفية ونطاقات الصلاحية</Th><Th>آخر دخول</Th><Th>الحالة</Th><Th /></Tr>
             </THead>
             <TBody>
               {users.map((u) => (
                 <Tr key={u.id} className={u.active ? undefined : "opacity-70"}>
                   <Td>
                     <b>{u.name}</b>
-                    {u.id === currentUserId && <Badge tone="p" className="ms-1.5">إنت</Badge>}
+                    {u.id === currentUserId && <Badge tone="p" className="ms-1.5">حسابك</Badge>}
                     <div dir="ltr" className="text-end text-xs text-tx3">{u.email}</div>
                   </Td>
                   <Td>
@@ -77,18 +77,18 @@ export function UsersTable({ users, options, currentUserId }: Props) {
                         <div key={`${r.role}-${r.scopeType}-${r.scopeId}`} className="flex flex-wrap items-center gap-1.5">
                           <Badge tone="p">{ROLE_LABELS[r.role]}</Badge>
                           <span className="text-xs text-tx2">
-                            {r.scopeType === "all" ? "كل الجهات" : `${SCOPE_TYPE_LABELS[r.scopeType]}: ${r.scopeName}`}
+                            {r.scopeType === "all" ? "جميع الجهات" : `${SCOPE_TYPE_LABELS[r.scopeType]}: ${r.scopeName}`}
                           </span>
                         </div>
                       ))}
-                      {u.roles.length === 0 && <span className="text-xs text-cr6">مالوش دور — مش هيشوف حاجة</span>}
+                      {u.roles.length === 0 && <span className="text-xs text-cr6">لم يُحدَّد دور وظيفي — لن تظهر للمستخدم أي بيانات</span>}
                     </div>
                   </Td>
                   <Td className="text-xs"><span className="num">{formatDateTime(u.lastLoginAt)}</span></Td>
                   <Td><Status u={u} /></Td>
                   <Td align="end" className="whitespace-nowrap">
                     {u.active && (
-                      <Button size="sm" variant="gh" disabled={pending} onClick={() => sendInvite(u)} title={u.hasPassword ? "رابط جديد لتحديد كلمة السر" : "إرسال دعوة"}>
+                      <Button size="sm" variant="gh" disabled={pending} onClick={() => sendInvite(u)} title={u.hasPassword ? "رابط جديد لتعيين كلمة المرور" : "إرسال دعوة"}>
                         <Send aria-hidden /> {u.hasPassword || u.invitePending ? "إعادة الدعوة" : "إرسال دعوة"}
                       </Button>
                     )}
@@ -109,26 +109,26 @@ export function UsersTable({ users, options, currentUserId }: Props) {
 
       {editing !== undefined && <UserFormModal key={formKey} user={editing} options={options} onClose={() => setEditing(undefined)} />}
 
-      <Modal open={!!invite} onClose={() => setInvite(undefined)} title={`دعوة ${invite?.name ?? ""}`} footer={<Button onClick={() => setInvite(undefined)}>تمام</Button>}>
-        <Alert tone="i">الإيميل اتسجل في صندوق الصادر. لحد ما الإرسال يشتغل ابعت الرابط ده بنفسك — بيظهر مرة واحدة بس، وصالح 72 ساعة، وأي دعوة قديمة اتلغت.</Alert>
+      <Modal open={!!invite} onClose={() => setInvite(undefined)} title={`دعوة ${invite?.name ?? ""}`} footer={<Button onClick={() => setInvite(undefined)}>إغلاق</Button>}>
+        <Alert tone="i">تم تسجيل رسالة البريد الإلكتروني في قائمة الصادر. لحين تفعيل الإرسال يرجى إرسال هذا الرابط يدوياً — يظهر مرة واحدة فقط، وصلاحيته 72 ساعة، وقد أُلغيت أي دعوة سابقة.</Alert>
         {invite && <CopyLink link={invite.link} />}
       </Modal>
 
       <Modal
         open={!!confirmOff}
         onClose={() => setConfirmOff(undefined)}
-        title="إيقاف حساب"
+        title="إيقاف الحساب"
         footer={
           <>
             <Button variant="dg" disabled={pending} onClick={() => confirmOff && toggleActive(confirmOff, false)}>
-              <Power aria-hidden /> أيوه، وقّفه
+              <Power aria-hidden /> تأكيد الإيقاف
             </Button>
             <Button variant="gh" onClick={() => setConfirmOff(undefined)}>إلغاء</Button>
           </>
         }
       >
         <p className="m-0">
-          توقف حساب <b>{confirmOff?.name}</b>؟ هيخرج فوراً من كل الأجهزة ومش هيقدر يدخل لحد ما تفعّله تاني. بياناته وسجلّه مش هيتمسحوا.
+          هل تريد إيقاف حساب <b>{confirmOff?.name}</b>؟ سيتم تسجيل خروجه فوراً من جميع الأجهزة، ولن يتمكن من تسجيل الدخول لحين إعادة تفعيل الحساب. لن تُحذف بياناته أو سجل إجراءاته.
         </p>
       </Modal>
     </>

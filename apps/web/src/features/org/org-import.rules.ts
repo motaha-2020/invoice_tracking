@@ -103,11 +103,11 @@ function validateRow(
 
   let gmUserId: string | null = null;
   if (def.level === "generalDept") {
-    const email = take(optionalEmail(row.gm_email, "إيميل المدير العام"), errors);
+    const email = take(optionalEmail(row.gm_email, "البريد الإلكتروني للمدير العام"), errors);
     if (email) {
       const u = users.get(email);
       if (u) gmUserId = u.id;
-      else warnings.push(`مفيش مستخدم بالإيميل ${email} لسه — مش هيتربط كمدير عام (ارفع قالب المستخدمين الأول)`);
+      else warnings.push(`لا يوجد مستخدم مسجل بالبريد الإلكتروني ${email} — لن يُربط كمدير عام (يرجى استيراد نموذج المستخدمين أولاً)`);
     }
   }
 
@@ -121,10 +121,10 @@ function validateRow(
   if (!current) return result(def.sheet, row.__row, label, errors, warnings, "create", data);
 
   if (parentCode && current.parentCode && current.parentCode !== parentCode) {
-    warnings.push(`الكود ده موجود تحت ${current.parentCode} في المنظومة — الرفع بيحدّث الاسم بس ومش بينقله (النقل من شاشة الهيكل)`);
+    warnings.push(`هذا الكود مسجل تحت ${current.parentCode} في المنظومة — يُحدِّث الاستيراد الاسم فقط دون النقل (يتم النقل من شاشة الهيكل التنظيمي)`);
   }
   const changed = current.name !== name || gmUserId !== null;
-  if (!changed) warnings.push("موجود بنفس البيانات — مفيش تغيير");
+  if (!changed) warnings.push("مسجل بالبيانات نفسها — لا يوجد تغيير");
   return result(def.sheet, row.__row, label, errors, warnings, changed ? "update" : "skip", data);
 }
 
@@ -138,7 +138,7 @@ function resolveParent(def: SheetDef, raw: unknown, existing: ExistingOrg, inFil
   }
   const fileState = inFile[level].get(p);
   if (fileState === true || existing[level].has(p)) return p;
-  if (fileState === false) errors.push(`${one} ${p} ${fem ? "فيها أخطاء في الملف ومش هتتحفظ — صلّحها" : "فيه أخطاء في الملف ومش هيتحفظ — صلّحه"} الأول`);
-  else errors.push(`مفيش ${one} بالكود ${p} — لا في المنظومة ولا في الملف`);
+  if (fileState === false) errors.push(`${one} ${p} ${fem ? "تتضمن أخطاء في الملف ولن تُحفظ — يرجى تصحيحها" : "يتضمن أخطاء في الملف ولن يُحفظ — يرجى تصحيحه"} أولاً`);
+  else errors.push(`لا يوجد ${one} بالكود ${p} — لا في المنظومة ولا في الملف`);
   return null;
 }

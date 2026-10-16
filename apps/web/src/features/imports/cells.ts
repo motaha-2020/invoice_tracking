@@ -30,7 +30,7 @@ export function code(v: unknown): string {
 export function itemNo(v: unknown): Cell<string> {
   const t = toLatinDigits(text(v)).replace(/\s+/g, "").replace(/\./g, "-");
   if (!t) return { error: "رقم البند إلزامي" };
-  if (!/^(N-)?\d+(-\d+)*$/i.test(t)) return { error: `رقم البند "${text(v)}" مش بالشكل الصح (زي 1-1-1-2)` };
+  if (!/^(N-)?\d+(-\d+)*$/i.test(t)) return { error: `رقم البند "${text(v)}" بصيغة غير صحيحة (مثال: 1-1-1-2)` };
   return { value: t.toUpperCase() };
 }
 
@@ -38,9 +38,9 @@ export function itemNo(v: unknown): Cell<string> {
 export function num(v: unknown, label: string, opts: { min?: number; max?: number } = {}): Cell<number | null> {
   if (v == null || v === "") return { value: null };
   const n = typeof v === "number" ? v : Number(toLatinDigits(String(v)).replace(/[,\s٬]/g, ""));
-  if (!Number.isFinite(n)) return { error: `${label}: "${text(v)}" مش رقم` };
-  if (opts.min != null && n < opts.min) return { error: `${label} لازم ${opts.min} أو أكتر` };
-  if (opts.max != null && n > opts.max) return { error: `${label} لازم ${opts.max} أو أقل` };
+  if (!Number.isFinite(n)) return { error: `${label}: القيمة "${text(v)}" ليست رقماً` };
+  if (opts.min != null && n < opts.min) return { error: `يجب ألا تقل قيمة ${label} عن ${opts.min}` };
+  if (opts.max != null && n > opts.max) return { error: `يجب ألا تزيد قيمة ${label} على ${opts.max}` };
   return { value: n };
 }
 
@@ -60,12 +60,12 @@ export function date(v: unknown, label: string): Cell<Date | null> {
   if (m) return mk(+m[3]!, +m[2]!, +m[1]!, label, t);
   m = /^(\d{4})[/.-](\d{1,2})(?:[/.-](\d{1,2}))?$/.exec(t);
   if (m) return mk(+m[1]!, +m[2]!, m[3] ? +m[3] : 1, label, t);
-  return { error: `${label}: "${t}" مش تاريخ مفهوم (اكتبه يوم/شهر/سنة)` };
+  return { error: `${label}: القيمة "${t}" ليست تاريخاً صالحاً (يرجى إدخاله بصيغة يوم/شهر/سنة)` };
 }
 
 function mk(y: number, mo: number, d: number, label: string, raw: string): Cell<Date | null> {
   const dt = new Date(Date.UTC(y, mo - 1, d));
-  if (dt.getUTCMonth() !== mo - 1 || y < 2000 || y > 2100) return { error: `${label}: "${raw}" تاريخ مش صحيح` };
+  if (dt.getUTCMonth() !== mo - 1 || y < 2000 || y > 2100) return { error: `${label}: التاريخ "${raw}" غير صحيح` };
   return { value: dt };
 }
 

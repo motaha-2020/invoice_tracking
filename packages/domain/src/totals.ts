@@ -122,11 +122,11 @@ function heldOf(gross: number, isPlanning: boolean, t: PaymentTerms): HeldAmount
   if (isPlanning) return [];
   const sum = t.payMonthlyPct + t.payAsbuiltPct + t.payHandoverPct;
   if (Math.abs(sum - 100) > PCT_TOLERANCE) {
-    throw new DomainError('TERMS_PCT_SUM', `نسب الصرف في العقد مجموعها ${sum}% بدل 100%`);
+    throw new DomainError('TERMS_PCT_SUM', `مجموع نسب السداد في العقد ${sum}% بدلاً من 100%`);
   }
   const held: HeldAmount[] = [];
-  if (t.payAsbuiltPct > 0) held.push({ type: 'asbuilt', name: 'محجوز لحد تسليم خرائط As-Built', pct: t.payAsbuiltPct, amount: pctOf(gross, t.payAsbuiltPct) });
-  if (t.payHandoverPct > 0) held.push({ type: 'handover', name: 'محجوز لحد التسليم الابتدائي', pct: t.payHandoverPct, amount: pctOf(gross, t.payHandoverPct) });
+  if (t.payAsbuiltPct > 0) held.push({ type: 'asbuilt', name: 'مبلغ محتجز لحين تسليم خرائط ما بعد التنفيذ (As-Built)', pct: t.payAsbuiltPct, amount: pctOf(gross, t.payAsbuiltPct) });
+  if (t.payHandoverPct > 0) held.push({ type: 'handover', name: 'مبلغ محتجز لحين الاستلام الابتدائي', pct: t.payHandoverPct, amount: pctOf(gross, t.payHandoverPct) });
   return held;
 }
 

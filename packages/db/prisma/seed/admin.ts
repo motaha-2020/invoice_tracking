@@ -12,11 +12,11 @@ export async function seedAdmin(db: PrismaClient): Promise<void> {
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const name = process.env.ADMIN_NAME?.trim();
   if (!email) {
-    console.log('  • admin: ADMIN_EMAIL مش متحدد — اتخطّينا إنشاء أول Admin');
+    console.log('  • admin: لم يُحدَّد ADMIN_EMAIL — تم تخطي إنشاء حساب مدير النظام الأول');
     return;
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error(`ADMIN_EMAIL مش إيميل صحيح: ${email}`);
-  if (!name) throw new Error('ADMIN_NAME مطلوب مع ADMIN_EMAIL');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error(`قيمة ADMIN_EMAIL ليست بريداً إلكترونياً صحيحاً: ${email}`);
+  if (!name) throw new Error('يجب تحديد ADMIN_NAME مع ADMIN_EMAIL');
 
   const user =
     (await db.user.findUnique({ where: { email } })) ??
@@ -30,7 +30,7 @@ export async function seedAdmin(db: PrismaClient): Promise<void> {
   }
 
   if (user.passwordHash) {
-    console.log(`  • admin: ${email} مفعّل بالفعل — مفيش دعوة جديدة`);
+    console.log(`  • admin: الحساب ${email} مفعّل بالفعل — لن تُنشأ دعوة جديدة`);
     return;
   }
 
@@ -39,8 +39,8 @@ export async function seedAdmin(db: PrismaClient): Promise<void> {
     where: { userId: user.id, purpose: 'invite', usedAt: null, expiresAt: { gt: now } },
   });
   if (pending && process.env.ADMIN_REISSUE !== '1') {
-    console.log(`  • admin: ${email} عنده دعوة لسه صالحة لحد ${pending.expiresAt.toISOString()}`);
-    console.log('           (لو التوكن ضاع: شغّل تاني بـ ADMIN_REISSUE=1)');
+    console.log(`  • admin: للحساب ${email} دعوة سارية حتى ${pending.expiresAt.toISOString()}`);
+    console.log('           (في حال فقدان الرمز: يرجى إعادة التشغيل مع ADMIN_REISSUE=1)');
     return;
   }
 
@@ -58,10 +58,10 @@ export async function seedAdmin(db: PrismaClient): Promise<void> {
 
   const base = process.env.APP_URL?.replace(/\/+$/, '');
   console.log('');
-  console.log('  ┌─ دعوة أول Admin (بتظهر مرة واحدة بس — انسخها دلوقتي) ─');
+  console.log('  ┌─ دعوة مدير النظام الأول (تظهر مرة واحدة فقط — يرجى نسخها الآن) ─');
   console.log(`  │ email : ${email}`);
   console.log(`  │ token : ${token}`);
   if (base) console.log(`  │ link  : ${base}/invite/${token}`);
-  console.log('  │ صالحة 72 ساعة');
+  console.log('  │ صالحة لمدة 72 ساعة');
   console.log('  └──────────────────────────────────────────────');
 }

@@ -12,8 +12,8 @@ type Req = { projectTypeId: string; docTypeId: string; stage: Stage };
 type Props = { docTypes: Item[]; projectTypes: Item[]; required: Req[] };
 
 const STAGES: { key: Stage; label: string }[] = [
-  { key: "submit", label: "تقديم" },
-  { key: "finance", label: "صرف" },
+  { key: "submit", label: "التقديم" },
+  { key: "finance", label: "السداد" },
 ];
 const k = (r: Req) => `${r.projectTypeId}|${r.docTypeId}|${r.stage}`;
 
@@ -51,9 +51,9 @@ export function RequiredDocs({ docTypes, projectTypes, required }: Props) {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader title="المستندات الإلزامية لكل نوع مشروع" sub="المستخلص مش هيتقدّم (أو مش هيتصرف) غير لما المستندات المعلّمة تبقى مرفقة" />
+        <CardHeader title="المستندات الإلزامية لكل نوع مشروع" sub="لا يمكن تقديم المستخلص (أو سداده) إلا بعد إرفاق المستندات المحددة" />
         {docTypes.length === 0 || projectTypes.length === 0 ? (
-          <EmptyState title="مفيش مستندات أو أنواع مشروعات لسه" />
+          <EmptyState title="لا توجد مستندات أو أنواع مشروعات بعد" />
         ) : (
           <TableWrap>
             <Table className="text-sm">
@@ -93,7 +93,7 @@ export function RequiredDocs({ docTypes, projectTypes, required }: Props) {
                   </Tr>
                 ))}
                 <Tr className="font-semibold">
-                  <Td>عدد الإلزامي</Td>
+                  <Td>عدد المستندات الإلزامية</Td>
                   {projectTypes.flatMap((t) => STAGES.map((s) => <Td key={`${t.id}-${s.key}`} align="center"><span className="num">{count(t, s.key)}</span></Td>))}
                   <Td />
                 </Tr>
@@ -108,7 +108,7 @@ export function RequiredDocs({ docTypes, projectTypes, required }: Props) {
         <CardBody className="space-y-3">
           {formError && <Alert tone="r">{formError}</Alert>}
           <div className="grid grid-cols-[1fr_2fr_auto] items-end gap-2 max-sm:grid-cols-1">
-            <Field label="الكود" htmlFor="dt-code" required hint="إنجليزي بس — زي test_report">
+            <Field label="الكود" htmlFor="dt-code" required hint="بالحروف الإنجليزية فقط — مثال: test_report">
               <Input id="dt-code" dir="ltr" value={form.code} maxLength={60} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} />
             </Field>
             <Field label="الاسم" htmlFor="dt-name" required>

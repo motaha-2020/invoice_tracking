@@ -3,8 +3,8 @@ import type { InvoiceStatus, Role, ScopeType } from "@it/db";
 /** أسماء الأدوار في الواجهة (من الديمو) */
 export const ROLE_LABELS: Record<Role, string> = {
   admin: "مدير النظام",
-  pmo: "فريق المتابعة PMO",
-  company: "شركة منفذة",
+  pmo: "مكتب إدارة المشروعات (PMO)",
+  company: "المقاول (الشركة المنفذة)",
   supervisor: "مشرف تنفيذ",
   exec_mgr: "مدير تنفيذ",
   gm: "مدير عام",
@@ -15,16 +15,16 @@ export const ROLE_LABELS: Record<Role, string> = {
   presidency_head: "رئاسة القطاعات",
   committee: "اللجنة العليا",
   stores: "المخازن والمشتريات",
-  finance: "المالية",
+  finance: "الإدارة المالية",
 };
 
 export const SCOPE_TYPE_LABELS: Record<ScopeType, string> = {
-  all: "كل الجهات",
-  company: "شركة",
+  all: "جميع الجهات",
+  company: "شركة منفذة",
   presidency: "رئاسة قطاعات",
   sector: "قطاع",
   general_dept: "إدارة عامة",
-  dept: "إدارة",
+  dept: "إدارة مختصة",
   central: "سنترال",
 };
 
@@ -32,10 +32,10 @@ export type Tone = "g" | "a" | "r" | "b" | "n" | "p";
 
 export const INVOICE_STATUS: Record<InvoiceStatus, { label: string; tone: Tone }> = {
   draft: { label: "مسودة", tone: "n" },
-  active: { label: "جاري", tone: "p" },
-  returned: { label: "مرتجع", tone: "b" },
-  on_hold: { label: "معلّق", tone: "a" },
-  paid: { label: "تم الصرف", tone: "g" },
+  active: { label: "قيد المراجعة", tone: "p" },
+  returned: { label: "معاد للاستيفاء", tone: "b" },
+  on_hold: { label: "موقوف مؤقتاً", tone: "a" },
+  paid: { label: "تم السداد", tone: "g" },
 };
 
 /** شيل اللقب (م. / أ.) وخد أول حرف — للـ avatar */

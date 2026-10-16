@@ -30,8 +30,8 @@ export interface SlaState {
 }
 
 function returnedLabel(returnTo: ReturnTarget | null | undefined, config: WorkflowConfig): string {
-  if (!returnTo || returnTo === 'company') return 'مرتجع للشركة';
-  return `مرتجع لـ ${config.steps[returnTo]?.short ?? returnTo}`;
+  if (!returnTo || returnTo === 'company') return 'معاد للاستيفاء — المقاول';
+  return `معاد للاستيفاء — ${config.steps[returnTo]?.short ?? returnTo}`;
 }
 
 /** حالة الـ SLA للمحطة الحالية: في الميعاد / قرب الميعاد / متأخر … */
@@ -42,16 +42,16 @@ export function slaState(
   holidays: Holidays = [],
   warnAt: number = DEFAULT_SLA_WARN_AT,
 ): SlaState {
-  if (inv.status === 'paid') return { k: 'paid', cls: 'g', label: 'تم الصرف', elapsed: null, sla: null };
+  if (inv.status === 'paid') return { k: 'paid', cls: 'g', label: 'تم السداد', elapsed: null, sla: null };
   if (inv.status === 'draft') return { k: 'draft', cls: 'n', label: 'مسودة', elapsed: null, sla: null };
   const elapsed = workingDaysBetween(inv.since, today, holidays);
   if (inv.status === 'on_hold') {
-    return { k: 'hold', cls: 'a', label: `معلّق: ${inv.holdReason || 'بانتظار اعتماد أمر التكليف'}`, elapsed, sla: null };
+    return { k: 'hold', cls: 'a', label: `موقوف مؤقتاً: ${inv.holdReason || 'بانتظار اعتماد أمر التكليف'}`, elapsed, sla: null };
   }
   if (inv.status === 'returned') return { k: 'returned', cls: 'b', label: returnedLabel(inv.returnTo, config), elapsed, sla: null };
   const sla = inv.currentStep ? slaDaysFor(config, effectiveCategory(inv), inv.currentStep) : null;
-  if (sla == null) return { k: 'nosla', cls: 'n', label: 'بدون SLA', elapsed, sla };
-  if (elapsed > sla) return { k: 'late', cls: 'r', label: 'متأخر', elapsed, sla };
-  if (sla - elapsed <= warnAt) return { k: 'due', cls: 'a', label: elapsed === sla ? 'آخر يوم' : 'قرب الميعاد', elapsed, sla };
-  return { k: 'ok', cls: 'g', label: 'في الميعاد', elapsed, sla };
+  if (sla == null) return { k: 'nosla', cls: 'n', label: 'دون مدة مستهدفة', elapsed, sla };
+  if (elapsed > sla) return { k: 'late', cls: 'r', label: 'متجاوز للمدة', elapsed, sla };
+  if (sla - elapsed <= warnAt) return { k: 'due', cls: 'a', label: 'قارب على الانتهاء', elapsed, sla };
+  return { k: 'ok', cls: 'g', label: 'ضمن المدة', elapsed, sla };
 }

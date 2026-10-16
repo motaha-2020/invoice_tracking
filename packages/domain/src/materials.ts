@@ -49,11 +49,11 @@ function flagsFor(m: MaterialInput, cum: number, opts: MaterialOptions): Materia
   const flags: MaterialFlag[] = [];
   if (!m.planned) flags.push({ code: 'not_in_ao', cls: 'r', text: 'غير موجود في أمر التكليف' });
   if (cum > m.issued + EPS) {
-    flags.push({ code: 'exceeds_issued', cls: 'r', text: 'المنفذ التراكمي أكبر من المنصرف' });
+    flags.push({ code: 'exceeds_issued', cls: 'r', text: 'الكمية المنفذة التراكمية تتجاوز المنصرف من المخازن' });
   } else if (m.issued - cum > Math.max(opts.minUnused, m.issued * opts.unusedRatio)) {
     flags.push({ code: 'unused_issued', cls: 'a', text: 'رصيد منصرف لم يُستخدم' });
   }
-  if (m.planned && cum > m.planned + EPS) flags.push({ code: 'exceeds_planned', cls: 'a', text: 'المنفذ أكبر من المخطط' });
+  if (m.planned && cum > m.planned + EPS) flags.push({ code: 'exceeds_planned', cls: 'a', text: 'الكمية المنفذة تتجاوز الكمية المخططة' });
   return flags;
 }
 

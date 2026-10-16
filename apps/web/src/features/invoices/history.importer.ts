@@ -46,7 +46,7 @@ type Row = MigratedState & {
 
 export const historyImporter: Importer<Row> = {
   templateId: "11_المستخلصات_السابقة",
-  title: "ترحيل المستخلصات الحالية",
+  title: "ترحيل بيانات المستخلصات الحالية",
   templateFile: "11_المستخلصات_السابقة.xlsx",
   permission: "invoice.override",
   sheets: [{ name: SHEET, kind: "table" }],
@@ -78,54 +78,54 @@ export const historyImporter: Importer<Row> = {
 
       const contract = contracts.get(contractNo);
       if (!contractNo) errors.push("رقم العقد إلزامي");
-      else if (!contract) errors.push(`العقد ${contractNo} مش متسجل — ارفع العقد (قالب 05) الأول`);
+      else if (!contract) errors.push(`العقد ${contractNo} غير مسجل — يرجى استيراد العقد (النموذج 05) أولاً`);
       if (!aoNo) errors.push("رقم أمر التكليف إلزامي");
       if (!invoiceNo) errors.push("رقم المستخلص إلزامي");
       if (path.error) errors.push(path.error);
       const workTypeCode = inferWorkTypeCode(path.value ?? "");
       const workTypeId = workTypes.get(workTypeCode) ?? null;
-      if (path.value && !workTypeId) warnings.push(`نوع الأعمال ${workTypeCode} مش متسجل — المستخلص هيتسجل من غير نوع أعمال`);
+      if (path.value && !workTypeId) warnings.push(`نوع الأعمال ${workTypeCode} غير مسجل — سيُسجَّل المستخلص دون نوع أعمال`);
 
       // ── المحطة ← الحالة ──
       const stepName = text(r.current_step);
       let state: MigratedState;
       if (!stepName) {
-        errors.push("المحطة الحالية إلزامية");
+        errors.push("مرحلة الاعتماد الحالية إلزامية");
         state = { ...UNKNOWN_STEP_STATE };
       } else {
         const mapped = mapStepName(stepName);
-        if (!mapped) warnings.push(`المحطة "${stepName}" مش معروفة — هيتسجل جاري عند مشرف التنفيذ`);
+        if (!mapped) warnings.push(`مرحلة الاعتماد "${stepName}" غير معروفة — سيُسجَّل المستخلص قيد المراجعة لدى مشرف التنفيذ`);
         state = mapped ?? { ...UNKNOWN_STEP_STATE };
       }
 
       // ── المبالغ ──
-      const excl = num(r.amount_excl_vat, "المبلغ غير شامل", { min: 0 });
-      const incl = num(r.amount_incl_vat, "المبلغ شامل", { min: 0 });
+      const excl = num(r.amount_excl_vat, "المبلغ غير شامل الضريبة", { min: 0 });
+      const incl = num(r.amount_incl_vat, "المبلغ شامل الضريبة", { min: 0 });
       if (excl.error) errors.push(excl.error);
-      else if (excl.value == null) errors.push("المبلغ غير شامل إلزامي");
+      else if (excl.value == null) errors.push("المبلغ غير شامل الضريبة إلزامي");
       if (incl.error) errors.push(incl.error);
-      if (excl.value != null && incl.value != null && incl.value + 0.01 < excl.value) warnings.push("المبلغ الشامل أقل من غير الشامل");
+      if (excl.value != null && incl.value != null && incl.value + 0.01 < excl.value) warnings.push("المبلغ شامل الضريبة أقل من المبلغ غير شامل الضريبة");
 
-      const since = date(r.since_date, "في المحطة من تاريخ");
+      const since = date(r.since_date, "في المرحلة منذ تاريخ");
       if (since.error) errors.push(since.error);
       else if (!since.value && (state.status === "active" || state.status === "on_hold")) {
-        warnings.push("تاريخ المحطة فاضي — عداد الـ SLA هيبدأ من يوم الرفع");
+        warnings.push("تاريخ دخول المرحلة غير مُدخل — سيبدأ احتساب المدة المستهدفة (SLA) من تاريخ الرفع");
       }
 
       // ── أمر التكليف ──
       const ao = contract && aoNo ? aoByKey.get(`${contract.id}|${aoNo}`) : undefined;
       if (contract && aoNo && !ao) {
         if (state.status === "on_hold" || state.status === "draft") {
-          warnings.push(`أمر التكليف ${aoNo} مش متسجل — هيتعمل بحالة "بانتظار الاعتماد" باسم المسار`);
+          warnings.push(`أمر التكليف ${aoNo} غير مسجل — سيُنشأ بحالة "بانتظار الاعتماد" باسم المسار`);
         } else {
-          errors.push(`أمر التكليف ${aoNo} مش على العقد ${contractNo} — ارفعه (قالب 06) الأول`);
+          errors.push(`أمر التكليف ${aoNo} غير مسجل على العقد ${contractNo} — يرجى استيراده (النموذج 06) أولاً`);
         }
       }
-      if (ao && inScope && !inScope.has(ao.id)) errors.push("أمر التكليف ده خارج نطاقك");
+      if (ao && inScope && !inScope.has(ao.id)) errors.push("أمر التكليف خارج نطاق صلاحيتك");
       // أمر تكليف لسه بانتظار الاعتماد (غالباً اتعمل من ترحيل سابق) — بس المعلّق والمسودة يتربطوا بيه،
       // عشان نتيجة الرفع ما تتغيرش لو نفس الملف اترفع مرتين
       if (ao && ao.status === "pending_approval" && state.status !== "on_hold" && state.status !== "draft") {
-        errors.push(`أمر التكليف ${aoNo} لسه بانتظار الاعتماد — ارفع بياناته (قالب 06) الأول`);
+        errors.push(`أمر التكليف ${aoNo} ما زال بانتظار الاعتماد — يرجى استيراد بياناته (النموذج 06) أولاً`);
       }
 
       // ── تكرار / موجود قبل كده ──
@@ -133,13 +133,13 @@ export const historyImporter: Importer<Row> = {
       if (contract && invoiceNo) {
         const k = `${contract.id}|${invoiceNo}`;
         const first = seen.get(k);
-        if (first) errors.push(`رقم المستخلص ${invoiceNo} متكرر على نفس العقد (صف ${first})`);
+        if (first) errors.push(`رقم المستخلص ${invoiceNo} مكرر على العقد نفسه (الصف ${first})`);
         else seen.set(k, r.__row);
       }
       if (prev && !prev.migrated) {
-        return { sheet: SHEET, row: r.__row, status: "skip", label, errors, warnings: [...warnings, "المستخلص ده متسجل في المنظومة (مش مرحّل) — مش هيتعدّل من الترحيل"] };
+        return { sheet: SHEET, row: r.__row, status: "skip", label, errors, warnings: [...warnings, "المستخلص مسجل في المنظومة (غير مُرحَّل) — لن يُعدَّل من خلال الترحيل"] };
       }
-      if (prev && ao && prev.aoId !== ao.id) warnings.push("المستخلص متسجل على أمر تكليف تاني — هتتحدث الحالة بس");
+      if (prev && ao && prev.aoId !== ao.id) warnings.push("المستخلص مسجل على أمر تكليف آخر — ستُحدَّث الحالة فقط");
 
       if (errors.length) return { sheet: SHEET, row: r.__row, status: "error", label, errors, warnings };
       const paymentRef = text(r.payment_ref) || null;
@@ -149,7 +149,7 @@ export const historyImporter: Importer<Row> = {
           (prev.currentStep ?? null) === state.currentStep &&
           (!since.value || prev.since.getTime() === since.value.getTime()) &&
           (prev.paymentRef ?? null) === paymentRef;
-        if (same) return { sheet: SHEET, row: r.__row, status: "skip", label, errors, warnings: [...warnings, "مفيش تغيير عن المتسجل"] };
+        if (same) return { sheet: SHEET, row: r.__row, status: "skip", label, errors, warnings: [...warnings, "لا يوجد تغيير عن البيانات المسجلة"] };
       }
 
       return {
@@ -179,9 +179,9 @@ export const historyImporter: Importer<Row> = {
     });
 
     const notes: string[] = [];
-    if (!rows.length) notes.push("مفيش صفوف في شيت المستخلصات");
+    if (!rows.length) notes.push("لا توجد صفوف في ورقة عمل المستخلصات");
     const toCreate = new Set(rows.filter((r) => r.data && !r.data.aoId).map((r) => `${r.data!.contractId}|${r.data!.aoNo}`));
-    if (toCreate.size) notes.push(`هيتعمل ${toCreate.size} أمر تكليف بحالة "بانتظار الاعتماد" للمستخلصات المعلّقة — الشئون الفنية تكمّل بياناتها من قالب 06.`);
+    if (toCreate.size) notes.push(`سيُنشأ ${toCreate.size} أمر تكليف بحالة "بانتظار الاعتماد" للمستخلصات الموقوفة مؤقتاً — تستكمل الشئون الفنية بياناتها من خلال النموذج 06.`);
     return { templateId: historyImporter.templateId, rows, notes };
   },
 
@@ -208,7 +208,7 @@ export const historyImporter: Importer<Row> = {
 
       const since = d.since ? new Date(d.since) : null;
       const paid = d.status === "paid";
-      const base = d.holder ? `مرحّل من ملف الموقف — الماسك: ${d.holder}` : "مرحّل من ملف الموقف";
+      const base = d.holder ? `مرحّل من ملف الموقف — الجهة الحالية: ${d.holder}` : "مرحّل من ملف الموقف";
       const note = d.notes ? `${base} | ${d.notes}` : base;
       const fields = {
         status: d.status,
@@ -254,8 +254,8 @@ export const historyImporter: Importer<Row> = {
       counts.created++;
     }
 
-    const parts = [`اترحّل ${counts.created} مستخلص جديد`, `واتحدّثت حالة ${counts.updated}`];
-    if (counts.aosCreated) parts.push(`واتعمل ${counts.aosCreated} أمر تكليف بانتظار الاعتماد`);
+    const parts = [`تم ترحيل ${counts.created} مستخلص جديد`, `وتحديث حالة ${counts.updated}`];
+    if (counts.aosCreated) parts.push(`وإنشاء ${counts.aosCreated} أمر تكليف بانتظار الاعتماد`);
     return { message: parts.join(" "), counts };
   },
 };

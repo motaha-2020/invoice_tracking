@@ -26,17 +26,17 @@ export function TermsCard({ view }: { view: ContractView }) {
         <Term label="قيمة العقد"><Num>{formatMoney(c.contractValue, { decimals: 0 })}</Num> <span className="text-xs text-tx3">{c.currency}</span></Term>
         <Term label="برقية القبول"><Num>{formatDate(c.awardDate)}</Num></Term>
         <Term label="البدء ← الانتهاء"><Num>{formatDate(c.startDate)}</Num> ← <Num>{formatDate(c.endDate)}</Num></Term>
-        <Term label="شروط الصرف"><span dir="ltr">{view.terms}</span></Term>
-        <Term label="صرف أعمال التخطيط"><Num>{pct(c.planningPayPct)}</Num></Term>
+        <Term label="شروط السداد"><span dir="ltr">{view.terms}</span></Term>
+        <Term label="نسبة سداد أعمال التخطيط"><Num>{pct(c.planningPayPct)}</Num></Term>
         <Term label="ضريبة القيمة المضافة"><Num>{pct(c.vatPct)}</Num></Term>
         <Term label="خصم من المنبع"><Num>{pct(c.taxPct)}</Num></Term>
         <Term label="خطاب الضمان النهائي"><Num>{pct(c.finalGuaranteePct)}</Num> <span className="text-xs text-tx3">من أمر التكليف</span></Term>
         <Term label="غرامة التأخير">
           {c.delayFinePctWeek == null ? "—" : <><Num>{pct(c.delayFinePctWeek)}</Num> أسبوعياً</>}
-          {c.delayFineCapPct != null && <span className="text-xs text-tx3"> (حد أقصى <Num>{pct(c.delayFineCapPct)}</Num>)</span>}
+          {c.delayFineCapPct != null && <span className="text-xs text-tx3"> (بحد أقصى <Num>{pct(c.delayFineCapPct)}</Num>)</span>}
         </Term>
         <Term label="الضمان الفني">{c.warrantyMonths == null ? "—" : <><Num>{c.warrantyMonths}</Num> شهر</>}</Term>
-        <Term label="الدمغات (على أمر التكليف)">
+        <Term label="رسوم الدمغة (على أمر التكليف)">
           <span className="text-[13px]">
             هندسية <Num>{pct(c.stampEngineeringPct)}</Num> · فنون تطبيقية <Num>{pct(c.stampAppliedArtsPct)}</Num> · تشييد <Num>{pct(c.stampConstructionPct)}</Num>
           </span>

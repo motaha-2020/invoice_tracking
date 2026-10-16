@@ -49,10 +49,10 @@ describe("checkPaymentTerms", () => {
 
 describe("termsSummary", () => {
   it("232: 70 / 20 / 10", () => {
-    expect(termsSummary({ payMonthlyPct: 70, payAsbuiltPct: 20, payHandoverPct: 10 })).toBe("70% / 20% As-Built / 10% تسليم");
+    expect(termsSummary({ payMonthlyPct: 70, payAsbuiltPct: 20, payHandoverPct: 10 })).toBe("70% / 20% As-Built / 10% استلام ابتدائي");
   });
   it("231: 90 / 0 / 10 — من غير As-Built", () => {
-    expect(termsSummary({ payMonthlyPct: 90, payAsbuiltPct: 0, payHandoverPct: 10 })).toBe("90% / 10% تسليم");
+    expect(termsSummary({ payMonthlyPct: 90, payAsbuiltPct: 0, payHandoverPct: 10 })).toBe("90% / 10% استلام ابتدائي");
   });
 });
 

@@ -52,7 +52,7 @@ describe("validateOrgSheets — ترتيب الأب ← الابن", () => {
     );
     expect(rows[0]!.status).toBe("error");
     expect(rows[1]!.status).toBe("error");
-    expect(rows[1]!.errors.join()).toContain("فيها أخطاء في الملف");
+    expect(rows[1]!.errors.join()).toContain("تتضمن أخطاء في الملف");
   });
 
   it("أب فيه خطأ في الملف بس موجود في المنظومة ← الابن سليم", () => {
@@ -80,7 +80,7 @@ describe("validateOrgSheets — تكرار وتحديث", () => {
     );
     expect(rows[0]!.status).toBe("create");
     expect(rows[1]!.status).toBe("error");
-    expect(rows[1]!.errors[0]).toContain("متكرر");
+    expect(rows[1]!.errors[0]).toContain("مكرر");
   });
 
   it("نفس الكود في مستويين مختلفين مش تكرار", () => {

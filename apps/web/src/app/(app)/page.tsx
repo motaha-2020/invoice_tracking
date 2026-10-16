@@ -23,41 +23,41 @@ async function Home() {
   return (
     <>
       <PageHeader
-        title={`أهلاً، ${user.name}`}
+        title={`مرحباً، ${user.name}`}
         sub={
           <>
-            ملخص المستخلصات في نطاقك · النهارده <span className="num">{formatDate(new Date())}</span>
+            ملخص المستخلصات ضمن نطاق صلاحيتك · اليوم <span className="num">{formatDate(new Date())}</span>
           </>
         }
       />
       <div className="mb-4 grid grid-cols-3 gap-4 max-xl:grid-cols-2 max-sm:grid-cols-1">
         <Kpi
           icon={Inbox}
-          label={isCompany ? "مطلوب منك" : "مستنيين اعتمادك"}
+          label={isCompany ? "بانتظار إجرائك" : "بانتظار اعتمادك"}
           value={formatCount(stats.inbox)}
-          sub="في صندوق الوارد"
+          sub="في المهام الواردة"
           tone={stats.inbox > 0 ? "a" : undefined}
           href="/inbox"
         />
-        <Kpi icon={Files} label="جاري في المسار" value={formatCount(s.active)} href="/invoices?status=active" />
-        <Kpi icon={Undo2} label="مرتجع" value={formatCount(s.returned)} href="/invoices?status=returned" />
+        <Kpi icon={Files} label="قيد الاعتماد" value={formatCount(s.active)} href="/invoices?status=active" />
+        <Kpi icon={Undo2} label="معاد للاستيفاء" value={formatCount(s.returned)} href="/invoices?status=returned" />
         <Kpi
           icon={PauseCircle}
-          label="معلّق"
+          label="موقوف مؤقتاً"
           value={formatCount(s.on_hold)}
-          sub="بانتظار أمر تكليف أو ملحق"
+          sub="بانتظار أمر تكليف أو ملحق أمر تكليف"
           tone={s.on_hold > 0 ? "a" : undefined}
           href="/invoices?status=on_hold"
         />
-        <Kpi icon={CheckCircle2} label="تم الصرف" value={formatCount(s.paid)} tone="g" href="/invoices?status=paid" />
+        <Kpi icon={CheckCircle2} label="تم السداد" value={formatCount(s.paid)} tone="g" href="/invoices?status=paid" />
         {isCompany && <Kpi icon={FilePen} label="مسودات" value={formatCount(s.draft)} href="/invoices?status=draft" />}
       </div>
       <Card>
-        <CardHeader title="المتأخر عن الـ SLA" sub="حسب أيام العمل في كل محطة" />
+        <CardHeader title="المستخلصات المتجاوزة للمدة المستهدفة (SLA)" sub="بأيام العمل الرسمية في كل مرحلة اعتماد" />
         <CardBody>
           {/* TODO: يتحسب من @it/domain (أيام العمل + SLA الفئة) لما الحزمة تجهز */}
-          <EmptyState title="قيد البناء">
-            <div className="text-[13px]">هيظهر هنا المستخلصات المتأخرة وقرب ميعادها.</div>
+          <EmptyState title="قيد التطوير">
+            <div className="text-[13px]">ستظهر هنا المستخلصات المتجاوزة للمدة والتي قاربت مدتها على الانتهاء.</div>
           </EmptyState>
         </CardBody>
       </Card>

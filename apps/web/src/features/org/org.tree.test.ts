@@ -53,7 +53,7 @@ describe("dependentsMessage", () => {
       { label: "صلاحية مستخدم على النطاق", n: 0 },
     ])!;
     expect(m).toContain("«بريدج»");
-    expect(m).toContain("تحتها");
+    expect(m).toContain("تابعة لها");
     expect(m).toContain("2 عقد");
     expect(m).not.toContain("صلاحية");
   });

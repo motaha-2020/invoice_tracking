@@ -3,11 +3,11 @@ import type { Tone } from "@/lib/labels";
 
 export const AO_STATUS: Record<AoStatus, { label: string; tone: Tone }> = {
   pending_approval: { label: "بانتظار الاعتماد", tone: "a" },
-  active: { label: "ساري", tone: "g" },
-  closed: { label: "مقفول", tone: "n" },
+  active: { label: "سارٍ", tone: "g" },
+  closed: { label: "مغلق", tone: "n" },
 };
 
 export const AO_CHANGE_KIND: Record<AoChangeKind, { label: string; tone: Tone }> = {
-  increase: { label: "ملحق زيادة", tone: "p" },
-  commitment_renewal: { label: "تجديد التزام مالي", tone: "b" },
+  increase: { label: "ملحق أمر التكليف", tone: "p" },
+  commitment_renewal: { label: "تعزيز الارتباط المالي", tone: "b" },
 };

@@ -16,8 +16,8 @@ export function BulkInvite({ pendingCount }: { pendingCount: number }) {
   return (
     <Card>
       <CardHeader
-        title="دعوات المستخدمين الجداد"
-        sub={<>لسه ما اتبعتلهمش دعوة: <span className="num">{pendingCount}</span></>}
+        title="دعوات المستخدمين الجدد"
+        sub={<>مستخدمون لم تُرسل إليهم دعوة بعد: <span className="num">{pendingCount}</span></>}
         actions={
           <Button
             variant="pr"
@@ -30,7 +30,7 @@ export function BulkInvite({ pendingCount }: { pendingCount: number }) {
               })
             }
           >
-            <Send aria-hidden /> {pending ? "بيتعمل…" : "ابعت دعوات للجداد"}
+            <Send aria-hidden /> {pending ? "جارٍ الإرسال…" : "إرسال الدعوات للمستخدمين الجدد"}
           </Button>
         }
       />
@@ -39,7 +39,7 @@ export function BulkInvite({ pendingCount }: { pendingCount: number }) {
           {message && <Alert tone={message.ok ? "g" : "r"}>{message.text}</Alert>}
           {links && links.length > 0 && (
             <>
-              <Alert tone="i">الإيميلات اتسجلت في صندوق الصادر. الروابط دي بتظهر مرة واحدة بس — انسخها دلوقتي لو هتبعتها بنفسك.</Alert>
+              <Alert tone="i">تم تسجيل رسائل البريد الإلكتروني في قائمة الصادر. تظهر هذه الروابط مرة واحدة فقط — يرجى نسخها الآن في حال إرسالها يدوياً.</Alert>
               <div className="max-h-[360px] space-y-2 overflow-y-auto">
                 {links.map((l) => (
                   <div key={l.userId} className="rounded-base border border-bd1 p-2">

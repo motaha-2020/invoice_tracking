@@ -49,7 +49,7 @@ describe("resolveScopeCode", () => {
   });
 
   it("كود في نوع غلط = خطأ", () => {
-    expect(resolveScopeCode(lookup, "sector", "D-ARISH").error).toMatch(/مش موجود/);
+    expect(resolveScopeCode(lookup, "sector", "D-ARISH").error).toMatch(/غير موجود/);
   });
 
   it("كود فاضي لنطاق محتاج كيان = خطأ", () => {
@@ -72,7 +72,7 @@ describe("normalizeRoleScopes", () => {
 
   it("نطاق من غير جهة = خطأ، وجهة مش موجودة = خطأ", () => {
     expect(normalizeRoleScopes([{ role: "gm", scopeType: "general_dept", scopeId: null }]).error).toBeTruthy();
-    expect(normalizeRoleScopes([{ role: "gm", scopeType: "general_dept", scopeId: "zzz" }], { general_dept: new Set(["g1"]) }).error).toMatch(/مش موجودة/);
+    expect(normalizeRoleScopes([{ role: "gm", scopeType: "general_dept", scopeId: "zzz" }], { general_dept: new Set(["g1"]) }).error).toMatch(/غير موجودة/);
     expect(normalizeRoleScopes([]).error).toBeTruthy();
   });
 });

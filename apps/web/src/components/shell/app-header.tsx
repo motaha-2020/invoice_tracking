@@ -32,7 +32,7 @@ export function AppHeader() {
         />
         <div className="truncate text-base leading-tight font-bold max-sm:text-sm max-[380px]:hidden">
           منظومة تتبع المستخلصات
-          <small className="block text-[11px] font-normal opacity-72 max-nav:hidden">المصرية للاتصالات · إدارة المتابعة PMO</small>
+          <small className="block text-[11px] font-normal opacity-72 max-nav:hidden">المصرية للاتصالات · مكتب إدارة المشروعات (PMO)</small>
         </div>
       </Link>
       <div className="flex-1" />

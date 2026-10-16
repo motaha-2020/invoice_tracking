@@ -21,7 +21,7 @@ const ADD_FOR_TAB: Partial<Record<OrgTab, { kind: OrgKind; label: string }>> = {
   projects: { kind: "project", label: "مشروع" },
   types: { kind: "projectType", label: "نوع مشروع" },
   "work-types": { kind: "workType", label: "نوع أعمال" },
-  companies: { kind: "company", label: "شركة" },
+  companies: { kind: "company", label: "شركة منفذة" },
 };
 
 /** شاشة "الهيكل والمشاريع" — بتقرا الجلسة، فلازم تتعرض جوه <Suspense> */
@@ -36,9 +36,9 @@ export async function OrgScreen({ tabParam }: { tabParam: Promise<unknown> }) {
   return (
     <OrgDialogsProvider canEdit={canEdit} options={buildOrgOptions(data.nodes, data.types)}>
       <PageHeader
-        title="الهيكل والمشاريع"
-        sub="الرئاسات والقطاعات والإدارات والسنترالات، والمشروعات والشركات"
-        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "الهيكل والمشاريع" }]}
+        title="الهيكل التنظيمي والمشروعات"
+        sub="رئاسات القطاعات والقطاعات والإدارات والسنترالات، والمشروعات والشركات المنفذة"
+        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "الهيكل التنظيمي والمشروعات" }]}
         actions={
           canEdit ? (
             <>
@@ -53,7 +53,7 @@ export async function OrgScreen({ tabParam }: { tabParam: Promise<unknown> }) {
         }
       />
       <Alert tone="p" className="mb-4">
-        <b>المستخلصات بتورث مكانها في الهيكل</b> من أمر التكليف ← المشروع ← السنترال — فأي نقل لمشروع أو سنترال بيغيّر مين يشوف مستخلصاته.
+        <b>يتحدد موقع المستخلص في الهيكل التنظيمي</b> من خلال أمر التكليف ← المشروع ← السنترال؛ لذا فإن نقل أي مشروع أو سنترال يغيّر نطاق الاطلاع على مستخلصاته.
       </Alert>
       <div className="mb-4 grid grid-cols-5 gap-4 max-xl:grid-cols-3 max-sm:grid-cols-2 max-sm:gap-3">
         <Kpi icon={Landmark} label="رئاسات القطاعات" value={count("presidency")} />
@@ -99,7 +99,7 @@ function ImportSection() {
   return (
     <div className="space-y-4">
       <Alert tone="i">
-        ارفع بالترتيب: الهيكل الأول، بعده المشروعات (كل مشروع محتاج سنترال موجود)، والشركات في أي وقت. الكود فريد ومش بيتغير — لو موجود الاسم بس بيتحدث.
+        يرجى الاستيراد بالترتيب: الهيكل التنظيمي أولاً، ثم المشروعات (يتطلب كل مشروع سنترالاً مسجلاً)، والشركات المنفذة في أي وقت. الكود فريد ولا يتغير — وإذا كان مسجلاً يُحدَّث الاسم فقط.
       </Alert>
       {[orgImporter, projectsImporter, companiesImporter].map((imp, i) => (
         <ImportPanel
@@ -117,5 +117,5 @@ function ImportSection() {
 const HINTS: Record<string, string> = {
   [orgImporter.templateId]: "رئاسات ← قطاعات ← إدارات عامة وشئون فنية ← إدارات مختصة ← سنترالات",
   [projectsImporter.templateId]: "أنواع المشروعات وأنواع الأعمال والمشروعات وربط كل مشروع بالسنترال",
-  [companiesImporter.templateId]: "الشركات المنفذة وإيميل المستخلصات بتاع كل شركة",
+  [companiesImporter.templateId]: "الشركات المنفذة والبريد الإلكتروني للمستخلصات لكل شركة",
 };

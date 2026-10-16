@@ -39,13 +39,13 @@ export function UserFormModal({ user, options, onClose }: Props) {
       }
       setErrors({});
       if (!invite || !res.userId) {
-        toast.show(res.message ?? "اتحفظ", "ok");
+        toast.show(res.message ?? "تم الحفظ بنجاح", "ok");
         onClose();
         return;
       }
       const inv = await inviteUserAction(res.userId);
       if (!inv.ok || !inv.link) {
-        setMessage(`اتحفظ المستخدم بس الدعوة ما اتعملتش: ${inv.message ?? ""}`);
+        setMessage(`تم حفظ المستخدم، وتعذّر إنشاء الدعوة: ${inv.message ?? ""}`);
         return;
       }
       setLink(inv.link);
@@ -59,7 +59,7 @@ export function UserFormModal({ user, options, onClose }: Props) {
       title={user ? `تعديل: ${user.name}` : "مستخدم جديد"}
       footer={
         link ? (
-          <Button onClick={onClose}>تمام</Button>
+          <Button onClick={onClose}>إغلاق</Button>
         ) : (
           <>
             {!user && (
@@ -68,7 +68,7 @@ export function UserFormModal({ user, options, onClose }: Props) {
               </Button>
             )}
             <Button variant={user ? "pr" : "default"} disabled={pending} onClick={() => submit(false)}>
-              <Save aria-hidden /> {pending ? "بيتحفظ…" : "حفظ"}
+              <Save aria-hidden /> {pending ? "جارٍ الحفظ…" : "حفظ"}
             </Button>
             <Button variant="gh" onClick={onClose}>إلغاء</Button>
           </>
@@ -77,8 +77,8 @@ export function UserFormModal({ user, options, onClose }: Props) {
     >
       {link ? (
         <>
-          <Alert tone="g" title="اتحفظ المستخدم واتعملت الدعوة">
-            الإيميل اتسجل في صندوق الصادر. لحد ما الإرسال يشتغل ابعت الرابط ده بنفسك — بيظهر مرة واحدة بس وصالح 72 ساعة.
+          <Alert tone="g" title="تم حفظ المستخدم وإنشاء الدعوة">
+            تم تسجيل رسالة البريد الإلكتروني في قائمة الصادر. لحين تفعيل الإرسال يرجى إرسال هذا الرابط يدوياً — يظهر مرة واحدة فقط وصلاحيته 72 ساعة.
           </Alert>
           <CopyLink link={link} />
         </>
@@ -89,19 +89,19 @@ export function UserFormModal({ user, options, onClose }: Props) {
             <Field label="الاسم" htmlFor="u-name" required error={errors.name}>
               <Input id="u-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
             </Field>
-            <Field label="الإيميل" htmlFor="u-email" required error={errors.email} hint="بيستخدم للدخول ولاستلام الإشعارات">
+            <Field label="البريد الإلكتروني" htmlFor="u-email" required error={errors.email} hint="يُستخدم لتسجيل الدخول واستلام التنبيهات">
               <Input id="u-email" type="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={200} />
             </Field>
-            <Field label="الموبايل" htmlFor="u-phone" error={errors.phone}>
+            <Field label="رقم الهاتف المحمول" htmlFor="u-phone" error={errors.phone}>
               <Input id="u-phone" dir="ltr" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={30} />
             </Field>
             <Field label="الحالة">
               <label className="flex h-[34px] items-center gap-2 text-sm">
-                <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> الحساب شغال
+                <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> الحساب نشط
               </label>
             </Field>
           </div>
-          <Field label="الأدوار والنطاقات" required error={errors.roles} hint="الدور بيحدد يعمل إيه، والنطاق بيحدد يشوف إيه">
+          <Field label="الأدوار الوظيفية ونطاقات الصلاحية" required error={errors.roles} hint="يحدد الدور الوظيفي الإجراءات المتاحة، ويحدد نطاق الصلاحية البيانات التي يطّلع عليها المستخدم">
             <RoleScopeRows value={roles} onChange={setRoles} options={options} />
           </Field>
         </>

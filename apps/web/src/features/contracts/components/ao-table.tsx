@@ -15,8 +15,8 @@ export function AoTable({ contractId, rows }: { contractId: string; rows: AoSumm
             <Th>المشروع / السنترال</Th>
             <Th>الحالة</Th>
             <Th align="end">القيمة</Th>
-            <Th align="end">الالتزام المالي</Th>
-            <Th>المفوتر من الالتزام</Th>
+            <Th align="end">الارتباط المالي</Th>
+            <Th>المفوتر من الارتباط المالي</Th>
             <Th align="end">المواقع</Th>
             <Th align="end">المستخلصات</Th>
           </tr>
@@ -34,7 +34,7 @@ export function AoTable({ contractId, rows }: { contractId: string; rows: AoSumm
                   <div className="max-w-[300px] truncate text-xs text-tx3" title={a.name}>{a.name}</div>
                 </Td>
                 <Td className="text-[13px]">
-                  <div>{a.project ?? <span className="text-tx3">مش مربوط بمشروع</span>}</div>
+                  <div>{a.project ?? <span className="text-tx3">غير مرتبط بمشروع</span>}</div>
                   <div className="max-w-[240px] truncate text-xs text-tx3">{a.central ?? "—"}</div>
                 </Td>
                 <Td><Badge tone={st.tone} dot>{st.label}</Badge></Td>

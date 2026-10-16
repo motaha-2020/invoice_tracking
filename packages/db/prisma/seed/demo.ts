@@ -13,10 +13,10 @@ type Ids = Map<string, string>;
 export function assertDemoEnv(): string {
   const password = process.env.SEED_DEMO_PASSWORD ?? '';
   if (password.length < MIN_PASSWORD) {
-    throw new Error(`SEED_DEMO=1 محتاج SEED_DEMO_PASSWORD (${MIN_PASSWORD} حرف على الأقل)`);
+    throw new Error(`يتطلب SEED_DEMO=1 تحديد SEED_DEMO_PASSWORD (${MIN_PASSWORD} حرفاً على الأقل)`);
   }
   if (process.env.NODE_ENV === 'production' && process.env.SEED_DEMO_FORCE !== '1') {
-    throw new Error('رفضنا نزرع بيانات تجريبية مع NODE_ENV=production (SEED_DEMO_FORCE=1 لو متأكد)');
+    throw new Error('تم رفض إنشاء بيانات تجريبية مع NODE_ENV=production (استخدم SEED_DEMO_FORCE=1 للتأكيد)');
   }
   return password;
 }

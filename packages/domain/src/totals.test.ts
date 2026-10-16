@@ -19,8 +19,8 @@ describe('invoiceTotals', () => {
     expect(t.gross).toBe(1_000_000);
     expect(t.byWorkType).toEqual({ مدني: 600_000, كهرباء: 400_000 });
     expect(t.held).toEqual([
-      { type: 'asbuilt', name: 'محجوز لحد تسليم خرائط As-Built', pct: 20, amount: 200_000 },
-      { type: 'handover', name: 'محجوز لحد التسليم الابتدائي', pct: 10, amount: 100_000 },
+      { type: 'asbuilt', name: 'مبلغ محتجز لحين تسليم خرائط ما بعد التنفيذ (As-Built)', pct: 20, amount: 200_000 },
+      { type: 'handover', name: 'مبلغ محتجز لحين الاستلام الابتدائي', pct: 10, amount: 100_000 },
     ]);
     expect(t.payNowPct).toBe(70);
     expect(t.payableNow).toBe(700_000);

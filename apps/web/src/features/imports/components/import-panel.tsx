@@ -17,7 +17,7 @@ type Props = {
 const STATUS: Record<string, { label: string; tone: "g" | "b" | "n" | "r" }> = {
   create: { label: "جديد", tone: "g" },
   update: { label: "تحديث", tone: "b" },
-  skip: { label: "متجاهل", tone: "n" },
+  skip: { label: "مُتجاهَل", tone: "n" },
   error: { label: "خطأ", tone: "r" },
 };
 
@@ -40,7 +40,7 @@ export function ImportPanel({ templateId, title, templateFile, hint }: Props) {
         sub={hint}
         actions={
           <a className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-tx" href={`/templates/${encodeURIComponent(templateFile)}`} download>
-            <Download className="size-4" aria-hidden /> تنزيل القالب
+            <Download className="size-4" aria-hidden /> تحميل النموذج
           </a>
         }
       />
@@ -52,7 +52,7 @@ export function ImportPanel({ templateId, title, templateFile, hint }: Props) {
             <input name="file" type="file" accept=".xlsx" required className="min-w-0 flex-1 text-sm" aria-label="ملف Excel" />
           </label>
           <Button variant="pr" type="submit" disabled={previewing}>
-            <Upload aria-hidden /> {previewing ? "بيتفحص…" : "رفع ومعاينة"}
+            <Upload aria-hidden /> {previewing ? "جارٍ الفحص…" : "رفع ومراجعة"}
           </Button>
         </form>
 
@@ -66,16 +66,16 @@ export function ImportPanel({ templateId, title, templateFile, hint }: Props) {
               <Badge tone="b">تحديث <Num>{p.counts.update}</Num></Badge>
               <Badge tone="r">أخطاء <Num>{p.counts.error}</Num></Badge>
               <Badge tone="a">تحذيرات <Num>{p.counts.warnings}</Num></Badge>
-              {p.counts.skip > 0 && <Badge tone="n">متجاهل <Num>{p.counts.skip}</Num></Badge>}
+              {p.counts.skip > 0 && <Badge tone="n">مُتجاهَل <Num>{p.counts.skip}</Num></Badge>}
               <label className="ms-auto flex items-center gap-1.5 text-tx2">
-                <input type="checkbox" checked={onlyProblems} onChange={(e) => setOnlyProblems(e.target.checked)} /> الأخطاء والتحذيرات بس
+                <input type="checkbox" checked={onlyProblems} onChange={(e) => setOnlyProblems(e.target.checked)} /> الأخطاء والتحذيرات فقط
               </label>
             </div>
             {p.notes.map((n) => <Alert key={n} tone="i">{n}</Alert>)}
             <TableWrap className="max-h-[420px] overflow-y-auto rounded-base border border-bd1">
               <Table>
                 <THead>
-                  <Tr><Th>الشيت</Th><Th align="end">الصف</Th><Th>البيان</Th><Th>الحالة</Th><Th>الملاحظات</Th></Tr>
+                  <Tr><Th>ورقة العمل</Th><Th align="end">الصف</Th><Th>البيان</Th><Th>الحالة</Th><Th>الملاحظات</Th></Tr>
                 </THead>
                 <TBody>
                   {rows.slice(0, 1000).map((r) => (
@@ -96,9 +96,9 @@ export function ImportPanel({ templateId, title, templateFile, hint }: Props) {
             <form action={commitAction} className="flex flex-wrap items-center gap-2">
               <input type="hidden" name="batchId" value={p.batchId} />
               <Button variant="ok" type="submit" disabled={committing || p.counts.create + p.counts.update === 0}>
-                {committing ? "بيتحفظ…" : `تأكيد حفظ ${p.counts.create + p.counts.update} صف`}
+                {committing ? "جارٍ الاستيراد…" : `اعتماد الاستيراد (${p.counts.create + p.counts.update} صف)`}
               </Button>
-              {p.counts.error > 0 && <span className="text-sm text-tx3">الصفوف اللي فيها أخطاء مش هتتحفظ — صلّحها في الملف وارفعه تاني.</span>}
+              {p.counts.error > 0 && <span className="text-sm text-tx3">لن تُحفظ الصفوف التي تتضمن أخطاء — يرجى تصحيحها في الملف وإعادة رفعه.</span>}
             </form>
           </>
         )}

@@ -24,7 +24,7 @@ describe('suggestCategory', () => {
       aoValue: 12_000,
     });
     expect(r.category).toBe('C2');
-    expect(r.reasons[0]).toContain('البند 1-1 تراكمي 120 من 100 (+20.0%)');
+    expect(r.reasons[0]).toContain('البند 1-1: الكمية التراكمية 120 من 100 (+20.0%)');
   });
 
   it('C3 one piastre above the AO value', () => {

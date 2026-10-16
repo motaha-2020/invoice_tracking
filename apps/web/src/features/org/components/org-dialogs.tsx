@@ -29,7 +29,7 @@ const Ctx = createContext<Api | null>(null);
 
 export function useOrgDialogs(): Api {
   const ctx = use(Ctx);
-  if (!ctx) throw new Error("useOrgDialogs لازم يتنادى جوه <OrgDialogsProvider>");
+  if (!ctx) throw new Error("يجب استدعاء useOrgDialogs داخل <OrgDialogsProvider>");
   return ctx;
 }
 
@@ -55,7 +55,7 @@ export function OrgDialogsProvider({ canEdit, options, children }: { canEdit: bo
   );
 
   const one = dialog ? KIND_LABELS[dialog.kind].one : "";
-  const title = !dialog ? "" : dialog.mode === "delete" ? `مسح ${one}` : dialog.record ? `تعديل ${one}` : `إضافة ${one}`;
+  const title = !dialog ? "" : dialog.mode === "delete" ? `حذف ${one}` : dialog.record ? `تعديل ${one}` : `إضافة ${one}`;
 
   return (
     <Ctx value={api}>
@@ -107,7 +107,7 @@ function EntityForm({ kind, record, defaults, options, onDone, onCancel }: FormP
           htmlFor={`${uid}-code`}
           required={!record}
           error={fe.code}
-          hint={record ? "الكود مش بيتغير بعد الإضافة" : "حروف وأرقام من غير مسافات (زي S-EAST) — مش هيتغير بعد الحفظ"}
+          hint={record ? "لا يمكن تغيير الكود بعد الإضافة" : "حروف وأرقام دون مسافات (مثال: S-EAST) — لا يمكن تغييره بعد الحفظ"}
           className="col-span-2 max-sm:col-span-1"
         >
           {record ? (
@@ -132,7 +132,7 @@ function EntityForm({ kind, record, defaults, options, onDone, onCancel }: FormP
       </div>
       <div className="-mx-5 -mb-[18px] mt-1 flex gap-2 border-t border-bd1 px-5 py-3">
         <Button type="submit" variant="pr" disabled={pending}>
-          {pending ? "بيتحفظ…" : record ? "حفظ التعديل" : "إضافة"}
+          {pending ? "جارٍ الحفظ…" : record ? "حفظ التعديل" : "إضافة"}
         </Button>
         <Button onClick={onCancel} disabled={pending}>
           إلغاء
@@ -154,7 +154,7 @@ function FieldInput({ f, id, value, error, options }: { f: FieldDef; id: string;
   if (f.type === "select") {
     control = (
       <Select {...common}>
-        <option value="">— اختار —</option>
+        <option value="">— اختر —</option>
         <OptionList list={options} />
       </Select>
     );
@@ -204,20 +204,20 @@ function DeleteForm({ kind, target, onDone, onCancel }: { kind: OrgKind; target:
       <input type="hidden" name="kind" value={kind} />
       <input type="hidden" name="id" value={target.id} />
       {state.message ? (
-        <Alert tone="r" title="مينفعش يتمسح">{state.message}</Alert>
+        <Alert tone="r" title="لا يمكن الحذف">{state.message}</Alert>
       ) : (
         <p className="m-0">
-          متأكد إنك عايز تمسح {one} <b>«{target.name}»</b> <span className="num text-tx3">({target.code})</span>؟ الحركة دي مش بترجع.
+          هل تريد بالتأكيد حذف {one} <b>«{target.name}»</b> <span className="num text-tx3">({target.code})</span>؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
       )}
       <div className="-mx-5 -mb-[18px] mt-1 flex gap-2 border-t border-bd1 px-5 py-3">
         {!state.message && (
           <Button type="submit" variant="dg" disabled={pending}>
-            <Trash2 aria-hidden /> {pending ? "بيتمسح…" : "مسح"}
+            <Trash2 aria-hidden /> {pending ? "جارٍ الحذف…" : "حذف"}
           </Button>
         )}
         <Button onClick={onCancel} disabled={pending}>
-          {state.message ? "تمام" : "إلغاء"}
+          {state.message ? "إغلاق" : "إلغاء"}
         </Button>
       </div>
     </form>

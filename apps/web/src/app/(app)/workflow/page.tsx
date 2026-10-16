@@ -12,15 +12,15 @@ import { SettingsForm } from "@/features/workflow/components/settings-form";
 import { SlaMatrixEditor } from "@/features/workflow/components/sla-matrix";
 import * as wf from "@/features/workflow/workflow.service";
 
-export const metadata: Metadata = { title: "المسار والـ SLA" };
+export const metadata: Metadata = { title: "مسار الاعتماد والمدد المستهدفة" };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const TABS = [
-  { key: "path", label: "المسار والـ SLA" },
-  { key: "reasons", label: "أسباب الإرجاع" },
+  { key: "path", label: "مسار الاعتماد والمدد المستهدفة" },
+  { key: "reasons", label: "أسباب الإعادة للاستيفاء" },
   { key: "docs", label: "المستندات الإلزامية" },
-  { key: "holidays", label: "الأجازات" },
+  { key: "holidays", label: "العطلات الرسمية" },
   { key: "settings", label: "الإعدادات" },
 ];
 
@@ -41,9 +41,9 @@ async function WorkflowContent({ searchParams }: { searchParams: SearchParams })
   return (
     <>
       <PageHeader
-        title="المسار والـ SLA"
-        sub="مسار كل فئة تجاوز ومدة كل محطة بأيام العمل، وأسباب الإرجاع والمستندات والأجازات"
-        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "المسار والـ SLA" }]}
+        title="مسار الاعتماد والمدد المستهدفة"
+        sub="مسار الاعتماد لكل فئة تجاوز والمدة المستهدفة (SLA) لكل مرحلة بأيام العمل الرسمية، وأسباب الإعادة للاستيفاء والمستندات والعطلات الرسمية"
+        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "مسار الاعتماد والمدد المستهدفة" }]}
       />
       <TabLinks base="/workflow" tabs={TABS} current={tab} />
       <TabBody tab={tab} actor={actor} />
@@ -66,9 +66,9 @@ async function TabBody({ tab, actor }: { tab: string; actor: SessionUser }) {
           <HolidaysPanel holidays={holidays} today={wf.todayCairo()} />
           <ImportPanel
             templateId="12_الأجازات_الرسمية"
-            title="رفع الأجازات من Excel"
+            title="استيراد العطلات الرسمية من Excel"
             templateFile="12_الأجازات_الرسمية.xlsx"
-            hint="كل يوم في صف — اليوم الموجود اسمه بيتحدث"
+            hint="كل يوم في صف مستقل — يُحدَّث اسم اليوم المسجل مسبقاً"
           />
         </div>
       );

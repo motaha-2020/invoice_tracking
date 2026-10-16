@@ -48,7 +48,7 @@ function overLines(lines: readonly CategoryLine[]): string[] {
     .map((l) => {
       const cum = l.prevQty + l.approvedQty;
       const pct = l.plannedQty ? ((cum - l.plannedQty) / l.plannedQty) * 100 : 100;
-      return `البند ${l.itemNo} تراكمي ${fmtQty(cum)} من ${fmtQty(l.plannedQty)} (+${pct.toFixed(1)}%)`;
+      return `البند ${l.itemNo}: الكمية التراكمية ${fmtQty(cum)} من ${fmtQty(l.plannedQty)} (+${pct.toFixed(1)}%)`;
     });
 }
 
@@ -65,21 +65,21 @@ function cumulativeValue(lines: readonly CategoryLine[], other: number): number 
 export function suggestCategory(input: SuggestCategoryInput): CategorySuggestion {
   const { lines, aoValue } = input;
   if (lines.some((l) => l.isNew || l.unitPrice == null)) {
-    return { category: 'C5', reasons: ['فيه بند مستجد مالوش سعر في العقد'], totalOverPct: null, cumulativeValue: null };
+    return { category: 'C5', reasons: ['يوجد بند مستجد غير مُسعّر في التعاقد'], totalOverPct: null, cumulativeValue: null };
   }
   const cumValue = cumulativeValue(lines, input.otherItemsCumulativeValue ?? 0);
   const overPct = aoValue && aoValue > 0 ? round2(((cumValue - aoValue) / aoValue) * 100) : null;
   const over = overLines(lines);
   const base = { totalOverPct: overPct, cumulativeValue: cumValue };
-  if (!over.length) return { ...base, category: 'C1', reasons: ['كل الكميات التراكمية في حدود أمر التكليف'] };
+  if (!over.length) return { ...base, category: 'C1', reasons: ['جميع الكميات التراكمية في حدود أمر التكليف'] };
   if (!aoValue || aoValue <= 0) {
-    return { ...base, category: 'C4', reasons: [...over, 'قيمة أمر التكليف غير معروفة — اتعامل كتجاوز أكبر من 25%'] };
+    return { ...base, category: 'C4', reasons: [...over, 'قيمة أمر التكليف غير معروفة — عومل كتجاوز يزيد على 25%'] };
   }
   // المقارنة بالقروش عشان الحدود (= قيمة أمر التكليف بالظبط، = 25% بالظبط) تبقى دقيقة
   const cumCents = toCents(cumValue);
   const aoCents = toCents(aoValue);
-  if (cumCents <= aoCents) return { ...base, category: 'C2', reasons: [...over, 'الإجمالي التراكمي لسه جوه قيمة أمر التكليف'] };
-  const reasons = [...over, `الإجمالي التراكمي تجاوز أمر التكليف بـ ${(overPct ?? 0).toFixed(1)}%`];
+  if (cumCents <= aoCents) return { ...base, category: 'C2', reasons: [...over, 'الإجمالي التراكمي في حدود قيمة أمر التكليف'] };
+  const reasons = [...over, `تجاوز الإجمالي التراكمي قيمة أمر التكليف بنسبة ${(overPct ?? 0).toFixed(1)}%`];
   const withinC3 = cumCents * 100 <= aoCents * (100 + C3_MAX_OVER_PCT);
   return { ...base, category: withinC3 ? 'C3' : 'C4', reasons };
 }

@@ -7,9 +7,9 @@ import { AddButton, RowActions } from "./org-buttons";
 export function WorkTypesTable({ workTypes, canEdit }: { workTypes: WorkTypeRow[]; canEdit: boolean }) {
   return (
     <Card>
-      <CardHeader title="أنواع الأعمال" sub="نوع الأعمال بيتحدد على المستخلص — ومستخلص التخطيط بيتصرف 100% بعد الانتهاء (من غير محجوز As-Built ولا تسليم)" />
+      <CardHeader title="أنواع الأعمال" sub="يُحدَّد نوع الأعمال على المستخلص — ويُسدَّد مستخلص التخطيط بنسبة 100% بعد الانتهاء (دون مبالغ محتجزة لخرائط As-Built أو للاستلام الابتدائي)" />
       {workTypes.length === 0 ? (
-        <EmptyState icon={Hammer} title="مفيش أنواع أعمال" action={<AddButton kind="workType" label="أول نوع أعمال" />} />
+        <EmptyState icon={Hammer} title="لا توجد أنواع أعمال" action={<AddButton kind="workType" label="إضافة أول نوع أعمال" />} />
       ) : (
         <TableWrap>
           <Table className="text-sm">
@@ -18,7 +18,7 @@ export function WorkTypesTable({ workTypes, canEdit }: { workTypes: WorkTypeRow[
                 <Th align="end">الترتيب</Th>
                 <Th>الكود</Th>
                 <Th>النوع</Th>
-                <Th>الصرف</Th>
+                <Th>السداد</Th>
                 <Th>الحالة</Th>
                 <Th align="end">مستخلصات</Th>
                 {canEdit && <Th><span className="sr-only">إجراءات</span></Th>}
@@ -30,8 +30,8 @@ export function WorkTypesTable({ workTypes, canEdit }: { workTypes: WorkTypeRow[
                   <Td align="end"><Num>{w.sort}</Num></Td>
                   <Td className="num whitespace-nowrap text-xs text-tx2">{w.code}</Td>
                   <Td><b className="font-semibold">{w.name}</b></Td>
-                  <Td>{w.isPlanning ? <Badge tone="b">تخطيط — 100% بعد الانتهاء</Badge> : <span className="text-xs text-tx3">حسب نسب العقد</span>}</Td>
-                  <Td>{w.active ? <Badge tone="g">شغال</Badge> : <Badge tone="n">متوقف</Badge>}</Td>
+                  <Td>{w.isPlanning ? <Badge tone="b">تخطيط — 100% بعد الانتهاء</Badge> : <span className="text-xs text-tx3">وفق نسب العقد</span>}</Td>
+                  <Td>{w.active ? <Badge tone="g">نشط</Badge> : <Badge tone="n">غير نشط</Badge>}</Td>
                   <Td align="end"><Num>{w.invoices}</Num></Td>
                   {canEdit && (
                     <Td align="end" className="whitespace-nowrap">
