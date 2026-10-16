@@ -17,7 +17,8 @@ export type NavIconName =
   | "org"
   | "package"
   | "users"
-  | "workflow";
+  | "workflow"
+  | "banknote";
 
 export type NavItem = {
   key: string;
@@ -51,6 +52,13 @@ export const NAV: readonly NavSection[] = [
   {
     title: "المتابعة والتقارير",
     items: [
+      {
+        key: "retentions",
+        href: "/retentions",
+        label: "المبالغ المحتجزة",
+        icon: "banknote",
+        roles: ["finance", "pmo", "admin", "tech_affairs", "company"],
+      },
       { key: "reports", href: "/reports", label: "التقارير والتصدير", icon: "reports", perm: "reports.view" },
       { key: "emails", href: "/emails", label: "سجل البريد الإلكتروني", icon: "mail", roles: ["pmo", "admin"] },
     ],

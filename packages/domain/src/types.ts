@@ -38,7 +38,8 @@ export type StepAction =
   | 'hold'
   | 'release'
   | 'pay'
-  | 'deductions';
+  | 'deductions'
+  | 'retention';
 
 export type DeductionType = 'asbuilt' | 'handover' | 'tax' | 'penalty' | 'other';
 

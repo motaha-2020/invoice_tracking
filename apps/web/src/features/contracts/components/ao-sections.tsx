@@ -1,13 +1,14 @@
+import type { ReactNode } from "react";
 import { Badge, Card, CardHeader, EmptyState, Money, Num, TBody, THead, Table, TableWrap, Td, Th, Tr } from "@/components/ui";
 import { formatDate, formatMoney, formatQty } from "@/lib/format";
 import { AO_CHANGE_KIND } from "../contracts.labels";
 import type { AoItemView, AoView } from "../contracts.service";
 
 /** تاريخ أمر التكليف: الملاحق وتجديدات الالتزام */
-export function AoChangesTimeline({ changes }: { changes: AoView["ao"]["changes"] }) {
+export function AoChangesTimeline({ changes, actions }: { changes: AoView["ao"]["changes"]; actions?: ReactNode }) {
   return (
     <Card>
-      <CardHeader title="ملاحق أمر التكليف وتعزيزات الارتباط المالي" sub={<span className="num">{changes.length}</span>} />
+      <CardHeader title="ملاحق أمر التكليف وتعزيزات الارتباط المالي" sub={<span className="num">{changes.length}</span>} actions={actions} />
       {changes.length === 0 ? (
         <EmptyState title="لا توجد ملاحق أو تعزيزات">
           <div className="text-[13px]">أمر التكليف بقيمته الأصلية.</div>

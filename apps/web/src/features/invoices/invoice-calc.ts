@@ -43,7 +43,7 @@ export type InvoiceCalc = {
   commitment: CommitmentState | null;
 };
 
-type CalcInput = Pick<InvoiceDetail, "id" | "seq" | "migrated" | "migratedAmount" | "deductions"> & {
+type CalcInput = Pick<InvoiceDetail, "id" | "seq" | "migrated" | "migratedAmount" | "deductions" | "deductionsSet"> & {
   ao: Pick<InvoiceDetail["ao"], "id" | "value" | "financialCommitment">;
   contract: Pick<InvoiceDetail["contract"], "vatPct" | "payMonthlyPct" | "payAsbuiltPct" | "payHandoverPct" | "planningPayPct" | "taxPct">;
   workType: Pick<NonNullable<InvoiceDetail["workType"]>, "isPlanning"> | null;
@@ -96,7 +96,8 @@ export async function calcInvoice(inv: CalcInput, rev: RevisionContent | null): 
     return { ...c, id: m.id, materialId: m.materialId, description: m.material.description, unit: m.material.unit };
   });
 
-  const deductionsOverride: DeductionInput[] | undefined = inv.deductions.length
+  // بعد ما المالية تراجع الاستقطاعات (أو بعد السداد) الصفوف المحفوظة هي المعتمدة — قبلها القيم الافتراضية من العقد
+  const deductionsOverride: DeductionInput[] | undefined = inv.deductionsSet
     ? inv.deductions.filter((d) => d.type !== "asbuilt" && d.type !== "handover").map((d) => ({ type: d.type, name: d.name, pct: n(d.pct), amount: n(d.amount) }))
     : undefined;
   const totals = invoiceTotals({

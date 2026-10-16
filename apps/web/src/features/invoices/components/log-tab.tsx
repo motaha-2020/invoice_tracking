@@ -14,7 +14,8 @@ export const ACTION_LABELS: Record<string, string> = {
   hold: "إيقاف مؤقت",
   release: "استئناف",
   pay: "تسجيل السداد",
-  deductions: "تعديل الاستقطاعات",
+  deductions: "مراجعة الاستقطاعات",
+  retention: "صرف مبلغ محتجز",
 };
 
 /** تاب سجل الإجراءات (الأحدث أولاً) */

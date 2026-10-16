@@ -1,4 +1,5 @@
 import {
+  Banknote,
   FileBarChart,
   FilePlus2,
   Files,
@@ -28,4 +29,5 @@ export const NAV_ICONS: Record<NavIconName, LucideIcon> = {
   package: Package,
   users: Users,
   workflow: GitBranch,
+  banknote: Banknote,
 };

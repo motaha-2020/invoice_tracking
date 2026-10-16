@@ -1,4 +1,5 @@
 import "server-only";
+import type { InvoiceTotals } from "@it/domain";
 import { prisma, type InvoiceStatus, type Prisma, type StepAction } from "@it/db";
 
 /**
@@ -103,4 +104,15 @@ export function latestRevision(invoiceId: string) {
 export async function setApprovedQty(tx: Tx, lineId: string, revisionId: string, qty: Prisma.Decimal | number, note: string): Promise<void> {
   const res = await tx.invoiceLine.updateMany({ where: { id: lineId, revisionId }, data: { approvedQty: qty, approveNote: note } });
   if (res.count !== 1) throw new Error("line not in latest revision");
+}
+
+/** وقت السداد: الاستقطاعات المعتمدة + المبالغ المحتجزة (قابلة للصرف لاحقاً) بتتحفظ كصفوف ثابتة */
+export async function snapshotPaidDeductions(tx: Tx, invoiceId: string, totals: InvoiceTotals, keepEdited: boolean): Promise<void> {
+  // keepEdited: المالية راجعت الاستقطاعات قبل كده — صفوفها (بأسباب الغرامات) بتفضل زي ما هي
+  await tx.invoiceDeduction.deleteMany({ where: { invoiceId, releasedAt: null, ...(keepEdited ? { type: { in: ["asbuilt", "handover"] } } : {}) } });
+  const rows: Prisma.InvoiceDeductionCreateManyInput[] = [
+    ...(keepEdited ? [] : totals.deductions).map((d) => ({ invoiceId, type: d.type, name: d.name, pct: d.pct, amount: d.amount, releasable: false })),
+    ...totals.held.map((h) => ({ invoiceId, type: h.type, name: h.name, pct: h.pct, amount: h.amount, releasable: true })),
+  ];
+  if (rows.length) await tx.invoiceDeduction.createMany({ data: rows });
 }

@@ -62,7 +62,8 @@ export function InvoiceCallouts({ v }: { v: InvoiceView }) {
     );
   }
   if (inv.status !== "paid" && inv.status !== "draft") {
-    if (calc.commitment?.warning) out.push(<Alert key="c" tone={calc.commitment.level === "exceeded" ? "r" : "a"}>{calc.commitment.warning}</Alert>);
+    if (v.payBlocked && v.access.canPay) out.push(<Alert key="pb" tone="r" title="السداد مقفل">{v.payBlocked}</Alert>);
+    else if (calc.commitment?.warning) out.push(<Alert key="c" tone={calc.commitment.level === "exceeded" ? "r" : "a"}>{calc.commitment.warning}</Alert>);
     if (v.missingDocs.length) out.push(<Alert key="m" tone="a">مستندات إلزامية غير مرفقة: {v.missingDocs.join("، ")}</Alert>);
   }
   if (inv.status === "on_hold")

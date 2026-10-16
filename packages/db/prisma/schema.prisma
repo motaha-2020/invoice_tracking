@@ -300,12 +300,12 @@ model AoItem {
 // ─────────────────────────── المهمات ───────────────────────────
 
 model Material {
-  id          String          @id @default(cuid())
-  code        String          @unique
+  id          String            @id @default(cuid())
+  code        String            @unique
   description String
   unit        String
-  suppliedBy  String?         @map("supplied_by")
-  groupName   String?         @map("group_name")
+  suppliedBy  String?           @map("supplied_by")
+  groupName   String?           @map("group_name")
   aoMaterials AoMaterial[]
   issues      MaterialIssue[]
   invoiceUses InvoiceMaterial[]
@@ -397,11 +397,11 @@ model CategoryStep {
 }
 
 model DocType {
-  id           String        @id @default(cuid())
-  code         String        @unique
-  name         String
-  requiredIn   RequiredDoc[]
-  attachments  Attachment[]
+  id          String        @id @default(cuid())
+  code        String        @unique
+  name        String
+  requiredIn  RequiredDoc[]
+  attachments Attachment[]
 
   @@map("doc_types")
 }
@@ -426,11 +426,11 @@ model RequiredDoc {
 }
 
 model ReturnReason {
-  id      String          @id @default(cuid())
-  name    String
-  active  Boolean         @default(true)
-  sort    Int             @default(0)
-  usedIn  StepLogReason[]
+  id     String          @id @default(cuid())
+  name   String
+  active Boolean         @default(true)
+  sort   Int             @default(0)
+  usedIn StepLogReason[]
 
   @@map("return_reasons")
 }
@@ -491,6 +491,8 @@ model Invoice {
   /// مستخلص مرحّل من ملفات الموقف القديمة (من غير بنود تفصيلية)
   migrated          Boolean         @default(false)
   migratedAmount    Decimal?        @map("migrated_amount") @db.Decimal(18, 2)
+  /// المالية راجعت الاستقطاعات (الصفوف في invoice_deductions هي المعتمدة حتى لو فاضية)
+  deductionsSet     Boolean         @default(false) @map("deductions_set")
   createdById       String?         @map("created_by_id")
   createdBy         User?           @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
   createdAt         DateTime        @default(now()) @map("created_at")
@@ -591,18 +593,25 @@ enum DeductionType {
 
 /// الاستقطاعات والمحجوز — releasable = بيتصرف لما المرحلة تتحقق (As-Built / التسليم الابتدائي)
 model InvoiceDeduction {
-  id         String        @id @default(cuid())
-  invoiceId  String        @map("invoice_id")
-  invoice    Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  type       DeductionType
-  name       String
-  pct        Decimal?      @db.Decimal(6, 3)
-  amount     Decimal?      @db.Decimal(18, 2)
-  releasable Boolean       @default(false)
-  releasedAt DateTime?     @map("released_at")
-  releaseRef String?       @map("release_ref")
+  id            String        @id @default(cuid())
+  invoiceId     String        @map("invoice_id")
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  type          DeductionType
+  name          String
+  pct           Decimal?      @db.Decimal(6, 3)
+  amount        Decimal?      @db.Decimal(18, 2)
+  /// سبب الغرامة / الاستقطاع
+  note          String?
+  releasable    Boolean       @default(false)
+  releasedAt    DateTime?     @map("released_at")
+  releaseRef    String?       @map("release_ref")
+  releaseMethod String?       @map("release_method")
+  releaseNote   String?       @map("release_note")
+  releasedById  String?       @map("released_by_id")
+  releasedBy    User?         @relation("DeductionReleasedBy", fields: [releasedById], references: [id])
 
   @@index([invoiceId])
+  @@index([releasable, releasedAt])
   @@map("invoice_deductions")
 }
 
@@ -617,6 +626,7 @@ enum StepAction {
   release
   pay
   deductions
+  retention
 
   @@map("step_action")
 }
@@ -676,15 +686,16 @@ model User {
   lastLoginAt  DateTime? @map("last_login_at")
   createdAt    DateTime  @default(now()) @map("created_at")
 
-  roles             UserRole[]
-  sessions          Session[]
-  invites           InviteToken[]
-  delegationsFrom   Delegation[]   @relation("DelegationFrom")
-  delegationsTo     Delegation[]   @relation("DelegationTo")
-  notifications     Notification[]
-  logEntries        StepLog[]
-  createdInvoices   Invoice[]      @relation("InvoiceCreatedBy")
-  auditEntries      AuditLog[]
+  roles              UserRole[]
+  sessions           Session[]
+  invites            InviteToken[]
+  delegationsFrom    Delegation[]       @relation("DelegationFrom")
+  delegationsTo      Delegation[]       @relation("DelegationTo")
+  notifications      Notification[]
+  logEntries         StepLog[]
+  createdInvoices    Invoice[]          @relation("InvoiceCreatedBy")
+  auditEntries       AuditLog[]
+  releasedDeductions InvoiceDeduction[] @relation("DeductionReleasedBy")
 
   @@map("users")
 }
@@ -727,14 +738,14 @@ model Delegation {
 }
 
 model Session {
-  id         String   @id
+  id        String   @id
   /// sha256 للتوكن — التوكن نفسه في الكوكي بس
-  userId     String   @map("user_id")
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt  DateTime @map("expires_at")
-  createdAt  DateTime @default(now()) @map("created_at")
-  ip         String?
-  userAgent  String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  ip        String?
+  userAgent String?  @map("user_agent")
 
   @@index([userId])
   @@map("sessions")

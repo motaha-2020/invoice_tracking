@@ -35,6 +35,8 @@ export type ActionsProps = {
   lastReturnNote: string | null;
   net: string;
   netWords: string;
+  /** سبب قفل السداد (تجاوز الارتباط المالي) */
+  payBlocked: string | null;
 };
 
 type Dialog = null | "approve" | "category" | "return" | "resubmit" | "hold" | "release" | "pay";
@@ -258,8 +260,9 @@ function PayDialog({ open, onClose, p, pending, run, overrideNote, err, setError
     run({ type: "pay", method: val("pay-method") || "شيك", ref }, onClose);
   };
   return (
-    <Modal open={open} onClose={onClose} title="تسجيل سداد المستخلص" footer={<><Button variant="pr" disabled={pending} onClick={submit}><Banknote /> تأكيد السداد</Button><Button onClick={onClose}>إلغاء</Button></>}>
+    <Modal open={open} onClose={onClose} title="تسجيل سداد المستخلص" footer={<><Button variant="pr" disabled={pending || !!p.payBlocked} onClick={submit}><Banknote /> تأكيد السداد</Button><Button onClick={onClose}>إلغاء</Button></>}>
       {overrideNote}
+      {p.payBlocked && <Alert tone="r" title="السداد مقفل">{p.payBlocked}</Alert>}
       <div className="rounded-base border border-bd1 bg-hover px-4 py-3">
         <div className="flex items-center justify-between font-bold"><span>صافي المستحق</span><Num>{p.net}</Num></div>
         <div className="mt-1 text-xs text-tx2">فقط {p.netWords}</div>

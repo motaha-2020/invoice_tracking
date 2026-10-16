@@ -14,6 +14,7 @@ import { LogTab } from "@/features/invoices/components/log-tab";
 import { MaterialsTab } from "@/features/invoices/components/materials-tab";
 import { MoneyTab } from "@/features/invoices/components/money-tab";
 import { getInvoiceView, type InvoiceView } from "@/features/invoices/invoice-view.service";
+import { localDate } from "@it/domain";
 import { formatMoney } from "@/lib/format";
 import { INVOICE_STATUS } from "@/lib/labels";
 
@@ -123,7 +124,7 @@ async function InvoiceContent({ params, searchParams }: { params: Params; search
         {tab === "lines" && <LinesTab invoiceId={inv.id} calc={calc} canEdit={v.access.canEditQty} />}
         {tab === "materials" && <MaterialsTab materials={calc.materials} />}
         {tab === "files" && <FilesTab revision={v.revision} revisions={inv.revisions} requiredDocs={v.requiredDocs} projectType={inv.ao.project?.type.name ?? null} />}
-        {tab === "money" && <MoneyTab calc={calc} inv={inv} />}
+        {tab === "money" && <MoneyTab calc={calc} inv={inv} editor={v.deductionEditor} retention={v.retention} today={localDate(new Date())} />}
         {tab === "log" && <LogTab inv={inv} steps={v.steps} />}
         {tab === "emails" && <EmailsTab emails={v.emails} />}
       </div>
@@ -153,6 +154,7 @@ function actionsProps(v: InvoiceView) {
     resubmitTo: inv.returnedFrom ? (v.steps[inv.returnedFrom]?.name ?? inv.returnedFrom) : null,
     lastReturnNote: lastReturn?.note ?? null,
     net: formatMoney(calc.totals.net),
+    payBlocked: v.payBlocked,
     netWords: calc.totals.words,
   };
 }

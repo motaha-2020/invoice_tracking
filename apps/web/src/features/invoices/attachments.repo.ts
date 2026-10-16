@@ -57,3 +57,11 @@ export function findAttachmentByPath(revisionId: string, storagePath: string) {
 export function auditInvoice(userId: string, invoiceId: string, action: string, details: Prisma.InputJsonValue) {
   return prisma.auditLog.create({ data: { userId, action, entity: "invoice", entityId: invoiceId, details }, select: { id: true } });
 }
+
+export function latestRevisionOfPaid(invoiceId: string, invoiceWhere: Prisma.InvoiceWhereInput) {
+  return prisma.invoiceRevision.findFirst({
+    where: { invoice: { AND: [{ id: invoiceId, status: "paid" }, invoiceWhere] } },
+    orderBy: { n: "desc" },
+    select: { id: true },
+  });
+}

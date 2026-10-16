@@ -5,6 +5,9 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { Badge, Card, CardHeader, EmptyState, Num, PageHeader, PageSkeleton } from "@/components/ui";
 import { AoChangesTimeline, AoItemsTable, AoMaterialsCard, AoSitesCard } from "@/features/contracts/components/ao-sections";
+import { localDate } from "@it/domain";
+import { can } from "@/features/auth/permissions";
+import { CommitmentRenewalButton } from "@/features/contracts/components/commitment-renewal";
 import { CommitmentMeter } from "@/features/contracts/components/commitment-meter";
 import { AO_STATUS } from "@/features/contracts/contracts.labels";
 import { getAoView } from "@/features/contracts/contracts.service";
@@ -35,7 +38,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 async function AoContent({ params }: { params: Params }) {
   const user = await requireNavAccess("contracts");
   const { id, aoId } = await params;
-  const view = await getAoView(user, id, aoId);
+  const [view, canRenew] = await Promise.all([getAoView(user, id, aoId), can(user, "master.import")]);
   if (!view) notFound();
   const { ao, commitment } = view;
   const st = AO_STATUS[ao.status];
@@ -81,7 +84,7 @@ async function AoContent({ params }: { params: Params }) {
             </div>
           )}
         </Card>
-        <AoChangesTimeline changes={ao.changes} />
+        <AoChangesTimeline changes={ao.changes} actions={canRenew ? <CommitmentRenewalButton aoId={ao.id} today={localDate(new Date())} /> : undefined} />
       </div>
 
       <div className="mt-5"><AoSitesCard sites={ao.sites} /></div>
