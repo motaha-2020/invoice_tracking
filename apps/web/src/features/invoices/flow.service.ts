@@ -1,5 +1,5 @@
 import "server-only";
-import { isDomainError, transition, type CategoryCode, type FlowCommand, type InvoiceFlowState } from "@it/domain";
+import { isDomainError, payBlock, transition, type CategoryCode, type FlowCommand, type InvoiceFlowState } from "@it/domain";
 import type { SessionUser } from "@/features/auth/auth.types";
 import { visibleInvoicesWhere } from "@/features/auth/scope";
 import { env } from "@/lib/env";
@@ -9,7 +9,7 @@ import { getFlowContext, isCategoryCode, type FlowContext } from "./flow-config"
 import type { MessageContext, MessageKind } from "./flow-messages";
 import { messagesFor, recipientsFor } from "./flow-notify";
 import { asCategory, flowAccess, type FlowAccess } from "./flow-access";
-import { cloneLatestRevision, setApprovedQty, writeFlow, type FlowWrite } from "./flow.repo";
+import { cloneLatestRevision, setApprovedQty, snapshotPaidDeductions, writeFlow, type FlowWrite } from "./flow.repo";
 import { calcInvoice } from "./invoice-calc";
 import { findInvoiceDetail, findRevisionContent, listActiveReturnReasons, type InvoiceDetail } from "./invoice.repo";
 
@@ -163,9 +163,15 @@ export async function act(user: SessionUser, invoiceId: string, cmd: ActCommand)
       const ref = cmd.ref.trim();
       const method = cmd.method.trim() || "شيك";
       const content = latest ? await findRevisionContent(latest.id) : null;
-      const net = (await calcInvoice(inv, content)).totals.net;
+      const calc = await calcInvoice(inv, content);
+      // قرار التشغيل: قفل تام عند تجاوز الارتباط المالي (حتى للتجاوز الإداري)
+      const blocked = payBlock(calc.commitment);
+      if (blocked) throw new AppError("CONFLICT", blocked);
+      const net = calc.totals.net;
       command = { type: "pay", ref, note: note(cmd.note ?? `تم السداد — ${method} رقم ${ref}`) ?? undefined };
-      write.extraData = { paidAt: new Date(), paymentRef: ref, paymentMethod: method, paymentAmount: net };
+      write.extraData = { paidAt: new Date(), paymentRef: ref, paymentMethod: method, paymentAmount: net, deductionsSet: true };
+      // تجميد الاستقطاعات والمحتجز وقت السداد: أي تغيير لاحق في شروط العقد ما يغيّرش مستخلص مصروف
+      write.extra = (tx) => snapshotPaidDeductions(tx, inv.id, calc.totals, inv.deductionsSet);
       kind = "paid";
       messageExtra = { paymentRef: `${method} رقم ${ref}`, amount: formatMoney(net) };
       break;

@@ -1,6 +1,7 @@
 import "server-only";
 import { checkLineRows, checkMaterialRows, type LineRowInput, type MaterialRowInput } from "@it/domain";
 import type { SessionUser } from "@/features/auth/auth.types";
+import { can } from "@/features/auth/permissions";
 import { visibleInvoicesWhere } from "@/features/auth/scope";
 import { AppError } from "@/lib/errors";
 import * as repo from "./attachments.repo";
@@ -36,6 +37,18 @@ async function editableRevision(user: SessionUser, invoiceId: string): Promise<{
   return { revisionId, aoId: inv.aoId, status: inv.status };
 }
 
+/**
+ * فين الملف يترفع: المقاول ← النسخة القابلة للتعديل.
+ * المالية (صرف المحتجز) ← آخر نسخة من مستخلص مصروف (مستند الصرف زي خرائط As-Built أو محضر الاستلام)، من غير نسخة جديدة.
+ */
+async function uploadTarget(user: SessionUser, invoiceId: string): Promise<{ revisionId: string }> {
+  if (companyIdsOf(user).length) return editableRevision(user, invoiceId);
+  if (!(await can(user, "retentions.release"))) throw new AppError("FORBIDDEN");
+  const rev = await repo.latestRevisionOfPaid(invoiceId, visibleInvoicesWhere(user));
+  if (!rev) throw new AppError("CONFLICT", "يُرفع مستند صرف المحتجز على المستخلصات التي تم سدادها فقط");
+  return { revisionId: rev.id };
+}
+
 export async function uploadAttachment(user: SessionUser, invoiceId: string, file: File, docTypeId: string | null) {
   if (!file.size) throw new AppError("VALIDATION", "الملف فارغ");
   if (file.size > MAX_ATTACHMENT_BYTES) throw new AppError("VALIDATION", `حجم الملف يتجاوز الحد الأقصى (${MAX_MB} ميجابايت)`);
@@ -44,7 +57,7 @@ export async function uploadAttachment(user: SessionUser, invoiceId: string, fil
     throw new AppError("VALIDATION", `نوع الملف غير مسموح — الأنواع المسموحة: ${Object.keys(ALLOWED_TYPES).join("، ")}`);
   }
   if (docTypeId && !(await repo.docTypeExists(docTypeId))) throw new AppError("VALIDATION", "نوع المستند غير معروف");
-  const { revisionId } = await editableRevision(user, invoiceId);
+  const { revisionId } = await uploadTarget(user, invoiceId);
   const stored = await saveFile(Buffer.from(await file.arrayBuffer()), name);
   try {
     const a = await repo.insertAttachment(

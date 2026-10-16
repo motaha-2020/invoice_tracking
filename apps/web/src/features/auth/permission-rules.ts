@@ -20,6 +20,7 @@ export const DEFAULT_PERMISSIONS = {
   ],
   "reports.export": ["admin", "pmo", "gm", "tech_affairs", "sector_head", "presidency_head", "finance", "company"],
   "deductions.edit": ["finance", "admin"],
+  "retentions.release": ["finance", "admin"],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof DEFAULT_PERMISSIONS;

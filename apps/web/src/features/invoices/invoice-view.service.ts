@@ -8,10 +8,16 @@ import {
   slaState,
   stepSegments,
   totalSlaDays,
+  payBlock,
+  releaseDocPresent,
   type CycleDays,
+  type HeldType,
   type SlaState,
 } from "@it/domain";
 import type { SessionUser } from "@/features/auth/auth.types";
+import { can } from "@/features/auth/permissions";
+import { attachedDocCodes } from "./finance.repo";
+import { deductionEditorRows, releaseDocTypes, type EditorRow } from "./finance.service";
 import { hasRole, visibleInvoicesWhere } from "@/features/auth/scope";
 import { listDocTypes } from "./draft.repo";
 import { asCategory, flowAccess, type FlowAccess } from "./flow-access";
@@ -53,6 +59,12 @@ export type InvoiceView = {
   isCompany: boolean;
   /** أنواع المستندات (للمقاول أثناء الاستيفاء بس) */
   docTypes: { id: string; name: string }[];
+  /** المالية: محرر الاستقطاعات (null = مش مسموح) */
+  deductionEditor: EditorRow[] | null;
+  /** سبب قفل السداد (تجاوز الارتباط المالي) */
+  payBlocked: string | null;
+  /** صرف المحتجز: الصلاحية + أنواع المستندات المقبولة لكل نوع */
+  retention: { canRelease: boolean; docs: Record<HeldType, { id: string; name: string }[]>; present: Record<HeldType, boolean> } | null;
 };
 
 export async function getInvoiceView(user: SessionUser, id: string): Promise<InvoiceView | null> {
@@ -68,6 +80,17 @@ export async function getInvoiceView(user: SessionUser, id: string): Promise<Inv
     isCompany ? Promise.resolve([]) : listInvoiceEmails(inv.id),
   ]);
   const calc = await calcInvoice(inv, revision);
+  const canDeductions = inv.status !== "draft" && inv.status !== "paid" && (await can(user, "deductions.edit"));
+  let retention: InvoiceView["retention"] = null;
+  if (inv.status === "paid" && inv.deductions.some((d) => d.releasable)) {
+    const codes = await attachedDocCodes(inv.id);
+    const [asbuilt, handover] = await Promise.all([releaseDocTypes("asbuilt"), releaseDocTypes("handover")]);
+    retention = {
+      canRelease: await can(user, "retentions.release"),
+      docs: { asbuilt, handover },
+      present: { asbuilt: releaseDocPresent("asbuilt", codes), handover: releaseDocPresent("handover", codes) },
+    };
+  }
 
   const cats = asCategory(inv);
   const cat = effectiveCategory({ category: cats.category, suggestedCategory: cats.suggestedCategory ?? calc.suggestion.category });
@@ -138,5 +161,8 @@ export async function getInvoiceView(user: SessionUser, id: string): Promise<Inv
     emails,
     isCompany,
     docTypes: access.companyResubmit ? await listDocTypes() : [],
+    deductionEditor: canDeductions ? await deductionEditorRows(inv, calc.totals.gross) : null,
+    payBlocked: inv.status === "active" ? payBlock(calc.commitment) : null,
+    retention,
   };
 }

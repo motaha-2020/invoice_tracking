@@ -11,7 +11,8 @@ export type MessageKind =
   | "resubmitted"
   | "held"
   | "released"
-  | "paid";
+  | "paid"
+  | "retention_released";
 
 export type MessageContext = {
   kind: MessageKind;
@@ -50,6 +51,8 @@ export function notificationTitle(c: MessageContext): string {
       return `استُؤنفت مراجعة ${no}`;
     case "paid":
       return `تم سداد ${no}`;
+    case "retention_released":
+      return `تم صرف مبلغ محتجز على ${no}`;
   }
 }
 
@@ -71,6 +74,8 @@ function headline(c: MessageContext): string {
       return `نحيطكم علماً باستئناف مراجعة المستخلص المبين أدناه في مرحلة «${c.stepName}».`;
     case "paid":
       return "نحيطكم علماً بأنه تم سداد المستخلص المبين أدناه.";
+    case "retention_released":
+      return `نحيطكم علماً بأنه تم صرف المبلغ المحتجز (${c.stepName}) على المستخلص المبين أدناه.`;
   }
 }
 

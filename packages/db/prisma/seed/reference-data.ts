@@ -130,6 +130,7 @@ export const PERMISSIONS: Record<string, Role[]> = {
     'sector_head', 'presidency_head', 'stores', 'finance', 'company'],
   'reports.export': ['admin', 'pmo', 'gm', 'tech_affairs', 'sector_head', 'presidency_head', 'finance', 'company'],
   'deductions.edit': ['finance', 'admin'],
+  'retentions.release': ['finance', 'admin'],
 };
 
 /** إعدادات افتراضية — بيانات SMTP السرية (user/password) في .env بس، مش هنا */

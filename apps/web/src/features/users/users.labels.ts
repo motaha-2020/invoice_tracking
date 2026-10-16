@@ -15,6 +15,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "reports.view": "الاطلاع على التقارير",
   "reports.export": "تصدير التقارير إلى Excel",
   "deductions.edit": "تعديل الاستقطاعات والضمانات",
+  "retentions.release": "صرف المبالغ المحتجزة (As-Built والاستلام الابتدائي)",
 };
 
 /** النطاق يعني إيه — "مين يشوف إيه" */

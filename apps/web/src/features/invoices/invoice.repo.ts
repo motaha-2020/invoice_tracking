@@ -62,6 +62,7 @@ const detailSelect = {
   paymentAmount: true,
   migrated: true,
   migratedAmount: true,
+  deductionsSet: true,
   createdAt: true,
   workType: { select: { id: true, name: true, isPlanning: true } },
   contract: {
@@ -99,7 +100,13 @@ const detailSelect = {
       _count: { select: { lines: true, materials: true, attachments: true } },
     },
   },
-  deductions: { select: { id: true, type: true, name: true, pct: true, amount: true, releasable: true } },
+  deductions: {
+    orderBy: { id: "asc" },
+    select: {
+      id: true, type: true, name: true, pct: true, amount: true, note: true, releasable: true,
+      releasedAt: true, releaseRef: true, releaseMethod: true, releaseNote: true, releasedBy: { select: { name: true } },
+    },
+  },
   log: {
     orderBy: { at: "asc" },
     select: {
