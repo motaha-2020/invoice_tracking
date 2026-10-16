@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge, CategoryBadge, Num, TBody, THead, Table, TableWrap, Td, Th, Tr } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { INVOICE_STATUS } from "@/lib/labels";
@@ -52,7 +53,9 @@ export function InvoiceTable({ rows, steps, showCompany = true }: InvoiceTablePr
             return (
               <Tr key={inv.id}>
                 <Td>
-                  <b className="num">{inv.invoiceNo}</b>
+                  <Link href={`/invoices/${inv.id}`} className="font-bold no-underline hover:underline">
+                    <span className="num">{inv.invoiceNo}</span>
+                  </Link>
                   <div className="text-xs text-tx3">
                     <Num>{inv.ao.aoNo}</Num>
                   </div>

@@ -9,13 +9,27 @@ const roleSelect = { select: { role: true, scopeType: true, scopeId: true } } as
 
 // ── الجلسات ─────────────────────────────────────────────
 
-export function findSessionWithUser(id: string) {
+/** الجلسة + المستخدم + أدوار اللي مفوّضينه النهارده (today = yyyy-mm-dd بتوقيت القاهرة) */
+export function findSessionWithUser(id: string, today: string) {
+  const day = new Date(`${today}T00:00:00Z`);
   return prisma.session.findUnique({
     where: { id },
     select: {
       id: true,
       expiresAt: true,
-      user: { select: { id: true, name: true, email: true, active: true, roles: roleSelect } },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          active: true,
+          roles: roleSelect,
+          delegationsTo: {
+            where: { startsOn: { lte: day }, endsOn: { gte: day }, fromUser: { active: true } },
+            select: { fromUser: { select: { id: true, name: true, roles: roleSelect } } },
+          },
+        },
+      },
     },
   });
 }

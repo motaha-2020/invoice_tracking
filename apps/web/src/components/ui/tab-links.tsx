@@ -5,7 +5,6 @@ export type TabDef = { key: string; label: string; count?: number };
 
 /**
  * تابات كلينكات (?tab=) — كل تاب صفحة server لوحدها، فالتنقل بيحمّل الداتا اللي محتاجها بس.
- * TODO: لو اتكررت في شاشات تانية تتنقل لـ components/ui.
  */
 export function TabLinks({ base, tabs, current }: { base: string; tabs: TabDef[]; current: string }) {
   return (

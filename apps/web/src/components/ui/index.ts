@@ -10,4 +10,5 @@ export { Money, Num } from "./num";
 export { PageHeader, type Crumb } from "./page-header";
 export { PageSkeleton, Skeleton } from "./skeleton";
 export { SlaChip, type SlaTone } from "./sla-chip";
+export { TabLinks, type TabDef } from "./tab-links";
 export { TBody, TFoot, THead, Table, TableWrap, Td, Th, Tr } from "./table";
