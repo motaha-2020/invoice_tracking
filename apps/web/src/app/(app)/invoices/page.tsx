@@ -26,8 +26,11 @@ export default function InvoicesPage({ searchParams }: { searchParams: SearchPar
 
 async function InvoicesContent({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireUser();
-  const status = parseStatus((await searchParams).status);
-  const [rows, steps, canManage] = await Promise.all([listVisibleInvoices(user, { status }), getStepNames(), can(user, "records.manage")]);
+  const sp = await searchParams;
+  const status = parseStatus(sp.status);
+  const steps = await getStepNames();
+  const step = typeof sp.step === "string" && steps[sp.step] ? sp.step : undefined;
+  const [rows, canManage] = await Promise.all([listVisibleInvoices(user, { status, step }), can(user, "records.manage")]);
   const isCompany = hasRole(user, "company");
 
   const chips: (InvoiceStatus | undefined)[] = [undefined, "active", "returned", "on_hold", "paid", ...(isCompany ? (["draft"] as const) : [])];
@@ -58,7 +61,11 @@ async function InvoicesContent({ searchParams }: { searchParams: SearchParams })
             );
           })}
         </div>
-        <CardHeader title="المستخلصات" sub={<span className="num">{rows.length}</span>} />
+        <CardHeader
+          title={step ? `المستخلصات لدى: ${steps[step]!.name}` : "المستخلصات"}
+          sub={<span className="num">{rows.length}</span>}
+          actions={step ? <Link href={status ? `/invoices?status=${status}` : "/invoices"} className="text-[13px]">إلغاء تصفية المرحلة</Link> : undefined}
+        />
         {rows.length === 0 ? (
           <EmptyState icon={Files} title="لا توجد مستخلصات">
             <div className="text-[13px]">لا توجد مستخلصات مطابقة لمعايير التصفية ضمن نطاق صلاحيتك.</div>

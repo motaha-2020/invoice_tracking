@@ -6,6 +6,8 @@ import { requireUser } from "@/features/auth/session";
 import { hasRole } from "@/features/auth/scope";
 import { InvoiceTable } from "@/features/invoices/components/invoice-table";
 import { getHomeStats, getStepNames, listSlaAlerts } from "@/features/invoices/invoices.service";
+import { GroupTable, MoneyOverview, StageBreakdown, WorkTypeBreakdown } from "@/features/insights/components/insights-cards";
+import { getDashboard } from "@/features/insights/insights.service";
 import { BackupStatus } from "@/features/system/components/backup-status";
 import { getBackupHealth } from "@/features/system/backup.service";
 import { formatCount, formatDate } from "@/lib/format";
@@ -20,7 +22,7 @@ export default function HomePage() {
 
 async function Home() {
   const user = await requireUser();
-  const [stats, alerts, steps, isAdmin] = await Promise.all([getHomeStats(user), listSlaAlerts(user), getStepNames(), can(user, "users.manage")]);
+  const [stats, alerts, steps, isAdmin, dash] = await Promise.all([getHomeStats(user), listSlaAlerts(user), getStepNames(), can(user, "users.manage"), getDashboard(user)]);
   const backup = isAdmin ? await getBackupHealth() : null;
   const isCompany = hasRole(user, "company");
   const s = stats.byStatus;
@@ -36,6 +38,13 @@ async function Home() {
         }
       />
       {backup && <BackupStatus h={backup} />}
+      <h2 className="m-0 mb-3 text-base font-bold">المؤشرات المالية</h2>
+      <MoneyOverview t={dash.insights.totals} />
+      <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <StageBreakdown stages={dash.insights.byStage} names={steps} />
+        <WorkTypeBreakdown rows={dash.insights.byWorkType} />
+      </div>
+      <h2 className="m-0 mb-3 text-base font-bold">حالة المستخلصات</h2>
       <div className="mb-4 grid grid-cols-3 gap-4 max-xl:grid-cols-2 max-sm:grid-cols-1">
         <Kpi
           icon={Inbox}
@@ -70,6 +79,12 @@ async function Home() {
           <InvoiceTable rows={alerts} steps={steps} showCompany={!isCompany} />
         )}
       </Card>
+      {!isCompany && (
+        <GroupTable title="المقاولون" rows={dash.insights.byCompany} labelHead="المقاول" href={(g) => `/companies/${g.id}`} />
+      )}
+      <GroupTable title="العقود" rows={dash.insights.byContract} labelHead="العقد" href={(g) => `/contracts/${g.id}`} />
+      <GroupTable title="المشروعات" rows={dash.insights.byProject} labelHead="المشروع" href={(g) => `/projects/${g.id}`} limit={15} />
+      {dash.truncated && <p className="mt-2 text-xs text-tx3">تتضمن المؤشرات أول 10,000 مستخلص فقط.</p>}
     </>
   );
 }

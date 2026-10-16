@@ -29,7 +29,7 @@ export function ContractsTable({ rows, showCompany = true, canManage = false }: 
                 </Link>
                 <div className="max-w-[340px] truncate text-xs text-tx3" title={c.title}>{c.title}</div>
               </Td>
-              {showCompany && <Td>{c.companyName}</Td>}
+              {showCompany && <Td><Link href={`/companies/${c.companyId}`} className="no-underline hover:underline">{c.companyName}</Link></Td>}
               <Td align="end"><Num>{formatCount(c.items)}</Num></Td>
               <Td align="end"><Num>{formatCount(c.aos)}</Num></Td>
               <Td align="end">

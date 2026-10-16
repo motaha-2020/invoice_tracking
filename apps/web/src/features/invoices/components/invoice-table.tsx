@@ -59,13 +59,25 @@ export function InvoiceTable({ rows, steps, showCompany = true, canManage = fals
                     <span className="num">{inv.invoiceNo}</span>
                   </Link>
                   <div className="text-xs text-tx3">
-                    <Num>{inv.ao.aoNo}</Num>
+                    <Link href={`/contracts/${inv.contract.id}/aos/${inv.ao.id}`} className="text-tx3 no-underline hover:underline" title="أمر التكليف"><Num>{inv.ao.aoNo}</Num></Link>
+                    {" · "}
+                    <Link href={`/contracts/${inv.contract.id}`} className="text-tx3 no-underline hover:underline" title="العقد"><Num>{inv.contract.contractNo}</Num></Link>
                   </div>
                 </Td>
-                {showCompany && <Td>{inv.contract.company.name}</Td>}
+                {showCompany && (
+                  <Td>
+                    <Link href={`/companies/${inv.contract.company.id}`} className="no-underline hover:underline">{inv.contract.company.name}</Link>
+                  </Td>
+                )}
                 <Td>
                   <div>{inv.pathName || inv.ao.project?.name || "—"}</div>
                   <div className="text-xs text-tx3">
+                    {inv.ao.project && (
+                      <>
+                        <Link href={`/projects/${inv.ao.project.id}`} className="text-tx3 no-underline hover:underline">{inv.ao.project.name}</Link>
+                        {" · "}
+                      </>
+                    )}
                     {inv.ao.project?.central.name ?? "—"}
                     {inv.workType && ` · ${inv.workType.name}`}
                   </div>

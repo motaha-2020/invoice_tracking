@@ -18,7 +18,7 @@ const listSelect = {
   payMonthlyPct: true,
   payAsbuiltPct: true,
   payHandoverPct: true,
-  company: { select: { name: true, code: true } },
+  company: { select: { id: true, name: true, code: true } },
   _count: { select: { items: { where: { isGroup: false } }, assignmentOrders: true } },
 } satisfies Prisma.ContractSelect;
 
@@ -75,7 +75,7 @@ const aoListSelect = {
   value: true,
   financialCommitment: true,
   centralText: true,
-  project: { select: { name: true, code: true, central: { select: { name: true } } } },
+  project: { select: { id: true, name: true, code: true, central: { select: { name: true } } } },
   _count: { select: { sites: true } },
 } satisfies Prisma.AssignmentOrderSelect;
 
@@ -85,7 +85,7 @@ export function findContract(id: string, where: Prisma.ContractWhereInput) {
   return prisma.contract.findFirst({
     where: { AND: [{ id }, where] },
     include: {
-      company: { select: { name: true, code: true } },
+      company: { select: { id: true, name: true, code: true } },
       items: {
         select: { id: true, itemNo: true, isGroup: true, description: true, unit: true, contractQty: true, unitPrice: true, workType: true },
         orderBy: [{ sortOrder: "asc" }, { itemNo: "asc" }],
@@ -101,8 +101,8 @@ export function findAoDetail(contractId: string, aoId: string, where: Prisma.Con
   return prisma.assignmentOrder.findFirst({
     where: { id: aoId, contractId, contract: where },
     include: {
-      contract: { select: { id: true, contractNo: true, title: true, company: { select: { name: true } } } },
-      project: { select: { name: true, code: true, central: { select: { name: true } } } },
+      contract: { select: { id: true, contractNo: true, title: true, company: { select: { id: true, name: true } } } },
+      project: { select: { id: true, name: true, code: true, central: { select: { name: true } } } },
       changes: { orderBy: [{ changeDate: "asc" }, { id: "asc" }] },
       sites: { select: { id: true, code: true, name: true, _count: { select: { aoItems: true } } }, orderBy: { code: "asc" } },
       items: {

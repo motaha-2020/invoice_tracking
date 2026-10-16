@@ -22,6 +22,7 @@ export type ContractSummary = {
   contractNo: string;
   title: string;
   currency: string;
+  companyId: string;
   companyName: string;
   contractValue: number | null;
   items: number;
@@ -42,6 +43,7 @@ export async function listContractsFor(user: SessionUser): Promise<ContractSumma
     contractNo: r.contractNo,
     title: r.title,
     currency: r.currency,
+    companyId: r.company.id,
     companyName: r.company.name,
     contractValue: n(r.contractValue),
     items: r._count.items,
@@ -70,6 +72,7 @@ export type AoSummary = {
   name: string;
   status: AoStatus;
   project: string | null;
+  projectId: string | null;
   central: string | null;
   value: number | null;
   financialCommitment: number | null;
@@ -112,6 +115,7 @@ export async function getContractView(user: SessionUser, id: string): Promise<Co
       name: a.name,
       status: a.status,
       project: a.project?.name ?? null,
+      projectId: a.project?.id ?? null,
       central: a.project?.central.name ?? a.centralText,
       value,
       financialCommitment: fc,

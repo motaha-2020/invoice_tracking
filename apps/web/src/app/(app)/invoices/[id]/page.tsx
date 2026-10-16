@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge, Card, CardBody, CardHeader, CategoryBadge, Num, PageHeader, PageSkeleton, SlaChip, TabLinks } from "@/components/ui";
@@ -59,7 +60,7 @@ async function InvoiceContent({ params, searchParams }: { params: Params; search
   return (
     <>
       <PageHeader
-        title={<>مستخلص {inv.contract.company.name} رقم <Num>{inv.invoiceNo}</Num></>}
+        title={<>مستخلص <Link href={`/companies/${inv.contract.company.id}`} className="text-inherit no-underline hover:underline">{inv.contract.company.name}</Link> رقم <Num>{inv.invoiceNo}</Num></>}
         sub={
           <>
             {inv.pathName || inv.ao.project?.name}

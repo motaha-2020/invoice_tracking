@@ -80,9 +80,16 @@ export function parseStatus(v: unknown): InvoiceStatus | undefined {
   return typeof v === "string" && (STATUSES as string[]).includes(v) ? (v as InvoiceStatus) : undefined;
 }
 
-export async function listVisibleInvoices(user: SessionUser, filter: { status?: InvoiceStatus } = {}): Promise<InvoiceListRow[]> {
-  const scope = visibleInvoicesWhere(user);
-  return enrich(await listInvoices(filter.status ? { AND: [scope, { status: filter.status }] } : scope));
+export async function listVisibleInvoices(user: SessionUser, filter: { status?: InvoiceStatus; step?: string } = {}): Promise<InvoiceListRow[]> {
+  const where: Prisma.InvoiceWhereInput[] = [visibleInvoicesWhere(user)];
+  if (filter.status) where.push({ status: filter.status });
+  if (filter.step) where.push({ currentStep: filter.step });
+  return enrich(await listInvoices(where.length === 1 ? where[0]! : { AND: where }, { take: 1000 }));
+}
+
+/** مستخلصات في نطاق المستخدم بشرط إضافي (صفحة الشركة / المشروع) */
+export async function listInvoicesWhere(user: SessionUser, where: Prisma.InvoiceWhereInput, take = 1000): Promise<InvoiceListRow[]> {
+  return enrich(await listInvoices({ AND: [visibleInvoicesWhere(user), where] }, { take }));
 }
 
 /** المستخلصات المتجاوزة للمدة أو التي قاربت على الانتهاء (للرئيسية) */

@@ -1,5 +1,6 @@
 import { ClipboardList, FileStack, ListTree, Wallet } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Card, CardHeader, EmptyState, Kpi, PageHeader, PageSkeleton } from "@/components/ui";
@@ -39,7 +40,7 @@ async function ContractContent({ params }: { params: Params }) {
     <>
       <PageHeader
         title={<>العقد <span className="num">{c.contractNo}</span></>}
-        sub={`${c.company.name} — ${c.title}`}
+        sub={<><Link href={`/companies/${c.company.id}`}>{c.company.name}</Link> — {c.title}</>}
         crumbs={[{ label: "الرئيسية", href: "/" }, { label: "العقود وأوامر التكليف", href: "/contracts" }, { label: c.contractNo }]}
         actions={
           canManage ? (

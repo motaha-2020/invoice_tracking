@@ -36,7 +36,7 @@ export function AoTable({ contractId, rows, canManage = false }: { contractId: s
                   <div className="max-w-[300px] truncate text-xs text-tx3" title={a.name}>{a.name}</div>
                 </Td>
                 <Td className="text-[13px]">
-                  <div>{a.project ?? <span className="text-tx3">غير مرتبط بمشروع</span>}</div>
+                  <div>{a.project && a.projectId ? <Link href={`/projects/${a.projectId}`} className="no-underline hover:underline">{a.project}</Link> : <span className="text-tx3">غير مرتبط بمشروع</span>}</div>
                   <div className="max-w-[240px] truncate text-xs text-tx3">{a.central ?? "—"}</div>
                 </Td>
                 <Td><Badge tone={st.tone} dot>{st.label}</Badge></Td>

@@ -29,11 +29,12 @@ const listSelect = {
   category: true,
   suggestedCategory: true,
   holdReason: true,
-  contract: { select: { contractNo: true, company: { select: { name: true } } } },
+  contract: { select: { id: true, contractNo: true, company: { select: { id: true, name: true } } } },
   ao: {
     select: {
+      id: true,
       aoNo: true,
-      project: { select: { name: true, central: { select: { name: true } } } },
+      project: { select: { id: true, name: true, central: { select: { name: true } } } },
     },
   },
 } satisfies Prisma.InvoiceSelect;

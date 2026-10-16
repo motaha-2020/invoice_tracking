@@ -1,5 +1,6 @@
 import { ListChecks } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
@@ -72,10 +73,10 @@ async function AoContent({ params }: { params: Params }) {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card accent={commitment?.level === "exceeded" ? "r" : commitment?.level === "warn" ? "a" : undefined}>
-          <CardHeader title="بيانات أمر التكليف" sub={ao.contract.company.name} />
+          <CardHeader title="بيانات أمر التكليف" sub={<Link href={`/companies/${ao.contract.company.id}`}>{ao.contract.company.name}</Link>} />
           <dl className="m-0 grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-x-5 gap-y-3.5 px-[18px] py-4 max-sm:px-3">
             <Field label="التاريخ"><Num>{formatDate(ao.aoDate)}</Num></Field>
-            <Field label="المشروع">{ao.project ? `${ao.project.name}` : <span className="text-wa7">غير مرتبط بمشروع</span>}</Field>
+            <Field label="المشروع">{ao.project ? <Link href={`/projects/${ao.project.id}`}>{ao.project.name}</Link> : <span className="text-wa7">غير مرتبط بمشروع</span>}</Field>
             <Field label="السنترال">{ao.project?.central.name ?? ao.centralText ?? "—"}</Field>
             <Field label="النطاق الجغرافي">{ao.area ?? "—"}{ao.outOfScope && <Badge tone="a" className="ms-1.5">خارج النطاق الجغرافي</Badge>}</Field>
             <Field label="القيمة الحالية"><Num>{formatMoney(ao.value, { decimals: 0 })}</Num></Field>
