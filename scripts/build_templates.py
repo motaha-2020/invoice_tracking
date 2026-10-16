@@ -79,6 +79,13 @@ def add_sheet(wb, title, cols, examples=(), group_rows=()):
                 ws.cell(row=r, column=j).number_format = "dd/mm/yyyy"
     ws.row_dimensions[1].height = 34
     ws.freeze_panes = "A3"
+    # صفوف المثال لازم تكون واضح إنها وهمية: بنضيف "مثال — " لعمود الوصف/الاسم، عشان صف حقيقي
+    # (زي "الأعمال المدنية" في المقايسة) عمره ما يطابق مثال ويتجاهل بالغلط.
+    label_keys = ("description", "name", "full_name", "path_name")
+    li = next((i for i, c in enumerate(cols) if c["key"] in label_keys), None)
+    if li is not None:
+        examples = [tuple((f"مثال — {v}" if i == li and isinstance(v, str) and v and not v.startswith("مثال") else v)
+                          for i, v in enumerate(ex)) for ex in examples]
     # نسخة من صفوف المثال في _meta — الـ parser بيتجاهل أي صف مطابق لها بالظبط (لو المستخدم نسي يمسحها)
     if examples:
         if not hasattr(wb, "_examples"):
