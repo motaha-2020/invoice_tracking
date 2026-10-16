@@ -2,10 +2,14 @@ import "server-only";
 import { todayCairo } from "@/features/workflow/workflow.service";
 import type { FlowContext } from "./flow-config";
 import { emailBody, emailSubject, notificationTitle, type MessageContext } from "./flow-messages";
-import { findRoleHolders, type InvoiceDetail } from "./invoice.repo";
+import { findRoleHolders } from "./invoice.repo";
 
 type Recipient = { id: string; name: string; email: string };
-type OrgInvoice = { contract: { company: { id: string } }; ao: Pick<InvoiceDetail["ao"], "project"> };
+type Ref = { id: string };
+type OrgInvoice = {
+  contract: { company: Ref };
+  ao: { project: { central: Ref & { dept: Ref & { generalDept: Ref & { sector: Ref & { presidency: Ref } } } } } | null };
+};
 
 /** المسؤولون عن الجهة اللي المستخلص وصل لها: المقاول، أو دور المرحلة بنطاق بيغطي المستخلص (+ البدلاء بالتفويض) */
 export async function recipientsFor(ctx: FlowContext, inv: OrgInvoice, target: string | null, excludeUserId: string): Promise<Recipient[]> {
