@@ -6,7 +6,7 @@
 import type { Role } from "@it/db";
 
 export const DEFAULT_PERMISSIONS = {
-  "invoice.create": ["company"],
+  "invoice.create": ["company", "admin"],
   "invoice.viewAll": ["admin", "pmo"],
   "invoice.override": ["admin", "pmo"],
   "master.import": ["admin", "tech_affairs"],

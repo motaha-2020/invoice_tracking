@@ -3,6 +3,10 @@ import { prisma, type Prisma } from "@it/db";
 
 /** الوصول للداتا الخاص بمسودة المستخلص (المعالج) — شركة المستخدم بتيجي في الـ where من الـ service */
 
+export async function listAllCompanyIds(): Promise<string[]> {
+  return (await prisma.company.findMany({ select: { id: true } })).map((c) => c.id);
+}
+
 export function listCompanyContracts(companyIds: string[]) {
   return prisma.contract.findMany({
     where: { companyId: { in: companyIds } },

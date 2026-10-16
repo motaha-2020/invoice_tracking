@@ -17,6 +17,8 @@ import { MoneyTab } from "@/features/invoices/components/money-tab";
 import { getInvoiceView, type InvoiceView } from "@/features/invoices/invoice-view.service";
 import { RecordActions } from "@/features/records/components/record-actions";
 import { invoiceForm } from "@/features/records/records.service";
+import { LocationButton } from "@/features/records/components/location-button";
+import { getAoLocation, getLocationOptions } from "@/features/records/location.service";
 import { localDate } from "@it/domain";
 import { formatMoney } from "@/lib/format";
 import { INVOICE_STATUS } from "@/lib/labels";
@@ -43,7 +45,7 @@ async function InvoiceContent({ params, searchParams }: { params: Params; search
   const v = await getInvoiceView(user, id);
   if (!v) notFound();
   const { inv, calc } = v;
-  const form = await invoiceForm(user, inv.id);
+  const [form, locOptions, location] = await Promise.all([invoiceForm(user, inv.id), getLocationOptions(user), getAoLocation(inv.ao.id)]);
   const tab: Tab = (TABS as readonly string[]).includes(String(sp.tab)) && !(sp.tab === "emails" && v.isCompany) ? (sp.tab as Tab) : "lines";
   const st = INVOICE_STATUS[inv.status];
   const cat = inv.category ?? null;
@@ -80,7 +82,10 @@ async function InvoiceContent({ params, searchParams }: { params: Params; search
         ]}
         actions={
           form ? (
-            <RecordActions entity="invoice" id={inv.id} name={inv.invoiceNo} form={form} labeled afterDeleteHref="/invoices" deleteWarning="سيُحذف المستخلص مع بنوده ومهماته ومرفقاته وسجل إجراءاته." />
+            <>
+              {locOptions && <LocationButton aoId={inv.ao.id} aoNo={inv.ao.aoNo} aoName={inv.pathName} invoices={1} current={location} options={locOptions} />}
+              <RecordActions entity="invoice" id={inv.id} name={inv.invoiceNo} form={form} labeled afterDeleteHref="/invoices" deleteWarning="سيُحذف المستخلص مع بنوده ومهماته ومرفقاته وسجل إجراءاته." />
+            </>
           ) : undefined
         }
       />

@@ -118,7 +118,7 @@ export const HOLIDAYS_2026: { date: string; name: string }[] = [
 
 /** صلاحيات إضافية لكل دور (غير الاعتماد في محطته) */
 export const PERMISSIONS: Record<string, Role[]> = {
-  'invoice.create': ['company'],
+  'invoice.create': ['company', 'admin'],
   'invoice.viewAll': ['admin', 'pmo'],
   'invoice.override': ['admin', 'pmo'],
   'master.import': ['admin', 'tech_affairs'],

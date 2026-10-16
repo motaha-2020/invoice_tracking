@@ -85,7 +85,8 @@ export function visibleInvoicesWhere(user: Pick<SessionUser, "roles">): Where {
   for (const rs of user.roles) {
     const c = scopeClause(rs);
     if (c === null) continue;
-    clauses.push(rs.role === "company" ? c : allOf(c, { status: { not: "draft" } }));
+    // المسودات بتظهر للمقاول، ولمدير النظام (بيقدّم نيابةً عن المقاول)
+    clauses.push(rs.role === "company" || rs.role === "admin" ? c : allOf(c, { status: { not: "draft" } }));
   }
   return anyOf(clauses);
 }

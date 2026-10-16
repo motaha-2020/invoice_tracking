@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/features/auth/session";
 import { isAppError, toArabicMessage, type ActionState } from "@/lib/errors";
+import { setAoLocation } from "./location.service";
 import { deleteRecord, updateRecord } from "./records.service";
 
 const entity = z.enum(["contract", "ao", "contractItem", "aoItem", "invoice"]);
@@ -30,6 +31,18 @@ export async function deleteRecordAction(e: unknown, recordId: unknown): Promise
     return { ok: true, message };
   } catch (err) {
     if (!isAppError(err) && !(err instanceof z.ZodError)) console.error("[records:delete]", err);
+    return { ok: false, message: toArabicMessage(err) };
+  }
+}
+
+export async function setAoLocationAction(aoId: unknown, input: unknown): Promise<ActionState> {
+  try {
+    const user = await requireUser();
+    const message = await setAoLocation(user, id.parse(aoId), input);
+    refresh();
+    return { ok: true, message };
+  } catch (err) {
+    if (!isAppError(err) && !(err instanceof z.ZodError)) console.error("[records:location]", err);
     return { ok: false, message: toArabicMessage(err) };
   }
 }

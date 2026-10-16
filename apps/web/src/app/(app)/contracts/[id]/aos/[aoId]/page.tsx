@@ -12,6 +12,8 @@ import { ContractFiles } from "@/features/contracts/components/contract-files";
 import { canEditContracts, listContractFiles } from "@/features/contracts/contract-edit.service";
 import { RecordActions } from "@/features/records/components/record-actions";
 import { aoForm } from "@/features/records/records.service";
+import { LocationButton } from "@/features/records/components/location-button";
+import { getAoLocation, getLocationOptions } from "@/features/records/location.service";
 import { CommitmentRenewalButton } from "@/features/contracts/components/commitment-renewal";
 import { CommitmentMeter } from "@/features/contracts/components/commitment-meter";
 import { AO_STATUS } from "@/features/contracts/contracts.labels";
@@ -46,7 +48,13 @@ async function AoContent({ params }: { params: Params }) {
   const [view, canRenew] = await Promise.all([getAoView(user, id, aoId), can(user, "master.import")]);
   if (!view) notFound();
   const { ao, commitment } = view;
-  const [files, canEditFiles, form] = await Promise.all([listContractFiles(ao.contract.id, ao.id), canEditContracts(user), aoForm(user, ao.id)]);
+  const [files, canEditFiles, form, locOptions, location] = await Promise.all([
+    listContractFiles(ao.contract.id, ao.id),
+    canEditContracts(user),
+    aoForm(user, ao.id),
+    getLocationOptions(user),
+    getAoLocation(ao.id),
+  ]);
   const st = AO_STATUS[ao.status];
   const over = view.items.filter((i) => i.over).length;
 
@@ -64,6 +72,7 @@ async function AoContent({ params }: { params: Params }) {
         actions={
           <>
             <Badge tone={st.tone} dot>{st.label}</Badge>
+            {locOptions && <LocationButton aoId={ao.id} aoNo={ao.aoNo} aoName={ao.name} invoices={ao._count.invoices} current={location} options={locOptions} />}
             {form && (
               <RecordActions entity="ao" id={ao.id} name={ao.aoNo} form={form} labeled afterDeleteHref={`/contracts/${ao.contract.id}`} deleteWarning="سيُحذف أمر التكليف مع بنوده ومواقعه ومهماته ومرفقاته. لا يمكن الحذف إذا كان عليه مستخلصات." />
             )}

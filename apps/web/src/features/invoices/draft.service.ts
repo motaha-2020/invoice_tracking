@@ -25,7 +25,8 @@ const n = (v: { toString(): string } | null | undefined): number | null => (v ==
 
 async function assertCreate(user: SessionUser): Promise<string[]> {
   if (!(await can(user, "invoice.create"))) throw new AppError("FORBIDDEN");
-  const ids = companyIdsOf(user);
+  // مدير النظام بيقدّم نيابةً عن أي مقاول
+  const ids = (await can(user, "records.manage")) ? await repo.listAllCompanyIds() : companyIdsOf(user);
   if (!ids.length) throw new AppError("FORBIDDEN", "حسابك غير مرتبط بشركة منفذة — يرجى التواصل مع مدير النظام");
   return ids;
 }
@@ -37,7 +38,7 @@ export async function getWizardOptions(user: SessionUser): Promise<{ contracts: 
     contracts: contracts.map((c) => ({
       id: c.id,
       contractNo: c.contractNo,
-      title: c.title,
+      title: ids.length > 1 ? `${c.company.name} — ${c.title}` : c.title,
       aos: c.assignmentOrders.map((a) => ({ id: a.id, aoNo: a.aoNo, name: a.name, project: a.project?.name ?? null, pending: a.status === "pending_approval" })),
     })),
     workTypes,
@@ -219,11 +220,19 @@ export async function submitDraft(user: SessionUser, draftId: string): Promise<{
     recipients,
   );
   const now = new Date();
+  const onBehalf = !companyIdsOf(user).includes(inv.contract.company.id);
   const ok = await writeFlow({
     invoiceId: inv.id,
     expect: { status: "draft", currentStep: null },
     data: { status: s.status, currentStep: s.currentStep, suggestedCategory: s.suggestedCategory, since: now, submittedAt: now },
-    log: { action: "submit", fromStep: "company", toStep: s.currentStep, note: res.logEntry.note, onBehalf: false, byId: user.id },
+    log: {
+      action: "submit",
+      fromStep: "company",
+      toStep: s.currentStep,
+      note: onBehalf ? `${res.logEntry.note} — قُدِّم بواسطة ${user.name} نيابةً عن المقاول` : res.logEntry.note,
+      onBehalf,
+      byId: user.id,
+    },
     audit: { userId: user.id, action: "invoice.submit", details: { suggested: s.suggestedCategory, gross: calc.totals.gross } },
     ...msgs,
   });
