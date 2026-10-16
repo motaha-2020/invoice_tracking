@@ -34,3 +34,6 @@ next-env.d.ts
 # playwright (لو اتشغل من الجذر بالغلط)
 /test-results/
 /playwright-report/
+# ── ملفات شخصية / بيانات دخول ──
+*.txt
+!**/requirements*.txt
