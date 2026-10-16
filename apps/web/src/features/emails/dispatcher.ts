@@ -1,6 +1,7 @@
 import "server-only";
 import { getMailer } from "./mailer";
 import { MAX_ATTEMPTS, claimBatch, markFailed, markSent } from "./outbox.repo";
+import { TEST_ADDRESS_NOTE, isReservedTestAddress } from "./smtp.rules";
 
 /**
  * مرسل البريد: كل 30 ثانية بياخد دفعة من email_outbox ويبعتها.
@@ -27,6 +28,10 @@ export async function dispatchOnce(): Promise<{ sent: number; failed: number }> 
   let failed = 0;
   try {
     for (const row of await claimBatch(BATCH)) {
+      if (isReservedTestAddress(row.toEmail)) {
+        await markFailed(row.id, TEST_ADDRESS_NOTE, true);
+        continue;
+      }
       try {
         await m.t.sendMail({ from: m.from, to: row.toName ? { name: row.toName, address: row.toEmail } : row.toEmail, subject: row.subject, text: row.body });
         await markSent(row.id);

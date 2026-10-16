@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_FROM_NAME, resolveSmtp } from "./smtp.rules";
+import { DEFAULT_FROM_NAME, isReservedTestAddress, resolveSmtp } from "./smtp.rules";
 
 const open = (s: string) => (s === "sealed-ok" ? "pw" : null);
 
@@ -34,5 +34,18 @@ describe("resolveSmtp", () => {
       secure: false,
       from: "u",
     });
+  });
+});
+
+describe("isReservedTestAddress", () => {
+  it("عناوين الاختبار المحجوزة", () => {
+    expect(isReservedTestAddress("test.sup@invoices.test")).toBe(true);
+    expect(isReservedTestAddress("a@example.com")).toBe(true);
+    expect(isReservedTestAddress("x@foo.invalid")).toBe(true);
+  });
+  it("العناوين الحقيقية", () => {
+    expect(isReservedTestAddress("motaha2012@gmail.com")).toBe(false);
+    expect(isReservedTestAddress("ahmad@te.eg")).toBe(false);
+    expect(isReservedTestAddress("someone@mytest.com")).toBe(false);
   });
 });

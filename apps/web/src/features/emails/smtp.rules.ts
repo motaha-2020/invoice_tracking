@@ -67,3 +67,14 @@ export function resolveSmtp(
 
 /** بصمة الإعدادات — لو اتغيرت بنعمل transport جديد */
 export const smtpFingerprint = (c: SmtpConfig) => JSON.stringify([c.host, c.port, c.secure, c.user, c.password]);
+
+/**
+ * عناوين الاختبار المحجوزة (RFC 2606/6761): ‎.test و ‎.example و ‎.invalid و example.com/org/net.
+ * مرسل البريد ما بيبعتلهاش — بتتسجل في سجل البريد فاشلة بسبب واضح (عشان المحاكاة ما تبعتش بريد حقيقي).
+ */
+export function isReservedTestAddress(email: string): boolean {
+  const domain = email.trim().toLowerCase().split("@")[1] ?? "";
+  return /\.(test|example|invalid|localhost)$/.test(domain) || /^example\.(com|org|net)$/.test(domain);
+}
+
+export const TEST_ADDRESS_NOTE = "عنوان اختبار — لا يُرسل إليه بريد";
