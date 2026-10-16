@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Mail,
   Network,
+  Package,
   Reply,
   Users,
   type LucideIcon,
@@ -24,6 +25,7 @@ export const NAV_ICONS: Record<NavIconName, LucideIcon> = {
   mail: Mail,
   contracts: FileSignature,
   org: Network,
+  package: Package,
   users: Users,
   workflow: GitBranch,
 };

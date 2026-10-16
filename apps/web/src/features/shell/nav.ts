@@ -15,6 +15,7 @@ export type NavIconName =
   | "mail"
   | "contracts"
   | "org"
+  | "package"
   | "users"
   | "workflow";
 
@@ -65,6 +66,7 @@ export const NAV: readonly NavSection[] = [
         roles: ["tech_affairs", "tech_office", "pmo", "admin", "planning", "company"],
       },
       { key: "org", href: "/org", label: "الهيكل والمشاريع", icon: "org", roles: ["admin", "pmo"] },
+      { key: "materials", href: "/materials", label: "المهمات المنصرفة", icon: "package", roles: ["stores", "pmo", "admin", "tech_affairs"] },
     ],
   },
   {

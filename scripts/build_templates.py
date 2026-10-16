@@ -8,11 +8,11 @@ build_templates.py — يبني قوالب Excel الموحدة لكل بيان�
   - صفوف مثال باللون الرمادي (بتتمسح قبل الرفع أو السيستم بيتجاهل أي صف أوله "مثال")
   - شيت "تعليمات" + شيت مخفي "_meta" فيه نوع القالب ونسخته
 """
+import json
 import os
 import sys
 
 from openpyxl import Workbook
-from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
@@ -54,8 +54,11 @@ def add_sheet(wb, title, cols, examples=(), group_rows=()):
         tech.alignment = Alignment(horizontal="center")
         tech.fill = PatternFill("solid", fgColor="FAFAFB")
         tech.border = BORDER
+        # الشرح بيروح لشيت "تعليمات" مش comment على الخلية — exceljs (في المنظومة) مش بيقرا comments بتاعة openpyxl
         if c["hint"]:
-            cell.comment = Comment(c["hint"], "المنظومة")
+            if not hasattr(wb, "_hints"):
+                wb._hints = []
+            wb._hints.append((title, c["label"], c["hint"]))
         ws.column_dimensions[get_column_letter(j)].width = c["width"]
         if c["options"]:
             dv = DataValidation(type="list", formula1='"' + ",".join(c["options"]) + '"', allow_blank=not c["req"],
@@ -76,6 +79,11 @@ def add_sheet(wb, title, cols, examples=(), group_rows=()):
                 ws.cell(row=r, column=j).number_format = "dd/mm/yyyy"
     ws.row_dimensions[1].height = 34
     ws.freeze_panes = "A3"
+    # نسخة من صفوف المثال في _meta — الـ parser بيتجاهل أي صف مطابق لها بالظبط (لو المستخدم نسي يمسحها)
+    if examples:
+        if not hasattr(wb, "_examples"):
+            wb._examples = {}
+        wb._examples[title] = [["" if v is None else str(v) for v in ex] for ex in examples]
     for i, ex in enumerate(examples):
         for j, v in enumerate(ex, 1):
             cell = ws.cell(row=3 + i, column=j, value=v)
@@ -128,6 +136,10 @@ def finish(wb, template_id, title, purpose, who, rules):
               ("• الأرقام من غير فواصل أو عملة. التواريخ يوم/شهر/سنة.", Font(name=FONT)),
               ("• عند الرفع السيستم بيعرض معاينة بكل صف وأخطاؤه قبل الحفظ — مفيش حاجة بتتحفظ قبل ما توافق.", Font(name=FONT)),
               (f"• نسخة القالب: {VERSION} — لو القالب قديم السيستم هيطلب تنزيل النسخة الجديدة.", Font(name=FONT, color="71717F"))]
+    hints = getattr(wb, "_hints", [])
+    if hints:
+        lines += [("", None), ("شرح الأعمدة", Font(name=FONT, bold=True, size=12, color=PURPLE))]
+        lines += [(f"• [{sheet}] {label}: {hint}", Font(name=FONT, size=11)) for sheet, label, hint in hints]
     for i, (t, f) in enumerate(lines, 1):
         c = ws.cell(row=i, column=1, value=t)
         if f:
@@ -136,6 +148,7 @@ def finish(wb, template_id, title, purpose, who, rules):
     meta = wb.create_sheet("_meta")
     meta["A1"], meta["B1"] = "template_id", template_id
     meta["A2"], meta["B2"] = "version", VERSION
+    meta["A3"], meta["B3"] = "examples", json.dumps(getattr(wb, "_examples", {}), ensure_ascii=False)
     meta.sheet_state = "hidden"
     del wb[wb.sheetnames[0]]  # الشيت الافتراضي الفاضي
     path = os.path.join(OUT, f"{template_id}.xlsx")

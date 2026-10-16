@@ -18,7 +18,22 @@ function cellValue(v: ExcelJS.CellValue): unknown {
   return v;
 }
 
-function parseTable(ws: ExcelJS.Worksheet): ParsedSheet {
+/** نص الخلية زي ما build_templates.py بيكتب صفوف المثال في _meta (str في بايثون) */
+function exampleText(v: unknown): string {
+  if (v == null) return "";
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return String(v).trim();
+}
+
+/**
+ * examples = صفوف المثال الرمادي من _meta. أي صف مطابق لواحد منها بالظبط بيتجاهل
+ * (المستخدم نسي يمسحها) — أما لو كتب فوقها بياناته، الصف مش هيطابق ومش هيتجاهل.
+ */
+/** فاصل بين خلايا الصف عند مقارنته بصفوف المثال (مستحيل يظهر في بيانات حقيقية) */
+const SEP = "\u0001";
+
+function parseTable(ws: ExcelJS.Worksheet, examples: string[][] = []): ParsedSheet {
+  const exampleKeys = new Set(examples.map((e) => e.join(SEP)));
   const keys: (string | null)[] = [];
   ws.getRow(2).eachCell({ includeEmpty: true }, (cell, col) => {
     const k = cellValue(cell.value);
@@ -29,13 +44,17 @@ function parseTable(ws: ExcelJS.Worksheet): ParsedSheet {
     const row = ws.getRow(r);
     const out: RawRow = { __row: r };
     let any = false;
+    const texts: string[] = [];
     keys.forEach((k, col) => {
       if (!k) return;
       const v = cellValue(row.getCell(col).value);
+      texts[col - 1] = exampleText(v);
       if (v !== null && v !== "") any = true;
       out[k] = typeof v === "string" ? v.trim() : v;
     });
-    if (any) rows.push(out);
+    const width = examples[0]?.length ?? 0;
+    const isExample = width > 0 && exampleKeys.has(Array.from({ length: width }, (_, i) => texts[i] ?? "").join(SEP));
+    if (any && !isExample) rows.push(out);
   }
   return { name: ws.name, kind: "table", rows };
 }
@@ -63,10 +82,16 @@ export async function parseWorkbook(buffer: ArrayBuffer, kvSheets: string[]): Pr
     const v = meta ? cellValue(meta.getRow(r).getCell(2).value) : null;
     return v == null ? null : String(v);
   };
+  let examples: Record<string, string[][]> = {};
+  try {
+    examples = JSON.parse(metaVal(3) ?? "{}") as Record<string, string[][]>;
+  } catch {
+    examples = {};
+  }
   const sheets: Record<string, ParsedSheet> = {};
   wb.eachSheet((ws) => {
     if (ws.name === "_meta" || ws.name === "تعليمات") return;
-    sheets[ws.name] = kvSheets.includes(ws.name) ? parseKv(ws) : parseTable(ws);
+    sheets[ws.name] = kvSheets.includes(ws.name) ? parseKv(ws) : parseTable(ws, examples[ws.name]);
   });
   return { templateId: metaVal(1), templateVersion: metaVal(2), sheets };
 }
