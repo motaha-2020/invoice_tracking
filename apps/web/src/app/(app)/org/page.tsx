@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
-import { UnderConstruction } from "@/features/shell/components/under-construction";
+import { Suspense } from "react";
+import { PageSkeleton } from "@/components/ui";
+import { OrgScreen } from "@/features/org/components/org-screen";
 
 export const metadata: Metadata = { title: "الهيكل والمشاريع" };
 
-export default function Page() {
-  return <UnderConstruction navKey="org" sub="الرئاسات والقطاعات والإدارات والسنترالات والمشاريع" />;
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default function OrgPage({ searchParams }: { searchParams: SearchParams }) {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <OrgScreen tabParam={searchParams.then((p) => p.tab)} />
+    </Suspense>
+  );
 }

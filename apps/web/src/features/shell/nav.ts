@@ -65,7 +65,7 @@ export const NAV: readonly NavSection[] = [
         icon: "contracts",
         roles: ["tech_affairs", "tech_office", "pmo", "admin", "planning", "company"],
       },
-      { key: "org", href: "/org", label: "الهيكل والمشاريع", icon: "org", roles: ["admin", "pmo"] },
+      { key: "org", href: "/org", label: "الهيكل والمشاريع", icon: "org", roles: ["admin", "pmo", "tech_affairs", "tech_office"] },
       { key: "materials", href: "/materials", label: "المهمات المنصرفة", icon: "package", roles: ["stores", "pmo", "admin", "tech_affairs"] },
     ],
   },

@@ -24,6 +24,8 @@ export type ParsedWorkbook = {
   templateId: string | null;
   templateVersion: string | null;
   sheets: Record<string, ParsedSheet>;
+  /** صفوف مطابقة لصفوف المثال في القالب واتجاهلت — بتظهر كملاحظة في المعاينة (sheet → أرقام الصفوف) */
+  skippedExamples: Record<string, number[]>;
 };
 
 export type RowStatus = "create" | "update" | "skip" | "error";

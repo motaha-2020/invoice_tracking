@@ -41,6 +41,10 @@ export async function previewImport(templateId: string, file: File, ctx: ImportC
   if (missing.length) throw new AppError("VALIDATION", `الشيتات دي ناقصة في الملف: ${missing.join("، ")} — استخدم القالب الرسمي`);
 
   const preview = await importer.validate(wb, ctx);
+  // صفوف المثال اللي اتجاهلت لازم تبان — ممكن تكون بيانات حقيقية مطابقة للمثال بالصدفة
+  for (const [sheet, rows] of Object.entries(wb.skippedExamples)) {
+    preview.notes.push(`اتجاهل ${rows.length} صف في شيت "${sheet}" لأنهم مطابقين لصفوف المثال في القالب (الصفوف ${rows.join("، ")}). لو دي بيانات حقيقية عدّل فيها أي خانة وارفع تاني.`);
+  }
   const batch = await createBatch({
     templateId,
     fileName: file.name.slice(0, 200),

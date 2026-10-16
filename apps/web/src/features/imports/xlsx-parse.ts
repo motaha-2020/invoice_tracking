@@ -32,7 +32,7 @@ function exampleText(v: unknown): string {
 /** فاصل بين خلايا الصف عند مقارنته بصفوف المثال (مستحيل يظهر في بيانات حقيقية) */
 const SEP = "\u0001";
 
-function parseTable(ws: ExcelJS.Worksheet, examples: string[][] = []): ParsedSheet {
+function parseTable(ws: ExcelJS.Worksheet, examples: string[][] = [], skipped: number[] = []): ParsedSheet {
   const exampleKeys = new Set(examples.map((e) => e.join(SEP)));
   const keys: (string | null)[] = [];
   ws.getRow(2).eachCell({ includeEmpty: true }, (cell, col) => {
@@ -54,7 +54,8 @@ function parseTable(ws: ExcelJS.Worksheet, examples: string[][] = []): ParsedShe
     });
     const width = examples[0]?.length ?? 0;
     const isExample = width > 0 && exampleKeys.has(Array.from({ length: width }, (_, i) => texts[i] ?? "").join(SEP));
-    if (any && !isExample) rows.push(out);
+    if (any && isExample) skipped.push(r);
+    else if (any) rows.push(out);
   }
   return { name: ws.name, kind: "table", rows };
 }
@@ -89,9 +90,12 @@ export async function parseWorkbook(buffer: ArrayBuffer, kvSheets: string[]): Pr
     examples = {};
   }
   const sheets: Record<string, ParsedSheet> = {};
+  const skippedExamples: Record<string, number[]> = {};
   wb.eachSheet((ws) => {
     if (ws.name === "_meta" || ws.name === "تعليمات") return;
-    sheets[ws.name] = kvSheets.includes(ws.name) ? parseKv(ws) : parseTable(ws, examples[ws.name]);
+    const skipped: number[] = [];
+    sheets[ws.name] = kvSheets.includes(ws.name) ? parseKv(ws) : parseTable(ws, examples[ws.name], skipped);
+    if (skipped.length) skippedExamples[ws.name] = skipped;
   });
-  return { templateId: metaVal(1), templateVersion: metaVal(2), sheets };
+  return { templateId: metaVal(1), templateVersion: metaVal(2), sheets, skippedExamples };
 }
