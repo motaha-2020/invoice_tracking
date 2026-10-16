@@ -7,6 +7,7 @@ import { getFlowContext, isCategoryCode } from "@/features/invoices/flow-config"
 import { recipientsFor } from "@/features/invoices/flow-notify";
 import { getSettings } from "@/features/workflow/workflow.repo";
 import { readSettings } from "@/features/workflow/workflow.rules";
+import { runBackupCheck } from "@/features/system/backup.service";
 import { env } from "@/lib/env";
 import { cairoNow, dailyDigestEmail, isDue, weeklyReportEmail, type LateItem } from "./digest.rules";
 import { claimRun, lastRun, listActiveInvoices, listUsersWithRoles, queueEmails } from "./digest.repo";
@@ -14,6 +15,7 @@ import { buildReport } from "./reports.service";
 
 const DAILY_KEY = "digest.daily.last";
 const WEEKLY_KEY = "digest.weekly.last";
+const BACKUP_CHECK_AT = "09:00";
 const WEEKLY_ROLES: Role[] = ["pmo", "sector_head", "gm"];
 
 /** الملخص اليومي: كل مسؤول عنده مستخلصات متأخرة بس يوصله إيميل بيها */
@@ -82,6 +84,11 @@ export async function digestTick(now = cairoNow()): Promise<void> {
   }
   if (now.weekday === settings.weeklyReportDay && isDue(now, settings.dailyDigestAt, await lastRun(WEEKLY_KEY)) && (await claimRun(WEEKLY_KEY, now.date))) {
     console.log(`[digest] weekly: ${await runWeeklyReport()} email(s)`);
+  }
+  // النسخ الاحتياطي (02:15) — التنبيه بعد بداية اليوم، مرة واحدة في اليوم بحد أقصى
+  if (now.time >= BACKUP_CHECK_AT) {
+    const n = await runBackupCheck(now.date);
+    if (n) console.log(`[digest] backup alert: ${n} email(s)`);
   }
 }
 

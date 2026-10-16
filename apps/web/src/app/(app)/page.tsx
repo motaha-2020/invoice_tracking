@@ -1,10 +1,13 @@
 import { CheckCircle2, FilePen, Files, Inbox, PauseCircle, Undo2 } from "lucide-react";
 import { Suspense } from "react";
 import { Card, CardBody, CardHeader, EmptyState, Kpi, PageHeader, PageSkeleton } from "@/components/ui";
+import { can } from "@/features/auth/permissions";
 import { requireUser } from "@/features/auth/session";
 import { hasRole } from "@/features/auth/scope";
 import { InvoiceTable } from "@/features/invoices/components/invoice-table";
 import { getHomeStats, getStepNames, listSlaAlerts } from "@/features/invoices/invoices.service";
+import { BackupStatus } from "@/features/system/components/backup-status";
+import { getBackupHealth } from "@/features/system/backup.service";
 import { formatCount, formatDate } from "@/lib/format";
 
 export default function HomePage() {
@@ -17,7 +20,8 @@ export default function HomePage() {
 
 async function Home() {
   const user = await requireUser();
-  const [stats, alerts, steps] = await Promise.all([getHomeStats(user), listSlaAlerts(user), getStepNames()]);
+  const [stats, alerts, steps, isAdmin] = await Promise.all([getHomeStats(user), listSlaAlerts(user), getStepNames(), can(user, "users.manage")]);
+  const backup = isAdmin ? await getBackupHealth() : null;
   const isCompany = hasRole(user, "company");
   const s = stats.byStatus;
 
@@ -31,6 +35,7 @@ async function Home() {
           </>
         }
       />
+      {backup && <BackupStatus h={backup} />}
       <div className="mb-4 grid grid-cols-3 gap-4 max-xl:grid-cols-2 max-sm:grid-cols-1">
         <Kpi
           icon={Inbox}

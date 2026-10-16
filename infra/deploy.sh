@@ -49,6 +49,26 @@ if [[ -n "$GHCR_TOKEN" ]]; then
   printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u motaha-2020 --password-stdin >/dev/null
 fi
 
+# جدولة النسخ الاحتياطي اليومي في crontab المستخدم ده (من غير sudo): سطر واحد بعلامة # invoices-backup.
+# أي سطر قديم لـ backup.sh (متضاف يدوي) بيتشال عشان مايتكررش. ولو مفيش نسخة خالص، بنعمل أول واحدة في الخلفية.
+BACKUP_DIR=/srv/invoices/backups
+ensure_backup_cron() {
+  command -v crontab >/dev/null || { echo "deploy: crontab مش موجود — جدول backup.sh يدوي" >&2; return 1; }
+  local line="15 2 * * * bash $APP_DIR/infra/backup.sh >> $BACKUP_DIR/backup.log 2>&1 # invoices-backup"
+  local cur want
+  cur="$(crontab -l 2>/dev/null || true)"
+  want="$( { grep -vF 'infra/backup.sh' <<<"$cur" || true; echo "$line"; } | sed '/^$/d')"
+  if [[ "$cur" != "$want" ]]; then
+    printf '%s\n' "$want" | crontab -
+    echo "deploy: backup cron مضبوط (يومياً 02:15)"
+  fi
+  mkdir -p "$BACKUP_DIR"
+  if ! compgen -G "$BACKUP_DIR/db-*.dump" >/dev/null; then
+    echo "deploy: مفيش نسخة احتياطية لسه — بنعمل أول واحدة في الخلفية"
+    env -u DOCKER_CONFIG setsid bash "$APP_DIR/infra/backup.sh" </dev/null >>"$BACKUP_DIR/backup.log" 2>&1 &
+  fi
+}
+
 echo "deploy: $WEB_IMAGE"
 dc --profile deploy pull -q migrate web
 if [[ -n "$GHCR_TOKEN" ]]; then docker logout ghcr.io >/dev/null 2>&1 || true; fi
@@ -60,6 +80,7 @@ for _ in $(seq 1 24); do
   status="$(docker inspect -f '{{.State.Health.Status}}' invoices-web-1 2>/dev/null || echo missing)"
   if [[ "$status" == healthy ]]; then
     echo "deploy: web healthy"
+    ensure_backup_cron || echo "deploy: warn — تعذر ضبط جدولة النسخ الاحتياطي (infra/README.md §4)" >&2
     # صورنا القديمة بس (السيرفر مشترك — مانلمسش صور n8n أو غيره)
     docker image prune -f --filter "until=168h" \
       --filter "label=org.opencontainers.image.source=https://github.com/motaha-2020/invoice_tracking" >/dev/null || true
