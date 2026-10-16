@@ -49,6 +49,7 @@ export type MigratedFields = {
   currentStep: string | null;
   heldAt: string | null;
   holdReason: string | null;
+  category: string | null;
   since: Date;
   paidAt: Date | null;
   paymentRef: string | null;

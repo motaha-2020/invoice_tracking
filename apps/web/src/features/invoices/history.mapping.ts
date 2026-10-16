@@ -2,6 +2,7 @@
  * ترحيل المستخلصات (قالب 11): ترجمة "المحطة الحالية" العربي لحالة + محطة، واستنتاج نوع الأعمال — دوال صافية.
  */
 import type { InvoiceStatus } from "@it/db";
+import { CATEGORY_CODES, CATEGORY_STEP, type CategoryCode, type WorkflowConfig } from "@it/domain";
 
 export type MigratedState = {
   status: InvoiceStatus;
@@ -48,10 +49,57 @@ const LOOKUP = new Map<string, MigratedState>(
   STEP_NAMES.flatMap(([names, state]) => names.map((n) => [normalizeArabic(n), state] as const)),
 );
 
+/**
+ * عبارات ملفات الموقف الحرّة (فيها أسماء الأشخاص)، زي "جارى التوقيع من مدير الإدارة (م/ ...)".
+ * بتتقارن بعد normalizeArabic (من غير مسافات)، والترتيب مهم: أول كلمة تطابق بتكسب.
+ */
+const PHRASES: [keywords: string[], state: MigratedState][] = [
+  [["منصرف", "تمالصرف", "مصروف"], { status: "paid", currentStep: null, heldAt: null, holdReason: null }],
+  // لسه عند المقاول (بيتجهز أو بيتقاس) — مسودة
+  [["تحتاليد", "تحتالقياس", "تقديري"], { status: "draft", currentStep: null, heldAt: null, holdReason: null }],
+  [["مخازن"], active("stores")],
+  [["فنيه"], active("tech")],
+  [["ماليه", "حسابات"], active("finance")],
+  [["مديرعام"], active("gm")],
+  [["مديراداره", "مديرالاداره", "مديرالتنفيذ"], active("exec")],
+  // مشرف التنفيذ، وتوقيع الشهادات، والمستخلص اللي اتسلّم وجاري اعتماده
+  [["مشرف", "شهاده", "شهادات", "جاريالاعتماد", "تسليمفاتوره"], active("sup")],
+];
+const HOLD_PHRASES = ["انتظاراعتمادامرالتكليف", "انتظارامرالتكليف"];
+
+function matchPhrase(t: string): MigratedState | null {
+  return PHRASES.find(([keys]) => keys.some((k) => t.includes(k)))?.[1] ?? null;
+}
+
 /** المحطة الحالية ← الحالة. null = اسم مش معروف (الـ importer بيحطه جاري عند المشرف مع تحذير) */
 export function mapStepName(name: string): MigratedState | null {
-  const st = LOOKUP.get(normalizeArabic(name));
+  const t = normalizeArabic(name);
+  const exact = LOOKUP.get(t);
+  if (exact) return { ...exact };
+  // "بانتظار اعتماد أمر التكليف" ← موقوف مؤقتاً، عند المرحلة المذكورة معاه لو فيه (غير كده المشرف)
+  if (HOLD_PHRASES.some((k) => t.includes(k))) {
+    const at = matchPhrase(HOLD_PHRASES.reduce((s, k) => s.replace(k, ""), t));
+    const step = at?.status === "active" ? at.currentStep! : "sup";
+    return { status: "on_hold", currentStep: step, heldAt: step, holdReason: HOLD_REASON_AO };
+  }
+  const st = matchPhrase(t);
   return st ? { ...st } : null;
+}
+
+/**
+ * فئة التجاوز للمستخلص المرحّل: المستخلص اللي عدّى مرحلة تحديد الفئة (أو اتصرف) لازم يكون ليه فئة
+ * عشان المسار يترسم ويكمل صح. بنختار أول فئة (C1 ← C5) مسارها فيه المرحلة الحالية.
+ * null = لسه قبل/عند مرحلة تحديد الفئة — مدير التنفيذ هو اللي يحددها.
+ */
+export function migratedCategory(config: WorkflowConfig, state: MigratedState): CategoryCode | null {
+  if (state.status === "paid") return CATEGORY_CODES[0]!;
+  const step = state.heldAt ?? state.currentStep;
+  if (!step || state.status === "draft") return null;
+  const first = config.categories[CATEGORY_CODES[0]!];
+  const ci = first?.path.findIndex((p) => p.step === CATEGORY_STEP) ?? -1;
+  const si = first?.path.findIndex((p) => p.step === step) ?? -1;
+  if (si >= 0 && si <= ci) return null;
+  return CATEGORY_CODES.find((c) => config.categories[c]?.path.some((p) => p.step === step)) ?? null;
 }
 
 /** الحالة الافتراضية لمحطة مش معروفة */

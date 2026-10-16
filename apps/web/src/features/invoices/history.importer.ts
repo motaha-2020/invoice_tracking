@@ -5,7 +5,8 @@ import { registerImporter } from "@/features/imports/registry";
 import { aoScopeWhere, isUnscoped } from "@/features/materials/ao-scope";
 import { normalizeAoNo, normalizeContractNo } from "@/features/materials/material-keys";
 import { aoIdsInScope } from "@/features/materials/materials.repo";
-import { inferWorkTypeCode, mapStepName, UNKNOWN_STEP_STATE, type MigratedState } from "./history.mapping";
+import { getFlowContext } from "./flow-config";
+import { inferWorkTypeCode, mapStepName, migratedCategory, UNKNOWN_STEP_STATE, type MigratedState } from "./history.mapping";
 import {
   createMigratedInvoice,
   ensurePendingAo,
@@ -34,6 +35,8 @@ type Row = MigratedState & {
   pathName: string;
   /** نوع الأعمال المستنتج من اسم المسار — null لو الكود مش متسجل في أنواع الأعمال */
   workTypeId: string | null;
+  /** فئة التجاوز لو المستخلص عدّى مرحلة تحديد الفئة — عشان المسار يترسم ويكمل صح */
+  category: string | null;
   amountExcl: number;
   amountIncl: number | null;
   /** ISO — المعاينة بتتخزن JSON */
@@ -64,6 +67,7 @@ export const historyImporter: Importer<Row> = {
     const existing = new Map(
       (await listExistingInvoices(contractIds, [...new Set(raw.map((r) => text(r.invoice_no)).filter(Boolean))])).map((i) => [`${i.contractId}|${i.invoiceNo}`, i]),
     );
+    const { config } = await getFlowContext();
     const workTypes = new Map((await listWorkTypesForHistory()).map((w) => [w.code, w.id]));
     const seen = new Map<string, number>();
 
@@ -97,6 +101,7 @@ export const historyImporter: Importer<Row> = {
         if (!mapped) warnings.push(`مرحلة الاعتماد "${stepName}" غير معروفة — سيُسجَّل المستخلص قيد المراجعة لدى مشرف التنفيذ`);
         state = mapped ?? { ...UNKNOWN_STEP_STATE };
       }
+      const category = migratedCategory(config, state);
 
       // ── المبالغ ──
       const excl = num(r.amount_excl_vat, "المبلغ غير شامل الضريبة", { min: 0 });
@@ -167,6 +172,7 @@ export const historyImporter: Importer<Row> = {
           invoiceNo,
           pathName: path.value!,
           workTypeId,
+          category,
           amountExcl: excl.value!,
           amountIncl: incl.value ?? null,
           since: since.value?.toISOString() ?? null,
@@ -215,6 +221,7 @@ export const historyImporter: Importer<Row> = {
         currentStep: d.currentStep,
         heldAt: d.heldAt,
         holdReason: d.holdReason,
+        category: d.category,
         // تاريخ الصرف مش معروف لو الخانة فاضية — أحسن من تاريخ وهمي في التقارير
         paidAt: paid ? since : null,
         paymentRef: d.paymentRef,
