@@ -8,10 +8,11 @@ import { useToast } from "@/components/ui/toast";
 import { ALLOWED_ACCEPT_CLIENT, fileSizeLabel } from "@/features/invoices/attachments.types";
 import { formatDateTime } from "@/lib/format";
 import type { ContractFile } from "../contract-edit.service";
-import { CONTRACT_DOC_KINDS } from "../contracts.labels";
+import { docKinds } from "../contracts.labels";
 
-/** مرفقات العقد: الكل يقدر ينزّل، والرفع والحذف للشئون الفنية ومدير النظام */
-export function ContractFiles({ contractId, files, canEdit }: { contractId: string; files: ContractFile[]; canEdit: boolean }) {
+/** مرفقات العقد أو أمر التكليف (aoId): الكل يقدر ينزّل، والرفع والحذف للشئون الفنية ومدير النظام */
+export function ContractFiles({ contractId, aoId, files, canEdit }: { contractId: string; aoId?: string; files: ContractFile[]; canEdit: boolean }) {
+  const kinds = docKinds(!!aoId);
   const toast = useToast();
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -30,6 +31,7 @@ export function ContractFiles({ contractId, files, canEdit }: { contractId: stri
         body.set("file", file);
         body.set("kind", kind);
         body.set("note", note);
+        if (aoId) body.set("aoId", aoId);
         const res = await fetch(`/api/contracts/${contractId}/files`, { method: "POST", body });
         const json = (await res.json().catch(() => ({ ok: false, message: "تعذّر رفع الملف" }))) as { ok: boolean; message?: string };
         if (!json.ok) {
@@ -60,15 +62,18 @@ export function ContractFiles({ contractId, files, canEdit }: { contractId: stri
 
   return (
     <Card className="mt-5">
-      <CardHeader title="مرفقات العقد" sub={<>برقية القبول والمقايسة والمستندات الخاصة بالعقد · <Num>{files.length}</Num></>} />
+      <CardHeader
+        title={aoId ? "مرفقات أمر التكليف" : "مرفقات العقد"}
+        sub={<>{aoId ? "خطاب أمر التكليف والملاحق والحصر وكشوف المهمات" : "برقية القبول والمقايسة والمستندات الخاصة بالعقد"} · <Num>{files.length}</Num></>}
+      />
       {canEdit && (
         <div className="grid grid-cols-[220px_minmax(0,1fr)_auto] items-center gap-2 border-b border-bd1 px-[18px] py-3 max-md:grid-cols-1 max-sm:px-3">
           <Select aria-label="نوع المستند" value={kind} onChange={(e) => { setKind(e.target.value); setError(undefined); }}>
             <option value="">— نوع المستند —</option>
-            {Object.entries(CONTRACT_DOC_KINDS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            {Object.entries(kinds).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
           </Select>
-          <Input aria-label="ملاحظة" placeholder="ملاحظة (اختياري) — مثل: رقم البرقية" value={note} onChange={(e) => setNote(e.target.value)} />
-          <input ref={input} type="file" multiple hidden accept={ALLOWED_ACCEPT_CLIENT} aria-label="ملفات العقد" onChange={(e) => upload(e.target.files)} />
+          <Input aria-label="ملاحظة" placeholder={aoId ? "ملاحظة (اختياري) — مثل: رقم الخطاب أو الموقع" : "ملاحظة (اختياري) — مثل: رقم البرقية"} value={note} onChange={(e) => setNote(e.target.value)} />
+          <input ref={input} type="file" multiple hidden accept={ALLOWED_ACCEPT_CLIENT} aria-label={aoId ? "ملفات أمر التكليف" : "ملفات العقد"} onChange={(e) => upload(e.target.files)} />
           <Button variant="pr" disabled={pending} onClick={() => (kind ? input.current?.click() : setError("يرجى اختيار نوع المستند أولاً"))}>
             <Upload aria-hidden /> {pending ? "جارٍ الرفع…" : "رفع ملفات"}
           </Button>
@@ -77,7 +82,7 @@ export function ContractFiles({ contractId, files, canEdit }: { contractId: stri
       )}
       {error && <Alert tone="r" className="mx-[18px] mt-3">{error}</Alert>}
       {files.length === 0 ? (
-        <EmptyState icon={FileText} title="لا توجد مرفقات للعقد بعد" />
+        <EmptyState icon={FileText} title={aoId ? "لا توجد مرفقات لأمر التكليف بعد" : "لا توجد مرفقات للعقد بعد"} />
       ) : (
         <ul className="m-0 list-none p-0">
           {files.map((f) => (

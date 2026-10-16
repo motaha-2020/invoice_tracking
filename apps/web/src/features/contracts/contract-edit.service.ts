@@ -6,7 +6,7 @@ import { AppError } from "@/lib/errors";
 import * as repo from "./contract-edit.repo";
 import type { ContractEditField, ContractEditInput } from "./contract-edit.schema";
 import { contractsScopeWhere, checkPaymentTerms } from "./contracts.rules";
-import { CONTRACT_DOC_KINDS, isContractDocKind, type ContractDocKind } from "./contracts.labels";
+import { docKinds, isContractDocKind, type ContractDocKind } from "./contracts.labels";
 
 /** تعديل بيانات العقد ومرفقاته: الشئون الفنية ومدير النظام (contracts.edit). العرض والتنزيل لأي حد يشوف العقد */
 async function assertEdit(user: SessionUser) {
@@ -82,15 +82,17 @@ export async function updateContractTerms(user: SessionUser, id: string, v: Cont
 
 export type ContractFile = { id: string; kind: ContractDocKind; kindLabel: string; note: string | null; fileName: string; size: number; uploadedAt: string; uploadedBy: string | null };
 
-export async function listContractFiles(contractId: string): Promise<ContractFile[]> {
-  const rows = await repo.listContractFiles(contractId);
+/** مرفقات العقد، أو مرفقات أمر تكليف واحد لو اتبعت aoId */
+export async function listContractFiles(contractId: string, aoId: string | null = null): Promise<ContractFile[]> {
+  const rows = await repo.listContractFiles(contractId, aoId);
+  const kinds = docKinds(aoId != null);
   const names = await repo.uploaderNames([...new Set(rows.map((r) => r.uploadedById).filter((x): x is string => !!x))]);
   return rows.map((r) => {
-    const kind = isContractDocKind(r.kind) ? r.kind : "other";
+    const kind = isContractDocKind(r.kind, aoId != null) ? r.kind : "other";
     return {
       id: r.id,
       kind,
-      kindLabel: CONTRACT_DOC_KINDS[kind],
+      kindLabel: kinds[kind] ?? "مستند آخر",
       note: r.note,
       fileName: r.fileName,
       size: r.size,
@@ -102,20 +104,22 @@ export async function listContractFiles(contractId: string): Promise<ContractFil
 
 const MAX_MB = MAX_ATTACHMENT_BYTES / 1024 / 1024;
 
-export async function uploadContractFile(user: SessionUser, contractId: string, file: File, kind: unknown, note: string | null): Promise<void> {
+export async function uploadContractFile(user: SessionUser, contractId: string, file: File, kind: unknown, note: string | null, aoId: string | null = null): Promise<void> {
   await assertEdit(user);
-  if (!isContractDocKind(kind)) throw new AppError("VALIDATION", "يرجى اختيار نوع المستند");
+  if (!isContractDocKind(kind, aoId != null)) throw new AppError("VALIDATION", "يرجى اختيار نوع المستند");
   if (!file.size) throw new AppError("VALIDATION", "الملف فارغ");
   if (file.size > MAX_ATTACHMENT_BYTES) throw new AppError("VALIDATION", `حجم الملف يتجاوز الحد الأقصى (${MAX_MB} ميجابايت)`);
   const name = file.name.replace(/[\\/\0]/g, "_").slice(0, 200) || "ملف";
   if (!ALLOWED_TYPES[extOf(name)]) throw new AppError("VALIDATION", `نوع الملف غير مسموح — الأنواع المسموحة: ${Object.keys(ALLOWED_TYPES).join("، ")}`);
   const c = await repo.findContractForEdit(contractId, contractsScopeWhere(user));
   if (!c) throw new AppError("NOT_FOUND", "العقد غير موجود");
+  const ao = aoId ? await repo.findAoOfContract(contractId, aoId) : null;
+  if (aoId && !ao) throw new AppError("NOT_FOUND", "أمر التكليف غير موجود في هذا العقد");
   const stored = await saveFile(Buffer.from(await file.arrayBuffer()), name);
   try {
     await repo.insertContractFile(
-      { contractId, kind, note: note?.trim().slice(0, 300) || null, fileName: name, storagePath: stored.storagePath, mimeType: stored.mimeType, size: file.size, sha256: stored.sha256, uploadedById: user.id },
-      { userId: user.id, action: "contract.file.upload", entity: "contract", details: { contractNo: c.contractNo, kind, fileName: name } },
+      { contractId, aoId: ao?.id ?? null, kind, note: note?.trim().slice(0, 300) || null, fileName: name, storagePath: stored.storagePath, mimeType: stored.mimeType, size: file.size, sha256: stored.sha256, uploadedById: user.id },
+      { userId: user.id, action: "contract.file.upload", entity: "contract", details: { contractNo: c.contractNo, aoNo: ao?.aoNo, kind, fileName: name } },
     );
   } catch (e) {
     await removeStoredFile(stored.storagePath);
@@ -133,6 +137,6 @@ export async function deleteContractFile(user: SessionUser, id: string): Promise
   await assertEdit(user);
   const f = await repo.findContractFile(id, contractsScopeWhere(user));
   if (!f) throw new AppError("NOT_FOUND", "الملف غير موجود");
-  await repo.deleteContractFile(id, { userId: user.id, action: "contract.file.delete", entity: "contract", entityId: f.contractId, details: { kind: f.kind, fileName: f.fileName } });
+  await repo.deleteContractFile(id, { userId: user.id, action: "contract.file.delete", entity: "contract", entityId: f.contractId, details: { aoId: f.aoId, kind: f.kind, fileName: f.fileName } });
   await removeStoredFile(f.storagePath);
 }

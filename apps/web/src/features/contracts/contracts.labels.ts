@@ -22,5 +22,19 @@ export const CONTRACT_DOC_KINDS = {
   other: "مستند آخر",
 } as const;
 
-export type ContractDocKind = keyof typeof CONTRACT_DOC_KINDS;
-export const isContractDocKind = (v: unknown): v is ContractDocKind => typeof v === "string" && v in CONTRACT_DOC_KINDS;
+/** أنواع مرفقات أمر التكليف — نفس العمود kind لكن للمرفقات اللي ليها ao_id */
+export const AO_DOC_KINDS = {
+  ao_letter: "خطاب أمر التكليف",
+  ao_addendum: "ملحق أمر التكليف",
+  boq: "المقايسة / حصر الأعمال",
+  materials: "كشف المهمات",
+  commitment: "خطاب الارتباط المالي",
+  recommendation: "مذكرة التوصية / الموافقة",
+  drawings: "الرسومات والمخططات",
+  other: "مستند آخر",
+} as const;
+
+export type ContractDocKind = keyof typeof CONTRACT_DOC_KINDS | keyof typeof AO_DOC_KINDS;
+/** قائمة الأنواع حسب مستوى المرفق: العقد أو أمر التكليف */
+export const docKinds = (forAo: boolean): Readonly<Record<string, string>> => (forAo ? AO_DOC_KINDS : CONTRACT_DOC_KINDS);
+export const isContractDocKind = (v: unknown, forAo = false): v is ContractDocKind => typeof v === "string" && v in docKinds(forAo);

@@ -7,6 +7,8 @@ import { Badge, Card, CardHeader, EmptyState, Num, PageHeader, PageSkeleton } fr
 import { AoChangesTimeline, AoItemsTable, AoMaterialsCard, AoSitesCard } from "@/features/contracts/components/ao-sections";
 import { localDate } from "@it/domain";
 import { can } from "@/features/auth/permissions";
+import { ContractFiles } from "@/features/contracts/components/contract-files";
+import { canEditContracts, listContractFiles } from "@/features/contracts/contract-edit.service";
 import { CommitmentRenewalButton } from "@/features/contracts/components/commitment-renewal";
 import { CommitmentMeter } from "@/features/contracts/components/commitment-meter";
 import { AO_STATUS } from "@/features/contracts/contracts.labels";
@@ -41,6 +43,7 @@ async function AoContent({ params }: { params: Params }) {
   const [view, canRenew] = await Promise.all([getAoView(user, id, aoId), can(user, "master.import")]);
   if (!view) notFound();
   const { ao, commitment } = view;
+  const [files, canEditFiles] = await Promise.all([listContractFiles(ao.contract.id, ao.id), canEditContracts(user)]);
   const st = AO_STATUS[ao.status];
   const over = view.items.filter((i) => i.over).length;
 
@@ -99,6 +102,8 @@ async function AoContent({ params }: { params: Params }) {
       </Card>
 
       <div className="mt-5"><AoMaterialsCard materials={ao.materials} /></div>
+
+      <ContractFiles contractId={ao.contract.id} aoId={ao.id} files={files} canEdit={canEditFiles} />
     </>
   );
 }

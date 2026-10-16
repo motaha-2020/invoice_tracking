@@ -21,6 +21,7 @@ export const ALLOWED_TYPES: Readonly<Record<string, string>> = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   doc: "application/msword",
   zip: "application/zip",
+  rar: "application/vnd.rar",
   dwg: "application/acad",
   kmz: "application/vnd.google-earth.kmz",
   kml: "application/vnd.google-earth.kml+xml",

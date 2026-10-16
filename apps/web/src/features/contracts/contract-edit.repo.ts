@@ -13,9 +13,10 @@ export function findContractForEdit(id: string, where: Prisma.ContractWhereInput
   return prisma.contract.findFirst({ where: { AND: [{ id }, where] } });
 }
 
-export function listContractFiles(contractId: string) {
+/** aoId = null ← مرفقات العقد نفسه، وغير كده مرفقات أمر التكليف */
+export function listContractFiles(contractId: string, aoId: string | null) {
   return prisma.contractAttachment.findMany({
-    where: { contractId },
+    where: { contractId, aoId },
     select: { id: true, kind: true, note: true, fileName: true, size: true, uploadedAt: true, uploadedById: true },
     orderBy: { uploadedAt: "desc" },
   });
@@ -38,8 +39,12 @@ export function insertContractFile(data: Prisma.ContractAttachmentUncheckedCreat
 export function findContractFile(id: string, contractWhere: Prisma.ContractWhereInput) {
   return prisma.contractAttachment.findFirst({
     where: { id, contract: contractWhere },
-    select: { id: true, contractId: true, fileName: true, storagePath: true, mimeType: true, kind: true },
+    select: { id: true, contractId: true, aoId: true, fileName: true, storagePath: true, mimeType: true, kind: true },
   });
+}
+
+export function findAoOfContract(contractId: string, aoId: string) {
+  return prisma.assignmentOrder.findFirst({ where: { id: aoId, contractId }, select: { id: true, aoNo: true } });
 }
 
 export function deleteContractFile(id: string, audit: Audit) {

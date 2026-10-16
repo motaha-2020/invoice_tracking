@@ -181,10 +181,13 @@ model Contract {
 }
 
 /// مرفقات العقد: برقية القبول، المقايسة، العقد الموقّع، الملاحق… (kind من قائمة ثابتة في contracts.labels.ts)
+/// ولو aoId موجود فالمرفق خاص بأمر التكليف ده (خطاب الإسناد، الملحق، الحصر، المهمات…)
 model ContractAttachment {
-  id           String   @id @default(cuid())
-  contractId   String   @map("contract_id")
-  contract     Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  id           String           @id @default(cuid())
+  contractId   String           @map("contract_id")
+  contract     Contract         @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  aoId         String?          @map("ao_id")
+  ao           AssignmentOrder? @relation(fields: [aoId], references: [id], onDelete: Cascade)
   kind         String
   note         String?
   fileName     String   @map("file_name")
@@ -196,6 +199,7 @@ model ContractAttachment {
   uploadedAt   DateTime @default(now()) @map("uploaded_at")
 
   @@index([contractId])
+  @@index([aoId])
   @@map("contract_attachments")
 }
 
@@ -259,6 +263,7 @@ model AssignmentOrder {
   materials AoMaterial[]
   issues    MaterialIssue[]
   invoices  Invoice[]
+  files     ContractAttachment[]
 
   @@unique([contractId, aoNo])
   @@index([projectId])
