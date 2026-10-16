@@ -16,11 +16,11 @@ function Term({ label, children, wide }: { label: string; children: ReactNode; w
 }
 
 /** كارت رأس العقد: كل الشروط من برقية القبول */
-export function TermsCard({ view }: { view: ContractView }) {
+export function TermsCard({ view, actions }: { view: ContractView; actions?: ReactNode }) {
   const c = view.contract;
   return (
     <Card>
-      <CardHeader title="شروط العقد" sub={c.company.name} />
+      <CardHeader title="شروط العقد" sub={c.company.name} actions={actions} />
       <dl className="m-0 grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-x-5 gap-y-3.5 px-[18px] py-4 max-sm:px-3">
         <Term label="موضوع العقد" wide>{c.title}</Term>
         <Term label="قيمة العقد"><Num>{formatMoney(c.contractValue, { decimals: 0 })}</Num> <span className="text-xs text-tx3">{c.currency}</span></Term>

@@ -174,9 +174,29 @@ model Contract {
   items            ContractItem[]
   assignmentOrders AssignmentOrder[]
   invoices         Invoice[]
+  attachments      ContractAttachment[]
 
   @@index([companyId])
   @@map("contracts")
+}
+
+/// مرفقات العقد: برقية القبول، المقايسة، العقد الموقّع، الملاحق… (kind من قائمة ثابتة في contracts.labels.ts)
+model ContractAttachment {
+  id           String   @id @default(cuid())
+  contractId   String   @map("contract_id")
+  contract     Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  kind         String
+  note         String?
+  fileName     String   @map("file_name")
+  storagePath  String   @map("storage_path")
+  mimeType     String   @map("mime_type")
+  size         Int
+  sha256       String
+  uploadedById String?  @map("uploaded_by_id")
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+
+  @@index([contractId])
+  @@map("contract_attachments")
 }
 
 /// بند المقايسة — متدرج (1 ← 1-1 ← 1-1-1-1). isGroup = صف عنوان. unitPrice null = مالوش سعر (C5)
