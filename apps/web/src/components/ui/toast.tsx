@@ -33,6 +33,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           return (
             <div
               key={t.id}
+              data-toast-id={t.id}
+              data-kind={t.kind}
               className={cn(
                 "flex animate-[fade_.14s_var(--ease-we)] items-center gap-2 rounded-base px-4 py-2.5 text-[13px] text-white shadow-overlay",
                 kindCls[t.kind],

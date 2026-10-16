@@ -21,7 +21,7 @@
 |---|---|
 | `compose.yml` | postgres + migrate + web |
 | `deploy.sh` | `git reset` على origin/main، وبعدين pull ← migrate ← `up -d web` ← انتظار الـ healthcheck |
-| `backup.sh` | pg_dump + أرشيف المرفقات، مع مسح أي نسخة أقدم من 14 يوم |
+| `backup.sh` | pg_dump + أرشيف المرفقات والتحقق منهم، مع مسح أي نسخة أقدم من 14 يوم، وتسجيل النتيجة في قاعدة البيانات |
 | `run.sh` | يشغّل أي أمر Node جوه `node:22` (صيانة / seed / migrate dev) |
 | `sync.sh` | تحديث الـ checkout + `npm ci` + migrate (طريقة التطوير القديمة، من غير صور) |
 | `caddy/invoices.caddy` | الـ site block (بيتطبق يدوي) |
@@ -148,10 +148,7 @@ infra/run.sh env ADMIN_EMAIL="..." ADMIN_NAME="..." npm run db:seed
 ### Caddy + backup cron
 
 - Caddy: [caddy/README.md](caddy/README.md).
-- cron للـ backup (`sudo crontab -u invoices-deploy -e`):
-  ```
-  15 2 * * * bash /srv/invoices/app/infra/backup.sh >> /srv/invoices/backups/backup.log 2>&1
-  ```
+- الـ backup cron **بيتضبط لوحده** مع كل deploy (القسم 4). لو `crontab` مش متسطّب على السيرفر (`sudo apt install cron`)، الـ deploy بيكمّل عادي وبيطبع تحذير.
 
 ---
 
@@ -196,11 +193,31 @@ WEB_IMAGE=ghcr.io/motaha-2020/invoice_tracking-web:sha-<قديم> \
 
 ## 4) Backup و Restore
 
-`backup.sh` بيعمل:
-- `db-YYYYMMDD-HHMM.dump`: pg_dump بصيغة custom.
-- `uploads-YYYYMMDD-HHMM.tar.gz`: المرفقات.
+### الجدولة (تلقائي)
 
-وبيمسح أي حاجة أقدم من 14 يوم (`KEEP_DAYS`). **انسخهم برا السيرفر كمان** (Hetzner Storage Box / rclone)، لأن النسخة على نفس الديسك مش backup حقيقي.
+`deploy.sh` بعد كل deploy ناجح:
+- بيتأكد إن crontab بتاع `invoices-deploy` فيه السطر ده بالظبط (وبيشيل أي سطر قديم لـ `backup.sh` اتضاف يدوي عشان مايتكررش):
+  ```
+  15 2 * * * bash /srv/invoices/app/infra/backup.sh >> /srv/invoices/backups/backup.log 2>&1 # invoices-backup
+  ```
+  (02:15 بتوقيت السيرفر — لو السيرفر UTC تبقى 04:15 أو 05:15 بتوقيت القاهرة).
+- لو مفيش ولا نسخة في `/srv/invoices/backups`، بيعمل أول نسخة في الخلفية على طول.
+
+للتأكد يدوي: `sudo crontab -u invoices-deploy -l` و`tail /srv/invoices/backups/backup.log`.
+
+### كل نسخة
+
+`backup.sh` بيعمل:
+- `db-YYYYMMDD-HHMM.dump`: pg_dump بصيغة custom، **وبيتحقق منها** بـ `pg_restore -l` (لازم تقرا وفيها بيانات الجداول).
+- `uploads-YYYYMMDD-HHMM.tar.gz`: المرفقات، **وبيتحقق منها** بـ `gzip -t`.
+
+وبيمسح أي حاجة أقدم من 14 يوم (`KEEP_DAYS`). الملف بيتكتب `.part` الأول، فالنسخة الناقصة عمرها ما تتعدّ نسخة.
+
+### المتابعة من جوه المنظومة
+
+بعد كل محاولة، `backup.sh` بيكتب النتيجة في `settings` (المفتاح `backup.status`): الوقت، والحجم، وعدد النسخ، والخطوة اللي فشلت لو فيه فشل.
+- **مدير النظام** بيشوف الحالة في الصفحة الرئيسية: تعمل / فشلت / متأخرة / لم تُسجَّل بعد.
+- لو آخر محاولة **فشلت**، أو آخر نسخة ناجحة **أقدم من 30 ساعة**، المنظومة بتبعت إيميل تنبيه لمديري النظام (مرة واحدة في اليوم، بعد 9 الصبح بتوقيت القاهرة). **انسخهم برا السيرفر كمان** (Hetzner Storage Box / rclone)، لأن النسخة على نفس الديسك مش backup حقيقي.
 
 Restore:
 
