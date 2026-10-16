@@ -174,13 +174,9 @@ export async function removeHoliday(actor: SessionUser, date: string) {
 
 // ── الإعدادات ───────────────────────────────────────────
 
-export type SettingsView = EditableSettings & { smtp: { host: string; port: string; from: string; fromName: string } };
-
-export async function getSettingsView(actor: SessionUser): Promise<SettingsView> {
+export async function getSettingsView(actor: SessionUser): Promise<EditableSettings> {
   await assertConfig(actor);
-  const raw = await repo.getSettings();
-  const s = (k: string) => (raw[k] == null ? "" : String(raw[k]));
-  return { ...readSettings(raw), smtp: { host: s("smtpHost"), port: s("smtpPort"), from: s("smtpFrom"), fromName: s("smtpFromName") } };
+  return readSettings(await repo.getSettings());
 }
 
 export async function saveSettings(actor: SessionUser, values: EditableSettings) {

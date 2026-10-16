@@ -3,7 +3,7 @@ import type { EmailStatus } from "@it/db";
 import type { SessionUser } from "@/features/auth/auth.types";
 import { hasRole } from "@/features/auth/scope";
 import { AppError } from "@/lib/errors";
-import { smtpInfo } from "./mailer";
+import { getSmtpConfig } from "./mailer";
 import * as repo from "./outbox.repo";
 
 /** سجل البريد الإلكتروني — PMO و Admin بس (زي القائمة) */
@@ -21,8 +21,8 @@ export async function getOutbox(user: SessionUser, filter: { status?: EmailStatu
     }),
     repo.countByStatus(),
   ]);
-  const s = smtpInfo();
-  return { rows, counts, smtp: { configured: s.configured, host: s.host, from: s.from } };
+  const s = await getSmtpConfig();
+  return { rows, counts, smtp: { configured: !!s && !s.passwordBroken, host: s?.host ?? "", from: s?.from ?? "" } };
 }
 
 export async function requeueFailed(user: SessionUser, ids: string[] | "allFailed"): Promise<number> {

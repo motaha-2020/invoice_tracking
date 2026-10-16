@@ -42,7 +42,8 @@ async function EmailsContent({ searchParams }: { searchParams: SearchParams }) {
         <Alert tone="g" className="mb-4">الإرسال مفعّل عبر الخادم <Num>{smtp.host}</Num>{smtp.from && <> من <Num>{smtp.from}</Num></>} — تُرسل الرسائل خلال دقيقة من إنشائها.</Alert>
       ) : (
         <Alert tone="a" className="mb-4" title="إرسال البريد غير مفعّل">
-          لم تُضبط بيانات خادم البريد (SMTP) على السيرفر بعد، لذا تُحفظ الرسائل هنا بحالة «قيد الإرسال» وتُرسل تلقائياً فور ضبطها.
+          لم تُضبط بيانات خادم البريد (SMTP) بعد، لذا تُحفظ الرسائل هنا بحالة «قيد الإرسال» وتُرسل تلقائياً فور ضبطها من{" "}
+          <Link href="/workflow?tab=settings">الإعدادات ← خادم البريد الإلكتروني</Link>.
         </Alert>
       )}
       <div className="mb-4 grid grid-cols-3 gap-4 max-sm:grid-cols-1">

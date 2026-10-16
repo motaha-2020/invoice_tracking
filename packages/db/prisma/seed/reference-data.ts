@@ -133,7 +133,7 @@ export const PERMISSIONS: Record<string, Role[]> = {
   'retentions.release': ['finance', 'admin'],
 };
 
-/** إعدادات افتراضية — بيانات SMTP السرية (user/password) في .env بس، مش هنا */
+/** إعدادات افتراضية — بيانات SMTP بتتعدل من شاشة «خادم البريد الإلكتروني» (كلمة السر مشفّرة، مش هنا) */
 export const SETTINGS: Record<string, string | number | boolean> = {
   slaWarnAt: 1,
   dailyDigestAt: '08:00',

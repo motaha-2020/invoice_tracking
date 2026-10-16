@@ -58,7 +58,8 @@ sudo chmod 640 /srv/invoices/.env
 | `POSTGRES_DB` | الافتراضي `invoices` |
 | `APP_URL` | `https://invoices.projectflow.site` (من غير `/` في الآخر) |
 | `SESSION_SECRET` | لو الـ web محتاجه: `openssl rand -hex 32` |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` | بيانات الإيميل |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` | اختياري — الأسهل من شاشة **الإعدادات ← خادم البريد الإلكتروني** (مدير النظام). لو الشاشة فيها خادم بتكسب على دول |
+| `SETTINGS_KEY` | اختياري: مفتاح تشفير كلمة سر البريد في قاعدة البيانات (`openssl rand -hex 32`). لو مش موجود بيتشتق من `DATABASE_URL`، فتغيير كلمة سر قاعدة البيانات بيطلب إعادة إدخال كلمة سر البريد |
 | `ADMIN_EMAIL` / `ADMIN_NAME` | اختياري هنا. بيتستخدموا مرة واحدة لإنشاء أول Admin (الخطوة 4) |
 | `WEB_IMAGE` / `MIGRATE_IMAGE` | اختياري، لتثبيت tag معيّن يدوي (`deploy.sh` بيكتب فوقهم) |
 
