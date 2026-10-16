@@ -4,7 +4,7 @@ import { PageHeader, PageSkeleton } from "@/components/ui";
 import type { SessionUser } from "@/features/auth/auth.types";
 import { ImportPanel } from "@/features/imports/components/import-panel";
 import { requireNavAccess } from "@/features/shell/nav.service";
-import { TabLinks } from "@/features/users/components/tab-links";
+import { TabLinks } from "@/components/ui/tab-links";
 import { HolidaysPanel } from "@/features/workflow/components/holidays-panel";
 import { RequiredDocs } from "@/features/workflow/components/required-docs";
 import { ReturnReasons } from "@/features/workflow/components/return-reasons";

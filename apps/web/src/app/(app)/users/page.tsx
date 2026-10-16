@@ -8,7 +8,7 @@ import { BulkInvite } from "@/features/users/components/bulk-invite";
 import { DelegationsPanel } from "@/features/users/components/delegations-panel";
 import { PermissionMatrix } from "@/features/users/components/permission-matrix";
 import { ScopeExplainer } from "@/features/users/components/scope-explainer";
-import { TabLinks } from "@/features/users/components/tab-links";
+import { TabLinks } from "@/components/ui/tab-links";
 import { UsersFilter } from "@/features/users/components/users-filter";
 import { UsersTable } from "@/features/users/components/users-table";
 import { parseRole } from "@/features/users/users.rules";

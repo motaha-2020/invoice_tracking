@@ -2,6 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import type { Role } from "@it/db";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { forbidden, redirect } from "next/navigation";
 import { cache } from "react";
 import { deleteSession, extendSession, findSessionWithUser, insertSession } from "./auth.repo";
@@ -54,7 +55,10 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   if (!token) return null;
 
   const id = hashToken(token);
-  const session = await findSessionWithUser(id);
+  // تاريخ النهارده (للتفويض) — لازم يتحسب وقت الطلب مش وقت الـ prerender
+  await connection();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date());
+  const session = await findSessionWithUser(id, today);
   if (!session) return null;
 
   const now = Date.now();
@@ -67,7 +71,11 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   }
 
   const { user } = session;
-  return { id: user.id, name: user.name, email: user.email, roles: user.roles };
+  // التفويض: البديل بيستلم أدوار المفوِّض بنطاقاتها طول فترة التفويض
+  const delegated = user.delegationsTo.flatMap((d) =>
+    d.fromUser.roles.map((r) => ({ ...r, delegatedFrom: { id: d.fromUser.id, name: d.fromUser.name } })),
+  );
+  return { id: user.id, name: user.name, email: user.email, roles: [...user.roles, ...delegated] };
 });
 
 /** لازم يكون فيه مستخدم — غير كده تحويل لصفحة الدخول */

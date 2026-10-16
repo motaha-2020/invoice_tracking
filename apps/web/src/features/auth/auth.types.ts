@@ -6,6 +6,8 @@ export type RoleScope = {
   scopeType: ScopeType;
   /** id الكيان — null لـ all */
   scopeId: string | null;
+  /** الدور ده جاي بالتفويض من مستخدم تاني (في فترة التفويض بس) */
+  delegatedFrom?: { id: string; name: string };
 };
 
 /** المستخدم الحالي زي ما الصفحات والـ services بتشوفه — من غير أي بيانات حساسة */

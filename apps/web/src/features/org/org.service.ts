@@ -123,9 +123,9 @@ export const getOrgPageData = cache(async (user: SessionUser): Promise<OrgPageDa
   };
 });
 
-/** الإضافة والتعديل والمسح والرفع: نفس صلاحية رفع البيانات الأساسية */
+/** الإضافة والتعديل والمسح والرفع: صلاحية org.manage (الافتراضي: Admin وPMO والشئون الفنية) */
 export function canEditOrg(user: SessionUser): Promise<boolean> {
-  return can(user, "master.import");
+  return can(user, "org.manage");
 }
 
 async function assertCanEdit(user: SessionUser) {
