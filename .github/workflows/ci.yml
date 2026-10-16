@@ -109,6 +109,8 @@ jobs:
       E2E_PASSWORD: ci-only-demo-password
       E2E_PORT: "3210"
       APP_URL: http://localhost:3210
+      # الـ e2e بيبعت لعناوين ‎.test على Mailpit — في الإنتاج عناوين الاختبار ما بيتبعتلهاش
+      MAIL_DELIVER_TEST_ADDRESSES: "1"
 
     steps:
       - uses: actions/checkout@v4

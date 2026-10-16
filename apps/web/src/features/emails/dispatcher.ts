@@ -9,6 +9,8 @@ import { TEST_ADDRESS_NOTE, isReservedTestAddress } from "./smtp.rules";
  * الإعدادات بتتقري كل دورة — فتفعيل البريد أو تغييره من الشاشة بيشتغل من غير restart.
  */
 const INTERVAL_MS = 30_000;
+/** بيئة الاختبار (e2e على Mailpit) بس هي اللي بتبعت لعناوين ‎.test */
+const DELIVER_TEST_ADDRESSES = process.env.MAIL_DELIVER_TEST_ADDRESSES === "1";
 const BATCH = 20;
 
 let running = false;
@@ -28,7 +30,7 @@ export async function dispatchOnce(): Promise<{ sent: number; failed: number }> 
   let failed = 0;
   try {
     for (const row of await claimBatch(BATCH)) {
-      if (isReservedTestAddress(row.toEmail)) {
+      if (!DELIVER_TEST_ADDRESSES && isReservedTestAddress(row.toEmail)) {
         await markFailed(row.id, TEST_ADDRESS_NOTE, true);
         continue;
       }
