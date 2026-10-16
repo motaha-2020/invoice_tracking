@@ -1,31 +1,38 @@
 import "server-only";
-import { getTransport, smtpInfo, FROM_NAME } from "./mailer";
+import { getMailer } from "./mailer";
 import { MAX_ATTEMPTS, claimBatch, markFailed, markSent } from "./outbox.repo";
 
 /**
  * مرسل البريد: كل 30 ثانية بياخد دفعة من email_outbox ويبعتها.
  * الفشل بيتسجل ويتعاد بعد attempts² دقيقة، وبعد 5 محاولات الرسالة بتبقى failed (وتتعاد من شاشة سجل البريد).
+ * الإعدادات بتتقري كل دورة — فتفعيل البريد أو تغييره من الشاشة بيشتغل من غير restart.
  */
 const INTERVAL_MS = 30_000;
 const BATCH = 20;
 
 let running = false;
+let lastState = "";
 
 export async function dispatchOnce(): Promise<{ sent: number; failed: number }> {
-  const t = getTransport();
-  if (!t || running) return { sent: 0, failed: 0 };
+  if (running) return { sent: 0, failed: 0 };
+  const m = await getMailer();
+  const state = m ? `on:${m.cfg.source}:${m.cfg.host}` : "off";
+  if (state !== lastState) {
+    console.log(m ? `[mail] مرسل البريد يعمل عبر ${m.cfg.host} (${m.cfg.source === "db" ? "إعدادات الشاشة" : "متغيرات البيئة"})` : "[mail] خادم البريد غير مضبوط — الرسائل تُحفظ في صندوق البريد الصادر دون إرسال");
+    lastState = state;
+  }
+  if (!m) return { sent: 0, failed: 0 };
   running = true;
   let sent = 0;
   let failed = 0;
   try {
-    const from = { name: FROM_NAME, address: smtpInfo().from };
-    for (const m of await claimBatch(BATCH)) {
+    for (const row of await claimBatch(BATCH)) {
       try {
-        await t.sendMail({ from, to: m.toName ? { name: m.toName, address: m.toEmail } : m.toEmail, subject: m.subject, text: m.body });
-        await markSent(m.id);
+        await m.t.sendMail({ from: m.from, to: row.toName ? { name: row.toName, address: row.toEmail } : row.toEmail, subject: row.subject, text: row.body });
+        await markSent(row.id);
         sent++;
       } catch (e) {
-        await markFailed(m.id, e instanceof Error ? e.message : String(e), m.attempts >= MAX_ATTEMPTS);
+        await markFailed(row.id, e instanceof Error ? e.message : String(e), row.attempts >= MAX_ATTEMPTS);
         failed++;
       }
     }
@@ -38,14 +45,10 @@ export async function dispatchOnce(): Promise<{ sent: number; failed: number }> 
 
 /** بيتنادي مرة واحدة من instrumentation.ts عند تشغيل السيرفر */
 export function startDispatcher(): void {
-  if (!smtpInfo().configured) {
-    console.log("[mail] SMTP_HOST غير مضبوط — الرسائل تُحفظ في صندوق البريد الصادر دون إرسال");
-    return;
-  }
   const g = globalThis as { __mailTimer?: ReturnType<typeof setInterval> };
   if (g.__mailTimer) return;
   g.__mailTimer = setInterval(() => {
     dispatchOnce().catch((e) => console.error("[mail] dispatch", e));
   }, INTERVAL_MS);
-  console.log(`[mail] مرسل البريد يعمل عبر ${smtpInfo().host}`);
+  dispatchOnce().catch((e) => console.error("[mail] dispatch", e));
 }

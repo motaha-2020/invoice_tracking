@@ -8,6 +8,8 @@ import { TabLinks } from "@/components/ui/tab-links";
 import { HolidaysPanel } from "@/features/workflow/components/holidays-panel";
 import { RequiredDocs } from "@/features/workflow/components/required-docs";
 import { ReturnReasons } from "@/features/workflow/components/return-reasons";
+import { SmtpForm } from "@/features/emails/components/smtp-form";
+import { getSmtpView } from "@/features/emails/smtp.service";
 import { SettingsForm } from "@/features/workflow/components/settings-form";
 import { SlaMatrixEditor } from "@/features/workflow/components/sla-matrix";
 import * as wf from "@/features/workflow/workflow.service";
@@ -74,8 +76,13 @@ async function TabBody({ tab, actor }: { tab: string; actor: SessionUser }) {
       );
     }
     case "settings": {
-      const { smtp, ...values } = await wf.getSettingsView(actor);
-      return <SettingsForm values={values} smtp={smtp} />;
+      const [values, smtp] = await Promise.all([wf.getSettingsView(actor), getSmtpView(actor)]);
+      return (
+        <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start gap-4 max-xl:grid-cols-1">
+          <SettingsForm values={values} />
+          <SmtpForm view={smtp} />
+        </div>
+      );
     }
     default: {
       const cfg = await wf.getPathConfig(actor);

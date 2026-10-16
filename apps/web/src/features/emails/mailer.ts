@@ -1,39 +1,54 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
+import { getSettings } from "@/features/workflow/workflow.repo";
+import { open } from "@/lib/secret-box";
+import { resolveSmtp, smtpFingerprint, type SmtpConfig } from "./smtp.rules";
 
 /**
- * إعدادات SMTP من البيئة (.env على السيرفر) — كلمة السر مش في قاعدة البيانات ولا في الكود.
- * SMTP_HOST فاضي = الإرسال متوقف، والرسائل بتفضل في الصندوق (pending) لحد ما يتظبط.
+ * إعدادات SMTP: من شاشة «خادم البريد الإلكتروني» (كلمة السر مشفّرة في قاعدة البيانات)،
+ * أو من متغيرات SMTP_* على السيرفر لو الشاشة فاضية. مفيش خادم = الإرسال متوقف والرسائل بتفضل pending.
  */
-export type SmtpInfo = { configured: boolean; host: string; port: number; secure: boolean; from: string };
+const CACHE_MS = 15_000;
+let cached: { at: number; cfg: SmtpConfig | null } | null = null;
 
-export function smtpInfo(): SmtpInfo {
-  const host = process.env.SMTP_HOST?.trim() ?? "";
-  const port = Number(process.env.SMTP_PORT ?? 587) || 587;
-  return {
-    configured: !!host,
-    host,
-    port,
-    secure: process.env.SMTP_SECURE === "true" || port === 465,
-    from: process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim() || "",
+export async function getSmtpConfig(): Promise<SmtpConfig | null> {
+  if (cached && Date.now() - cached.at < CACHE_MS) return cached.cfg;
+  const cfg = resolveSmtp(await getSettings(), process.env, open);
+  cached = { at: Date.now(), cfg };
+  return cfg;
+}
+
+/** بعد الحفظ من الشاشة — عشان المرسل ياخد الإعدادات الجديدة على طول */
+export function invalidateSmtpConfig(): void {
+  cached = null;
+}
+
+let transport: { key: string; t: Transporter } | null = null;
+
+export function transportFor(c: SmtpConfig, opts: { pool?: boolean } = {}): Transporter {
+  const base = {
+    host: c.host,
+    port: c.port,
+    secure: c.secure,
+    auth: c.user ? { user: c.user, pass: c.password } : undefined,
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
   };
+  return opts.pool ? nodemailer.createTransport({ ...base, pool: true, maxConnections: 2 }) : nodemailer.createTransport(base);
 }
 
-let transport: Transporter | null = null;
-
-export function getTransport(): Transporter | null {
-  const s = smtpInfo();
-  if (!s.configured) return null;
-  transport ??= nodemailer.createTransport({
-    host: s.host,
-    port: s.port,
-    secure: s.secure,
-    auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD ?? "" } : undefined,
-    pool: true,
-    maxConnections: 2,
-  });
-  return transport;
+/** transport مشترك للمرسل — بيتعمل من جديد لو الإعدادات اتغيرت */
+export async function getMailer(): Promise<{ t: Transporter; from: { name: string; address: string }; cfg: SmtpConfig } | null> {
+  const cfg = await getSmtpConfig();
+  if (!cfg || cfg.passwordBroken) {
+    transport?.t.close();
+    transport = null;
+    return null;
+  }
+  const key = smtpFingerprint(cfg);
+  if (transport?.key !== key) {
+    transport?.t.close();
+    transport = { key, t: transportFor(cfg, { pool: true }) };
+  }
+  return { t: transport.t, from: { name: cfg.fromName, address: cfg.from }, cfg };
 }
-
-/** اسم المرسل الظاهر */
-export const FROM_NAME = "منظومة تتبع المستخلصات";

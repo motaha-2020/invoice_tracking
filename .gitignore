@@ -30,3 +30,7 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 .npmrc
+
+# playwright (لو اتشغل من الجذر بالغلط)
+/test-results/
+/playwright-report/

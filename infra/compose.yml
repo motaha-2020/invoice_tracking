@@ -54,6 +54,7 @@ services:
       APP_URL: ${APP_URL:-https://invoices.projectflow.site}
       SESSION_SECRET: ${SESSION_SECRET:-}
       COOKIE_SECURE: ${COOKIE_SECURE:-}
+      SETTINGS_KEY: ${SETTINGS_KEY:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_SECURE: ${SMTP_SECURE:-false}
