@@ -132,6 +132,7 @@ export const PERMISSIONS: Record<string, Role[]> = {
   'deductions.edit': ['finance', 'admin'],
   'retentions.release': ['finance', 'admin'],
   'contracts.edit': ['tech_affairs', 'admin'],
+  'records.manage': ['admin'],
 };
 
 /** إعدادات افتراضية — بيانات SMTP بتتعدل من شاشة «خادم البريد الإلكتروني» (كلمة السر مشفّرة، مش هنا) */

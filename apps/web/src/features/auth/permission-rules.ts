@@ -22,6 +22,8 @@ export const DEFAULT_PERMISSIONS = {
   "deductions.edit": ["finance", "admin"],
   "retentions.release": ["finance", "admin"],
   "contracts.edit": ["tech_affairs", "admin"],
+  /** تعديل وحذف السجلات (العقود، أوامر التكليف، البنود، المستخلصات، الهيكل) — مدير النظام فقط */
+  "records.manage": ["admin"],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof DEFAULT_PERMISSIONS;

@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Money, Num, TBody, THead, Table, TableWrap, Td, Th, Tr } from "@/components/ui";
 import { formatCount, formatMoney } from "@/lib/format";
+import { RecordActions } from "@/features/records/components/record-actions";
 import type { ContractSummary } from "../contracts.service";
 
-export function ContractsTable({ rows, showCompany = true }: { rows: ContractSummary[]; showCompany?: boolean }) {
+export function ContractsTable({ rows, showCompany = true, canManage = false }: { rows: ContractSummary[]; showCompany?: boolean; canManage?: boolean }) {
   return (
     <TableWrap>
       <Table>
@@ -16,6 +17,7 @@ export function ContractsTable({ rows, showCompany = true }: { rows: ContractSum
             <Th align="end">قيمة أوامر التكليف</Th>
             <Th align="end">القيمة المفوترة</Th>
             <Th>شروط السداد</Th>
+            {canManage && <Th><span className="sr-only">إجراءات</span></Th>}
           </tr>
         </THead>
         <TBody>
@@ -40,6 +42,11 @@ export function ContractsTable({ rows, showCompany = true }: { rows: ContractSum
               </Td>
               <Td align="end"><Money>{formatMoney(c.billed, { decimals: 0 })}</Money></Td>
               <Td className="text-[13px]"><span dir="ltr" className="num">{c.terms}</span></Td>
+              {canManage && (
+                <Td className="whitespace-nowrap">
+                  <RecordActions entity="contract" id={c.id} name={c.contractNo} editHref={`/contracts/${c.id}`} deleteWarning="سيُحذف العقد مع جدول الكميات وجميع أوامر التكليف والمرفقات. لا يمكن الحذف إذا كان على العقد مستخلصات." />
+                </Td>
+              )}
             </Tr>
           ))}
         </TBody>

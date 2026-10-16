@@ -3,9 +3,10 @@ import { Badge, Money, Num, TBody, THead, Table, TableWrap, Td, Th, Tr } from "@
 import { formatCount, formatMoney } from "@/lib/format";
 import { AO_STATUS } from "../contracts.labels";
 import type { AoSummary } from "../contracts.service";
+import { RecordActions } from "@/features/records/components/record-actions";
 import { CommitmentMeter } from "./commitment-meter";
 
-export function AoTable({ contractId, rows }: { contractId: string; rows: AoSummary[] }) {
+export function AoTable({ contractId, rows, canManage = false }: { contractId: string; rows: AoSummary[]; canManage?: boolean }) {
   return (
     <TableWrap>
       <Table>
@@ -19,6 +20,7 @@ export function AoTable({ contractId, rows }: { contractId: string; rows: AoSumm
             <Th>المفوتر من الارتباط المالي</Th>
             <Th align="end">المواقع</Th>
             <Th align="end">المستخلصات</Th>
+            {canManage && <Th><span className="sr-only">إجراءات</span></Th>}
           </tr>
         </THead>
         <TBody>
@@ -46,6 +48,11 @@ export function AoTable({ contractId, rows }: { contractId: string; rows: AoSumm
                 <Td>{a.commitment ? <CommitmentMeter state={a.commitment} compact /> : <span className="text-tx3">—</span>}</Td>
                 <Td align="end"><Num>{formatCount(a.sites)}</Num></Td>
                 <Td align="end"><Num>{formatCount(a.invoices)}</Num></Td>
+                {canManage && (
+                  <Td className="whitespace-nowrap">
+                    <RecordActions entity="ao" id={a.id} name={a.aoNo} editHref={`/contracts/${contractId}/aos/${a.id}`} deleteWarning="سيُحذف أمر التكليف مع بنوده ومواقعه ومهماته ومرفقاته. لا يمكن الحذف إذا كان عليه مستخلصات." />
+                  </Td>
+                )}
               </Tr>
             );
           })}

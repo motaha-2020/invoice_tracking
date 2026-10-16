@@ -13,7 +13,7 @@ import { projectRecord } from "./node-detail";
 export function ProjectsTable({ projects, types }: { projects: ProjectRow[]; types: ProjectTypeRow[] }) {
   const [q, setQ] = useState("");
   const [type, setType] = useState("");
-  const { canEdit } = useOrgDialogs();
+  const { canManage } = useOrgDialogs();
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
     return projects.filter(
@@ -63,7 +63,7 @@ export function ProjectsTable({ projects, types }: { projects: ProjectRow[]; typ
                 <Th>الموقع في الهيكل التنظيمي</Th>
                 <Th align="end">أوامر تكليف</Th>
                 <Th align="end">مستخلصات</Th>
-                {canEdit && <Th><span className="sr-only">إجراءات</span></Th>}
+                {canManage && <Th><span className="sr-only">إجراءات</span></Th>}
               </Tr>
             </THead>
             <TBody>
@@ -85,7 +85,7 @@ export function ProjectsTable({ projects, types }: { projects: ProjectRow[]; typ
                   <Td className="min-w-[200px] text-xs text-tx3">{p.path.join(" · ") || "—"}</Td>
                   <Td align="end"><Num>{p.aoCount}</Num></Td>
                   <Td align="end"><Num>{p.invoices}</Num></Td>
-                  {canEdit && (
+                  {canManage && (
                     <Td align="end" className="whitespace-nowrap">
                       <RowActions kind="project" record={projectRecord(p)} />
                     </Td>

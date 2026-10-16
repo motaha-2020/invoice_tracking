@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge, CategoryBadge, Money, Num, SlaChip, TBody, THead, Table, TableWrap, Td, Th, Tr } from "@/components/ui";
 import { formatDate, formatMoney } from "@/lib/format";
 import { INVOICE_STATUS } from "@/lib/labels";
+import { RecordActions } from "@/features/records/components/record-actions";
 import type { InvoiceListRow, StepInfo } from "../invoices.service";
 
 /** مين ماسك المستخلص دلوقتي (نفس holderLabel في الديمو) */
@@ -26,10 +27,12 @@ type InvoiceTableProps = {
   steps: Record<string, StepInfo>;
   /** إخفاء عمود الشركة (لمستخدم الشركة) */
   showCompany?: boolean;
+  /** أزرار التعديل والحذف (مدير النظام) */
+  canManage?: boolean;
 };
 
 /** جدول المستخلصات المشترك (المهام الواردة والقوائم والرئيسية) */
-export function InvoiceTable({ rows, steps, showCompany = true }: InvoiceTableProps) {
+export function InvoiceTable({ rows, steps, showCompany = true, canManage = false }: InvoiceTableProps) {
   return (
     <TableWrap>
       <Table>
@@ -43,6 +46,7 @@ export function InvoiceTable({ rows, steps, showCompany = true }: InvoiceTablePr
             <Th>الحالة</Th>
             <Th>المدة المستهدفة</Th>
             <Th align="end">القيمة المعتمدة</Th>
+            {canManage && <Th><span className="sr-only">إجراءات</span></Th>}
           </tr>
         </THead>
         <TBody>
@@ -85,6 +89,11 @@ export function InvoiceTable({ rows, steps, showCompany = true }: InvoiceTablePr
                 <Td align="end">
                   <Money>{formatMoney(inv.gross)}</Money>
                 </Td>
+                {canManage && (
+                  <Td className="whitespace-nowrap">
+                    <RecordActions entity="invoice" id={inv.id} name={inv.invoiceNo} editHref={`/invoices/${inv.id}`} deleteWarning="سيُحذف المستخلص مع بنوده ومهماته ومرفقاته وسجل إجراءاته." />
+                  </Td>
+                )}
               </Tr>
             );
           })}

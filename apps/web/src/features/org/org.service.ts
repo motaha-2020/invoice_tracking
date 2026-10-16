@@ -128,8 +128,17 @@ export function canEditOrg(user: SessionUser): Promise<boolean> {
   return can(user, "org.manage");
 }
 
+/** تعديل وحذف كيانات الهيكل — مدير النظام فقط */
+export function canManageOrg(user: SessionUser): Promise<boolean> {
+  return can(user, "records.manage");
+}
+
 async function assertCanEdit(user: SessionUser) {
   if (!(await canEditOrg(user))) throw new AppError("FORBIDDEN");
+}
+
+async function assertCanManage(user: SessionUser) {
+  if (!(await canManageOrg(user))) throw new AppError("FORBIDDEN", "تعديل البيانات وحذفها متاح لمدير النظام فقط");
 }
 
 function prismaCode(e: unknown): string | undefined {
@@ -154,7 +163,7 @@ export async function createOrgEntity(user: SessionUser, data: OrgData, code: st
 }
 
 export async function updateOrgEntity(user: SessionUser, id: string, data: OrgData) {
-  await assertCanEdit(user);
+  await assertCanManage(user);
   try {
     return await updateEntity(id, data, user.id);
   } catch (e) {
@@ -164,7 +173,7 @@ export async function updateOrgEntity(user: SessionUser, id: string, data: OrgDa
 
 /** المسح ممنوع لو تحت الكيان أي بيانات (أبناء، مشروعات، أوامر تكليف، عقود، مستخدمين على النطاق) */
 export async function deleteOrgEntity(user: SessionUser, kind: OrgKind, id: string) {
-  await assertCanEdit(user);
+  await assertCanManage(user);
   const rec = await findEntity(kind, id);
   if (!rec) throw new AppError("NOT_FOUND", `${KIND_LABELS[kind].one} غير موجود — ربما حُذف`);
   const blocked = dependentsMessage(kind, rec.name, await countDependents(kind, id));

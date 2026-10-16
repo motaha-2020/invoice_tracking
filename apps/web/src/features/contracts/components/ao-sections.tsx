@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Badge, Card, CardHeader, EmptyState, Money, Num, TBody, THead, Table, TableWrap, Td, Th, Tr } from "@/components/ui";
 import { formatDate, formatMoney, formatQty } from "@/lib/format";
 import { AO_CHANGE_KIND } from "../contracts.labels";
+import { RecordActions } from "@/features/records/components/record-actions";
+import { AO_ITEM_FIELDS } from "@/features/records/records.fields";
 import type { AoItemView, AoView } from "../contracts.service";
 
 /** تاريخ أمر التكليف: الملاحق وتجديدات الالتزام */
@@ -45,7 +47,7 @@ export function AoChangesTimeline({ changes, actions }: { changes: AoView["ao"][
 }
 
 /** البنود المخططة مقابل المفوتر التراكمي — التجاوز للكمية المخططة بالأحمر */
-export function AoItemsTable({ items }: { items: AoItemView[] }) {
+export function AoItemsTable({ items, canManage = false }: { items: AoItemView[]; canManage?: boolean }) {
   const showSite = items.some((i) => i.site);
   return (
     <TableWrap className="max-h-[640px] overflow-y-auto">
@@ -59,6 +61,7 @@ export function AoItemsTable({ items }: { items: AoItemView[] }) {
             <Th align="end">الكمية المخططة</Th>
             <Th align="end">الكمية المفوترة التراكمية</Th>
             <Th align="end">المتبقي</Th>
+            {canManage && <Th><span className="sr-only">إجراءات</span></Th>}
           </tr>
         </THead>
         <TBody>
@@ -77,6 +80,11 @@ export function AoItemsTable({ items }: { items: AoItemView[] }) {
                 {i.over && <div className="text-[11px] text-cr7">تجاوز للكمية المخططة</div>}
               </Td>
               <Td align="end"><Num className={i.over ? "text-cr7" : "text-tx2"}>{formatQty(i.planned - i.billed)}</Num></Td>
+              {canManage && (
+                <Td className="whitespace-nowrap">
+                  <RecordActions entity="aoItem" id={i.id} name={i.site ? `${i.itemNo} (${i.site})` : i.itemNo} form={{ fields: AO_ITEM_FIELDS, values: { plannedQty: String(i.planned) } }} />
+                </Td>
+              )}
             </Tr>
           ))}
         </TBody>

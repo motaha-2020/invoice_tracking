@@ -21,7 +21,7 @@ export default function ContractsPage() {
 
 async function ContractsContent() {
   const user = await requireNavAccess("contracts");
-  const [rows, canImport] = await Promise.all([listContractsFor(user), can(user, "master.import")]);
+  const [rows, canImport, canManage] = await Promise.all([listContractsFor(user), can(user, "master.import"), can(user, "records.manage")]);
   const onlyCompany = user.roles.every((r) => r.role === "company") && hasRole(user, "company");
 
   return (
@@ -38,7 +38,7 @@ async function ContractsContent() {
             <div className="text-[13px]">{canImport ? "يرجى رفع نموذج العقد وجدول الكميات من القسم أدناه." : "لا توجد عقود مسجلة ضمن نطاق صلاحيتك."}</div>
           </EmptyState>
         ) : (
-          <ContractsTable rows={rows} showCompany={!onlyCompany} />
+          <ContractsTable rows={rows} showCompany={!onlyCompany} canManage={canManage} />
         )}
       </Card>
 

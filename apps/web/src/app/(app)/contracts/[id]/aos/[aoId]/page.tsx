@@ -9,6 +9,8 @@ import { localDate } from "@it/domain";
 import { can } from "@/features/auth/permissions";
 import { ContractFiles } from "@/features/contracts/components/contract-files";
 import { canEditContracts, listContractFiles } from "@/features/contracts/contract-edit.service";
+import { RecordActions } from "@/features/records/components/record-actions";
+import { aoForm } from "@/features/records/records.service";
 import { CommitmentRenewalButton } from "@/features/contracts/components/commitment-renewal";
 import { CommitmentMeter } from "@/features/contracts/components/commitment-meter";
 import { AO_STATUS } from "@/features/contracts/contracts.labels";
@@ -43,7 +45,7 @@ async function AoContent({ params }: { params: Params }) {
   const [view, canRenew] = await Promise.all([getAoView(user, id, aoId), can(user, "master.import")]);
   if (!view) notFound();
   const { ao, commitment } = view;
-  const [files, canEditFiles] = await Promise.all([listContractFiles(ao.contract.id, ao.id), canEditContracts(user)]);
+  const [files, canEditFiles, form] = await Promise.all([listContractFiles(ao.contract.id, ao.id), canEditContracts(user), aoForm(user, ao.id)]);
   const st = AO_STATUS[ao.status];
   const over = view.items.filter((i) => i.over).length;
 
@@ -58,7 +60,14 @@ async function AoContent({ params }: { params: Params }) {
           { label: ao.contract.contractNo, href: `/contracts/${ao.contract.id}` },
           { label: ao.aoNo },
         ]}
-        actions={<Badge tone={st.tone} dot>{st.label}</Badge>}
+        actions={
+          <>
+            <Badge tone={st.tone} dot>{st.label}</Badge>
+            {form && (
+              <RecordActions entity="ao" id={ao.id} name={ao.aoNo} form={form} labeled afterDeleteHref={`/contracts/${ao.contract.id}`} deleteWarning="سيُحذف أمر التكليف مع بنوده ومواقعه ومهماته ومرفقاته. لا يمكن الحذف إذا كان عليه مستخلصات." />
+            )}
+          </>
+        }
       />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -98,7 +107,7 @@ async function AoContent({ params }: { params: Params }) {
           sub={<span className="num">{view.items.length}</span>}
           actions={over > 0 ? <Badge tone="r">{over} بند تجاوز الكمية المخططة</Badge> : undefined}
         />
-        {view.items.length === 0 ? <EmptyState icon={ListChecks} title="لا توجد كميات مخططة بعد" /> : <AoItemsTable items={view.items} />}
+        {view.items.length === 0 ? <EmptyState icon={ListChecks} title="لا توجد كميات مخططة بعد" /> : <AoItemsTable items={view.items} canManage={!!form} />}
       </Card>
 
       <div className="mt-5"><AoMaterialsCard materials={ao.materials} /></div>

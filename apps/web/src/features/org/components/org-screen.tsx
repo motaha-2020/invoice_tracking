@@ -5,7 +5,7 @@ import { requireNavAccess } from "@/features/shell/nav.service";
 import { companiesImporter } from "../companies.importer";
 import { buildOrgOptions } from "../org.options";
 import { orgImporter } from "../org.importer";
-import { canEditOrg, getOrgPageData, type OrgPageData } from "../org.service";
+import { canEditOrg, canManageOrg, getOrgPageData, type OrgPageData } from "../org.service";
 import { projectsImporter } from "../projects.importer";
 import type { OrgKind, OrgLevel } from "../org.kinds";
 import { AddButton } from "./org-buttons";
@@ -27,14 +27,14 @@ const ADD_FOR_TAB: Partial<Record<OrgTab, { kind: OrgKind; label: string }>> = {
 /** شاشة "الهيكل والمشاريع" — بتقرا الجلسة، فلازم تتعرض جوه <Suspense> */
 export async function OrgScreen({ tabParam }: { tabParam: Promise<unknown> }) {
   const user = await requireNavAccess("org");
-  const [data, canEdit, rawTab] = await Promise.all([getOrgPageData(user), canEditOrg(user), tabParam]);
+  const [data, canEdit, canManage, rawTab] = await Promise.all([getOrgPageData(user), canEditOrg(user), canManageOrg(user), tabParam]);
   let tab = parseOrgTab(rawTab);
   if (tab === "import" && !canEdit) tab = "tree";
   const add = ADD_FOR_TAB[tab];
   const count = (k: OrgLevel) => data.nodes.filter((n) => n.kind === k).length;
 
   return (
-    <OrgDialogsProvider canEdit={canEdit} options={buildOrgOptions(data.nodes, data.types)}>
+    <OrgDialogsProvider canEdit={canEdit} canManage={canManage} options={buildOrgOptions(data.nodes, data.types)}>
       <PageHeader
         title="الهيكل التنظيمي والمشروعات"
         sub="رئاسات القطاعات والقطاعات والإدارات والسنترالات، والمشروعات والشركات المنفذة"
@@ -73,21 +73,21 @@ export async function OrgScreen({ tabParam }: { tabParam: Promise<unknown> }) {
           companies: data.companies.length,
         }}
       />
-      <TabBody tab={tab} data={data} canEdit={canEdit} />
+      <TabBody tab={tab} data={data} canManage={canManage} />
     </OrgDialogsProvider>
   );
 }
 
-function TabBody({ tab, data, canEdit }: { tab: OrgTab; data: OrgPageData; canEdit: boolean }) {
+function TabBody({ tab, data, canManage }: { tab: OrgTab; data: OrgPageData; canManage: boolean }) {
   switch (tab) {
     case "projects":
       return <ProjectsTable projects={data.projects} types={data.types} />;
     case "types":
-      return <TypesTable types={data.types} canEdit={canEdit} />;
+      return <TypesTable types={data.types} canEdit={canManage} />;
     case "work-types":
-      return <WorkTypesTable workTypes={data.workTypes} canEdit={canEdit} />;
+      return <WorkTypesTable workTypes={data.workTypes} canEdit={canManage} />;
     case "companies":
-      return <CompaniesTable companies={data.companies} canEdit={canEdit} />;
+      return <CompaniesTable companies={data.companies} canEdit={canManage} />;
     case "import":
       return <ImportSection />;
     default:

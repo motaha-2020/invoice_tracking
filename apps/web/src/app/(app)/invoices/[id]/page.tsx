@@ -14,6 +14,8 @@ import { LogTab } from "@/features/invoices/components/log-tab";
 import { MaterialsTab } from "@/features/invoices/components/materials-tab";
 import { MoneyTab } from "@/features/invoices/components/money-tab";
 import { getInvoiceView, type InvoiceView } from "@/features/invoices/invoice-view.service";
+import { RecordActions } from "@/features/records/components/record-actions";
+import { invoiceForm } from "@/features/records/records.service";
 import { localDate } from "@it/domain";
 import { formatMoney } from "@/lib/format";
 import { INVOICE_STATUS } from "@/lib/labels";
@@ -40,6 +42,7 @@ async function InvoiceContent({ params, searchParams }: { params: Params; search
   const v = await getInvoiceView(user, id);
   if (!v) notFound();
   const { inv, calc } = v;
+  const form = await invoiceForm(user, inv.id);
   const tab: Tab = (TABS as readonly string[]).includes(String(sp.tab)) && !(sp.tab === "emails" && v.isCompany) ? (sp.tab as Tab) : "lines";
   const st = INVOICE_STATUS[inv.status];
   const cat = inv.category ?? null;
@@ -74,6 +77,11 @@ async function InvoiceContent({ params, searchParams }: { params: Params; search
           v.isCompany ? { label: "جميع المستخلصات", href: "/invoices" } : { label: "المهام الواردة", href: "/inbox" },
           { label: `مستخلص رقم ${inv.invoiceNo}` },
         ]}
+        actions={
+          form ? (
+            <RecordActions entity="invoice" id={inv.id} name={inv.invoiceNo} form={form} labeled afterDeleteHref="/invoices" deleteWarning="سيُحذف المستخلص مع بنوده ومهماته ومرفقاته وسجل إجراءاته." />
+          ) : undefined
+        }
       />
 
       <Card className="mb-4">

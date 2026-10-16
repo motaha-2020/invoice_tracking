@@ -1,10 +1,23 @@
 import { Badge, Num, TBody, THead, Table, TableWrap, Td, Th, Tr } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatQty } from "@/lib/format";
+import { RecordActions } from "@/features/records/components/record-actions";
+import { CONTRACT_ITEM_FIELDS } from "@/features/records/records.fields";
 import type { BoqRow } from "../contracts.service";
 
+const itemValues = (r: BoqRow) => ({
+  itemNo: r.itemNo,
+  unit: r.unit ?? "",
+  isGroup: r.isGroup ? "1" : "",
+  description: r.description,
+  contractQty: r.contractQty == null ? "" : String(r.contractQty),
+  unitPrice: r.unitPrice == null ? "" : String(r.unitPrice),
+  workType: r.workType ?? "",
+});
+
 /** المقايسة المتدرجة: صفوف العناوين بخلفية، والمسافة حسب المستوى */
-export function BoqTable({ rows }: { rows: BoqRow[] }) {
+/** canManage = أزرار التعديل والحذف لكل بند (مدير النظام) */
+export function BoqTable({ rows, canManage = false }: { rows: BoqRow[]; canManage?: boolean }) {
   return (
     <TableWrap className="max-h-[640px] overflow-y-auto">
       <Table>
@@ -16,6 +29,7 @@ export function BoqTable({ rows }: { rows: BoqRow[] }) {
             <Th align="end">الكمية التعاقدية</Th>
             <Th align="end">سعر الوحدة</Th>
             <Th>نوع العمل</Th>
+            {canManage && <Th><span className="sr-only">إجراءات</span></Th>}
           </tr>
         </THead>
         <TBody>
@@ -39,6 +53,11 @@ export function BoqTable({ rows }: { rows: BoqRow[] }) {
                 )}
               </Td>
               <Td className="whitespace-nowrap text-xs text-tx3">{r.workType ?? ""}</Td>
+              {canManage && (
+                <Td className="whitespace-nowrap">
+                  <RecordActions entity="contractItem" id={r.id} name={r.itemNo} form={{ fields: CONTRACT_ITEM_FIELDS, values: itemValues(r) }} />
+                </Td>
+              )}
             </Tr>
           ))}
         </TBody>

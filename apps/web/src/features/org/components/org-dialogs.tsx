@@ -20,7 +20,10 @@ type Dialog =
   | { mode: "delete"; kind: OrgKind; target: DeleteTarget; n: number };
 
 type Api = {
+  /** إضافة (org.manage) */
   canEdit: boolean;
+  /** تعديل وحذف (records.manage — مدير النظام) */
+  canManage: boolean;
   openForm: (kind: OrgKind, record?: EntityRecord | null, defaults?: EntityRecord) => void;
   openDelete: (kind: OrgKind, target: DeleteTarget) => void;
 };
@@ -34,7 +37,7 @@ export function useOrgDialogs(): Api {
 }
 
 /** بيمسك حالة نوافذ الإضافة/التعديل/المسح لكل شاشة /org */
-export function OrgDialogsProvider({ canEdit, options, children }: { canEdit: boolean; options: OrgOptions; children: ReactNode }) {
+export function OrgDialogsProvider({ canEdit, canManage, options, children }: { canEdit: boolean; canManage: boolean; options: OrgOptions; children: ReactNode }) {
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const toast = useToast();
   const close = useCallback(() => setDialog(null), []);
@@ -48,10 +51,11 @@ export function OrgDialogsProvider({ canEdit, options, children }: { canEdit: bo
   const api = useMemo<Api>(
     () => ({
       canEdit,
+      canManage,
       openForm: (kind, record = null, defaults) => setDialog((d) => ({ mode: "form", kind, record, defaults, n: (d?.n ?? 0) + 1 })),
       openDelete: (kind, target) => setDialog((d) => ({ mode: "delete", kind, target, n: (d?.n ?? 0) + 1 })),
     }),
-    [canEdit],
+    [canEdit, canManage],
   );
 
   const one = dialog ? KIND_LABELS[dialog.kind].one : "";
@@ -60,7 +64,7 @@ export function OrgDialogsProvider({ canEdit, options, children }: { canEdit: bo
   return (
     <Ctx value={api}>
       {children}
-      {canEdit && (
+      {(canEdit || canManage) && (
         <Modal open={dialog !== null} onClose={close} title={title} size={dialog?.kind === "project" || dialog?.kind === "company" ? "lg" : "md"}>
           {dialog?.mode === "form" && (
             <EntityForm key={dialog.n} kind={dialog.kind} record={dialog.record} defaults={dialog.defaults} options={options} onDone={done} onCancel={close} />

@@ -10,6 +10,8 @@ import { ContractFiles } from "@/features/contracts/components/contract-files";
 import { getContractEditValues, listContractFiles } from "@/features/contracts/contract-edit.service";
 import { TermsCard } from "@/features/contracts/components/terms-card";
 import { getContractView } from "@/features/contracts/contracts.service";
+import { RecordActions } from "@/features/records/components/record-actions";
+import { canManageRecords } from "@/features/records/records.service";
 import { requireNavAccess } from "@/features/shell/nav.service";
 import { formatCount, formatMoney } from "@/lib/format";
 
@@ -31,7 +33,7 @@ async function ContractContent({ params }: { params: Params }) {
   const view = await getContractView(user, id);
   if (!view) notFound();
   const { contract: c, stats } = view;
-  const [editValues, files] = await Promise.all([getContractEditValues(user, c.id), listContractFiles(c.id)]);
+  const [editValues, files, canManage] = await Promise.all([getContractEditValues(user, c.id), listContractFiles(c.id), canManageRecords(user)]);
 
   return (
     <>
@@ -39,6 +41,11 @@ async function ContractContent({ params }: { params: Params }) {
         title={<>العقد <span className="num">{c.contractNo}</span></>}
         sub={`${c.company.name} — ${c.title}`}
         crumbs={[{ label: "الرئيسية", href: "/" }, { label: "العقود وأوامر التكليف", href: "/contracts" }, { label: c.contractNo }]}
+        actions={
+          canManage ? (
+            <RecordActions entity="contract" id={c.id} name={c.contractNo} labeled afterDeleteHref="/contracts" deleteWarning="سيُحذف العقد مع جدول الكميات وجميع أوامر التكليف والمرفقات. لا يمكن الحذف إذا كان على العقد مستخلصات." />
+          ) : undefined
+        }
       />
       <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">
         <Kpi icon={ListTree} label="بنود جدول الكميات" value={formatCount(stats.items)} sub={stats.unpriced ? `${stats.unpriced} بند غير مُسعّر · ${stats.groups} عنوان` : `${stats.groups} عنوان`} />
@@ -56,13 +63,13 @@ async function ContractContent({ params }: { params: Params }) {
         {view.aos.length === 0 ? (
           <EmptyState icon={ClipboardList} title="لا توجد أوامر تكليف على هذا العقد بعد" />
         ) : (
-          <AoTable contractId={c.id} rows={view.aos} />
+          <AoTable contractId={c.id} rows={view.aos} canManage={canManage} />
         )}
       </Card>
 
       <Card className="mt-5">
         <CardHeader title="جدول الكميات والأسعار (المقايسة)" sub={<span className="num">{view.boq.length}</span>} />
-        {view.boq.length === 0 ? <EmptyState icon={ListTree} title="جدول الكميات لا يتضمن أي بنود" /> : <BoqTable rows={view.boq} />}
+        {view.boq.length === 0 ? <EmptyState icon={ListTree} title="جدول الكميات لا يتضمن أي بنود" /> : <BoqTable rows={view.boq} canManage={canManage} />}
       </Card>
     </>
   );

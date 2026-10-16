@@ -28,10 +28,10 @@ export function AddButton({
   );
 }
 
-/** تعديل + مسح لصف في جدول أو تفاصيل عقدة */
+/** تعديل + مسح لصف في جدول أو تفاصيل عقدة — لمدير النظام فقط (records.manage) */
 export function RowActions({ kind, record, size = "sm" }: { kind: OrgKind; record: EntityRecord & DeleteTarget; size?: ButtonSize }) {
-  const { canEdit, openForm, openDelete } = useOrgDialogs();
-  if (!canEdit) return null;
+  const { canManage, openForm, openDelete } = useOrgDialogs();
+  if (!canManage) return null;
   const { one } = KIND_LABELS[kind];
   return (
     <span className="inline-flex gap-1">

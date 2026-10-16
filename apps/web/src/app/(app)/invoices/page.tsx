@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Card, CardHeader, EmptyState, PageHeader, PageSkeleton } from "@/components/ui";
 import { hasRole } from "@/features/auth/scope";
+import { can } from "@/features/auth/permissions";
 import { requireUser } from "@/features/auth/session";
 import { InvoiceTable } from "@/features/invoices/components/invoice-table";
 import { getStepNames, listVisibleInvoices, parseStatus } from "@/features/invoices/invoices.service";
@@ -26,7 +27,7 @@ export default function InvoicesPage({ searchParams }: { searchParams: SearchPar
 async function InvoicesContent({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireUser();
   const status = parseStatus((await searchParams).status);
-  const [rows, steps] = await Promise.all([listVisibleInvoices(user, { status }), getStepNames()]);
+  const [rows, steps, canManage] = await Promise.all([listVisibleInvoices(user, { status }), getStepNames(), can(user, "records.manage")]);
   const isCompany = hasRole(user, "company");
 
   const chips: (InvoiceStatus | undefined)[] = [undefined, "active", "returned", "on_hold", "paid", ...(isCompany ? (["draft"] as const) : [])];
@@ -63,7 +64,7 @@ async function InvoicesContent({ searchParams }: { searchParams: SearchParams })
             <div className="text-[13px]">لا توجد مستخلصات مطابقة لمعايير التصفية ضمن نطاق صلاحيتك.</div>
           </EmptyState>
         ) : (
-          <InvoiceTable rows={rows} steps={steps} showCompany={!isCompany} />
+          <InvoiceTable rows={rows} steps={steps} showCompany={!isCompany} canManage={canManage} />
         )}
       </Card>
     </>
