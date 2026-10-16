@@ -24,12 +24,10 @@ invoices.projectflow.site {
 		lb_try_duration 5s
 	}
 
+	# الـ log على stdout ← journald (systemd بيمنع Caddy يكتب في /var/log)
+	# للعرض:  journalctl -u caddy | grep invoices.projectflow.site
 	log {
-		output file /var/log/caddy/invoices.access.log {
-			roll_size 20MiB
-			roll_keep 10
-			roll_keep_for 720h
-		}
+		output stdout
 		format json
 	}
 }
