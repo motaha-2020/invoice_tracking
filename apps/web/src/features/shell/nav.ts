@@ -12,6 +12,7 @@ export type NavIconName =
   | "file-plus"
   | "files"
   | "reports"
+  | "dashboard"
   | "mail"
   | "contracts"
   | "org"
@@ -52,6 +53,7 @@ export const NAV: readonly NavSection[] = [
   {
     title: "المتابعة والتقارير",
     items: [
+      { key: "dashboard", href: "/dashboard", label: "لوحة المؤشرات", icon: "dashboard", perm: "reports.view" },
       {
         key: "retentions",
         href: "/retentions",

@@ -8,6 +8,11 @@ import { grossByIds } from "@/features/invoices/invoices.repo";
  */
 const ref = { id: true, name: true } as const;
 const projectRef = { id: true, code: true, name: true } as const;
+/** مكان المشروع في الهيكل (للوحة المؤشرات: البلاطات حسب الإدارة العامة / السنترال) */
+const projectOrg = {
+  ...projectRef,
+  central: { select: { id: true, name: true, dept: { select: { generalDept: { select: { id: true, name: true } } } } } },
+} as const;
 
 const invoiceSelect = {
   id: true,
@@ -15,9 +20,11 @@ const invoiceSelect = {
   status: true,
   currentStep: true,
   heldAt: true,
+  category: true,
+  suggestedCategory: true,
   workType: { select: { name: true } },
   contract: { select: { id: true, contractNo: true, company: { select: ref } } },
-  ao: { select: { id: true, aoNo: true, project: { select: projectRef } } },
+  ao: { select: { id: true, aoNo: true, project: { select: projectOrg } } },
 } satisfies Prisma.InvoiceSelect;
 
 export type InvoiceFactRow = Prisma.InvoiceGetPayload<{ select: typeof invoiceSelect }> & { gross: number };
@@ -38,7 +45,7 @@ const aoSelect = {
   value: true,
   financialCommitment: true,
   contract: { select: { id: true, contractNo: true, company: { select: ref } } },
-  project: { select: projectRef },
+  project: { select: projectOrg },
 } satisfies Prisma.AssignmentOrderSelect;
 
 export type AoFactRow = Prisma.AssignmentOrderGetPayload<{ select: typeof aoSelect }>;

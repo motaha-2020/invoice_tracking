@@ -12,6 +12,7 @@ import {
   Package,
   Reply,
   Users,
+  Gauge,
   type LucideIcon,
 } from "lucide-react";
 import type { NavIconName } from "@/features/shell/nav";
@@ -23,6 +24,7 @@ export const NAV_ICONS: Record<NavIconName, LucideIcon> = {
   "file-plus": FilePlus2,
   files: Files,
   reports: FileBarChart,
+  dashboard: Gauge,
   mail: Mail,
   contracts: FileSignature,
   org: Network,
